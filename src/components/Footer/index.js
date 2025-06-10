@@ -23,25 +23,24 @@ const Footer = () => {
         </div>
         <div className="right">
           <div className="icons">
-            <a href="">
+            <a href="https://wa.me/+50670785225">
               <FaWhatsapp className="icon" />
             </a>
             <a href="">
               <FaInstagram className="icon" />
             </a>
-            <a href="">
-              <FaTiktok className="icon" />
-            </a>
-            <a href="">
+
+            <a href="./Contactenos">
               <FaLocationDot className="icon" />
             </a>
           </div>
           <div className="footer-info">
             <p>
-              Teléfono: <a href="tel:+50612345678">+506 1234 5678</a>
+              Teléfono: <a href="tel:+50612345678">+506 7078 5225</a>
             </p>
             <p>
-              Email: <a href="mailto:info@kinder.com">info@kinder.com</a>
+              Email:{" "}
+              <a href="mailto:info@kinder.com">creciendofeliz@gmail.com</a>
             </p>
           </div>
 

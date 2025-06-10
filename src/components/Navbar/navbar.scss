@@ -19,7 +19,7 @@
   }
   &__container {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     justify-content: space-between;
     align-items: center;
     width: 100%;
@@ -53,17 +53,46 @@
   &__links {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 24px;
+    flex-wrap: nowrap; // Prevent wrapping
 
     a {
+      position: relative;
+      background: transparent;
+      color: #6ec1ff;
       text-decoration: none;
-      color: #ff0000;
       font-size: 1rem;
-      font-weight: bold;
-      transition: font-size 0.1s ease;
+      font-weight: 500;
+      padding: 0.5rem 0;
+      border: none;
+      transition: color 0.2s;
 
-      &:hover {
-        color: #3b82f6;
+      @media (max-width: 1070px) {
+        gap: 14px;
+      }
+
+      // Animated underline
+      &::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        bottom: 0;
+        width: 0;
+        height: 2px;
+        background: #b3e0ff;
+        transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+          left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transform: translateX(-50%);
+      }
+
+      &:hover,
+      &:focus {
+        color: #3a9dff;
+        &::after {
+          width: 100%;
+          left: 0;
+          transform: none;
+        }
       }
 
       @media (max-width: 1080px) {
@@ -108,17 +137,28 @@
     }
   }
   .navbar__button {
-    background-color: #fcc858;
-    color: #ffffff;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
+    background: #6ec1ff;
+    color: #fff;
+    border-radius: 20px;
+    padding: 0.5rem 1.5rem;
     font-weight: bold;
-    transition: all 0.2s ease;
+    border: none;
+    margin-left: 1rem;
+    box-shadow: 0 2px 8px rgba(58, 157, 255, 0.08);
+    transition: background 0.2s, color 0.2s;
+    text-decoration: none;
+    position: relative;
+    z-index: 1;
 
-    &:hover {
-      background-color: #d97706;
+    // Prevent underline animation if inherited
+    &::after {
+      display: none !important;
+    }
+
+    &:hover,
+    &:focus {
+      background: #3a9dff;
+      color: #fff;
     }
 
     @media (max-width: 1080px) {
@@ -129,8 +169,8 @@
       padding: 4px 10px;
       font-size: 0.75rem;
       margin-bottom: 15px;
-      background-color: transparent;
-      color: #3b82f6;
+      background-color: #6ec1ff;
+      color: #fff;
     }
   }
 
