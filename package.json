@@ -16,6 +16,8 @@
     "react-scripts": "5.0.1",
     "react-scroll": "^1.9.3",
     "sass": "^1.83.0",
+    "sweetalert2": "^11.22.1",
+    "sweetalert2-react-content": "^5.1.0",
     "swiper": "^11.2.2",
     "web-vitals": "^2.1.4"
   },

@@ -7,8 +7,17 @@ import { FaLocationDot } from "react-icons/fa6";
 import { BsFillTelephoneFill } from "react-icons/bs";
 import { MdEmail } from "react-icons/md";
 import { AiFillLike } from "react-icons/ai";
+import Swal from 'sweetalert2';
+
 
 const Contactenos = () => {
+  const showAlert = () => {
+        Swal.fire({
+          title: 'Hello!',
+          text: 'This is a SweetAlert2 message in React.',
+          icon: 'success',
+        });
+      };
   return (
     <div className="contact-container">
       <Return />
@@ -60,7 +69,7 @@ const Contactenos = () => {
             <input type="text" placeholder="Escriba su teléfono" />
             <label>Tu mensaje:</label>
             <textarea placeholder="Escriba su consulta aquí..."></textarea>
-            <button type="submit">Enviar</button>
+            <button onClick={showAlert}>Enviar</button>
           </form>
         </div>
       </div>
