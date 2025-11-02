@@ -18,7 +18,7 @@ const Footer = () => {
       <div className="container">
         <div className="left">
           <Link to="/" onClick={scrollToTop}>
-            <img src={kinderLogo} alt="Kinder Logo" />
+            <img src={kinderLogo} alt="institucion Logo" />
           </Link>
         </div>
         <div className="right">
@@ -40,7 +40,7 @@ const Footer = () => {
             </p>
             <p>
               Email:{" "}
-              <a href="mailto:info@kinder.com">creciendofeliz@gmail.com</a>
+              <a href="mailto:info@institucion.com">creciendofelizabc@gmail.com</a>
             </p>
           </div>
 

@@ -56,7 +56,7 @@ export default function Donaciones() {
       <section className="donaciones-why">
         <h2>¿Por qué tu ayuda es crucial?</h2>
         <p>
-          Este año el PANI redujo la cuota que financia al kinder y limitó la
+          Este año el PANI redujo la cuota que financia al institucion y limitó la
           estancia a solo 4 horas diarias. Pero las escuelas públicas
           frecuentemente suspenden clases, y los niños deben quedarse todo el
           día en nuestra institución, generando gastos de transporte,

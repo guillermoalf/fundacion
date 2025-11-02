@@ -61,7 +61,7 @@ export default function StepsIMAS() {
               <p className="description">
                 Para padres y madres de familia, el proceso de la matrícula con
                 el IMAS será solo para aquellas familias en las que el niño o
-                niña se encuentra cursando el kinder y tiene entre 1 y 6 años.
+                niña se encuentra cursando el institucion y tiene entre 1 y 6 años.
                 Antes de esto, siempre se realiza una reunión introductoria para
                 explicar horarios, servicios y contrato.
               </p>

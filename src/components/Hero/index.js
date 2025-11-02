@@ -15,7 +15,7 @@ const Hero = () => {
           <p>
             En Fundación Creciendo Feliz, ofrecemos un refugio educativo y lleno
             de cuidado para los niños y niñas. Nos asociamos con instituciones
-            como PANI y la red de Cuido IMAS para asegurar que cada día sea una
+            como PANI, Junta de Protección Social JPS y la red de Cuido IMAS para asegurar que cada día sea una
             oportunidad de aprendizaje y crecimiento para los hijos de madres y
             padres trabajadores.
           </p>

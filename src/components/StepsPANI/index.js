@@ -26,7 +26,7 @@ export default function StepsPANI() {
             <div className="fixed-content">
               <h2>Pasos para matricular con el PANI</h2>
               <p className="description">
-                El kinder financia el estudio socioeconómico; la familia debe
+                El institucion financia el estudio socioeconómico; la familia debe
                 aportar toda la información y documentación dentro de los 3
                 primeros días hábiles. Antes de esto, siempre se realiza una
                 reunión introductoria para explicar horarios, servicios y
@@ -45,7 +45,7 @@ export default function StepsPANI() {
                 index={0}
                 icon={<CreditCard className="step-icon" />}
                 title="Pago y estudio socioeconómico"
-                description="El kinder paga y gestiona el estudio socioeconómico; la familia debe aportar toda la información y documentación requerida."
+                description="El institucion paga y gestiona el estudio socioeconómico; la familia debe aportar toda la información y documentación requerida."
               />
 
               <StepCard

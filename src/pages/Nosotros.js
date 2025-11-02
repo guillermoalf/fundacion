@@ -3,20 +3,33 @@ import Return from "../components/Return";
 import Copy from "../components/Copy";
 import teamPhoto from "../assets/grupal3.JPG";
 import "../styles/nosotros.scss";
+import { Target, HeartHandshake } from "lucide-react";
 
 export default function Nosotros() {
   return (
-    <div>
+    <div className="nosotros-page">
       <Return />
 
       {/* Contenedor central con gutter uniforme */}
       <div className="cont">
         {/* Hero */}
+        <section className="about-hero">
+          <span className="badge">Nosotros</span>
+          <h1>Educación con corazón y propósito</h1>
+          <p>
+            Más de 20 años acompañando a familias con un entorno seguro, cálido
+            y creativo para que los niños y niñas exploren, aprendan y sueñen en
+            grande.
+          </p>
+        </section>
 
         {/* Misión & Visión */}
         <section className="mision-vision">
-          <div className="mision">
-            <h2>Misión</h2>
+          <div className="mision card">
+            <div className="card-title">
+              <HeartHandshake className="icon" />
+              <h2>Misión</h2>
+            </div>
             <p>
               Nuestra misión es brindar una educación preescolar integral y
               afectuosa a niños y niñas de escasos recursos, fomentando su
@@ -26,8 +39,11 @@ export default function Nosotros() {
               el apoyo que necesita para alcanzar su máximo potencial.
             </p>
           </div>
-          <div className="vision">
-            <h2>Visión</h2>
+          <div className="vision card">
+            <div className="card-title">
+              <Target className="icon" />
+              <h2>Visión</h2>
+            </div>
             <p>
               Ser un referente de educación temprana inclusiva y de calidad en
               Costa Rica, donde cada niño y niña, sin importar su condición
