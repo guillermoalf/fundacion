@@ -93,8 +93,7 @@ const Contactenos = () => {
       };
 
       // Send email using EmailJS
-      // NOTA: Reemplaza 'service_xxxxx' con tu nuevo Service ID de SMTP Server
-      const EMAILJS_SERVICE_ID = 'service_xxxxx';  // ← Pega tu nuevo Service ID aquí
+      const EMAILJS_SERVICE_ID = 'service_uawsvcs';
       const EMAILJS_TEMPLATE_ID = 'template_bmxa59x';
       
       const response = await emailjs.send(
