@@ -1,3 +1,4 @@
+
 import React from "react";
 import Return from "../components/Return";
 import Copy from "../components/Copy";
@@ -75,12 +76,32 @@ export default function Nosotros() {
           </div>
         </section>
         <section className="tiqui">
-          <h1>Conoce nuestra familia</h1>
-          <p className="tiqui-subtitle">
-            Desde hace más de 20 años acompañamos con cariño y dedicación a
-            niños y niñas de nuestra comunidad, ofreciendo un espacio seguro
-            donde pueden jugar, aprender y crecer.
-          </p>
+          <div className="tiqui-content">
+            <div className="tiqui-header">
+              <span className="tiqui-badge">Nuestra Comunidad</span>
+              <h1 className="tiqui-title">Conoce nuestra familia</h1>
+              <div className="tiqui-divider"></div>
+            </div>
+            <p className="tiqui-subtitle">
+              Desde hace más de 20 años acompañamos con cariño y dedicación a
+              niños y niñas de nuestra comunidad, ofreciendo un espacio seguro
+              donde pueden jugar, aprender y crecer.
+            </p>
+            <div className="tiqui-stats">
+              <div className="stat-item">
+                <div className="stat-number">20+</div>
+                <div className="stat-label">Años de experiencia</div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-number">100+</div>
+                <div className="stat-label">Niños atendidos</div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-number">1</div>
+                <div className="stat-label">Gran familia</div>
+              </div>
+            </div>
+          </div>
         </section>
       </div>
 

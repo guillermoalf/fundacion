@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Copy from "../components/Copy";
 import Return from "../components/Return";
 import "../styles/contactenos.scss";
@@ -8,16 +8,152 @@ import { BsFillTelephoneFill } from "react-icons/bs";
 import { MdEmail } from "react-icons/md";
 import { AiFillLike } from "react-icons/ai";
 import Swal from 'sweetalert2';
+import emailjs from '@emailjs/browser';
 
+// Inicializar EmailJS con tu Public Key
+const EMAILJS_PUBLIC_KEY = '7hT5a0Tx6XeaYKkOk';
+emailjs.init(EMAILJS_PUBLIC_KEY);
 
 const Contactenos = () => {
-  const showAlert = () => {
-        Swal.fire({
-          title: 'Hello!',
-          text: 'This is a SweetAlert2 message in React.',
-          icon: 'success',
-        });
+  const [formData, setFormData] = useState({
+    nombre: '',
+    email: '',
+    telefono: '',
+    mensaje: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+
+  // Check if user has already submitted in this session
+  useEffect(() => {
+    const submitted = localStorage.getItem('formSubmitted');
+    if (submitted === 'true') {
+      setHasSubmitted(true);
+    }
+  }, []);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Check if already submitted
+    if (hasSubmitted || localStorage.getItem('formSubmitted') === 'true') {
+      Swal.fire({
+        title: '¡Ya has enviado un mensaje!',
+        text: 'Solo puedes enviar un mensaje por sesión. Nos pondremos en contacto contigo pronto.',
+        icon: 'info',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#ff9800'
+      });
+      return;
+    }
+
+    // Validate form
+    if (!formData.nombre || !formData.email || !formData.mensaje) {
+      Swal.fire({
+        title: 'Campos incompletos',
+        text: 'Por favor completa todos los campos requeridos (Nombre, Email y Mensaje).',
+        icon: 'warning',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#ff9800'
+      });
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      Swal.fire({
+        title: 'Email inválido',
+        text: 'Por favor ingresa un email válido.',
+        icon: 'warning',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#ff9800'
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // EmailJS template parameters
+      const templateParams = {
+        from_name: formData.nombre,
+        from_email: formData.email,
+        phone: formData.telefono || 'No proporcionado',
+        message: formData.mensaje,
+        to_email: 'creciendofelizabc@gmail.com'
       };
+
+      // Send email using EmailJS
+      // NOTA: Reemplaza 'service_xxxxx' con tu nuevo Service ID de SMTP Server
+      const EMAILJS_SERVICE_ID = 'service_xxxxx';  // ← Pega tu nuevo Service ID aquí
+      const EMAILJS_TEMPLATE_ID = 'template_bmxa59x';
+      
+      const response = await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        templateParams
+      );
+
+      if (response.status === 200) {
+        // Mark as submitted in localStorage
+        localStorage.setItem('formSubmitted', 'true');
+        setHasSubmitted(true);
+        
+        // Reset form
+        setFormData({
+          nombre: '',
+          email: '',
+          telefono: '',
+          mensaje: ''
+        });
+
+        Swal.fire({
+          title: '¡Mensaje enviado!',
+          text: 'Gracias por contactarnos. Nos pondremos en contacto contigo pronto.',
+          icon: 'success',
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: '#ff9800'
+        });
+      }
+    } catch (error) {
+      console.error('Error completo:', error);
+      console.error('Error status:', error?.status);
+      console.error('Error text:', error?.text);
+      
+      let errorMessage = 'Hubo un problema al enviar tu mensaje. ';
+      
+      if (error?.status === 400) {
+        errorMessage += 'Por favor verifica que todos los campos estén completos.';
+      } else if (error?.status === 0) {
+        errorMessage += 'Parece que hay un problema de conexión. Verifica tu internet.';
+      } else if (error?.text) {
+        errorMessage += `Error: ${error.text}`;
+      } else {
+        errorMessage += 'Por favor intenta de nuevo más tarde o contáctanos directamente por teléfono.';
+      }
+      
+      Swal.fire({
+        title: 'Error al enviar',
+        text: errorMessage,
+        icon: 'error',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#ff9800',
+        footer: 'Si el problema persiste, puedes contactarnos al 2220 1049'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="contact-container">
       <Return />
@@ -60,16 +196,54 @@ const Contactenos = () => {
         </div>
 
         <div className="contact-form">
-          <form>
-            <label>Nombre:</label>
-            <input type="text" placeholder="Escriba su nombre" />
-            <label>Email:</label>
-            <input type="email" placeholder="Escriba su email" />
+          <form onSubmit={handleSubmit}>
+            <label>Nombre: *</label>
+            <input 
+              type="text" 
+              name="nombre"
+              placeholder="Escriba su nombre" 
+              value={formData.nombre}
+              onChange={handleChange}
+              disabled={hasSubmitted || isSubmitting}
+              required
+            />
+            <label>Email: *</label>
+            <input 
+              type="email" 
+              name="email"
+              placeholder="Escriba su email" 
+              value={formData.email}
+              onChange={handleChange}
+              disabled={hasSubmitted || isSubmitting}
+              required
+            />
             <label>Teléfono:</label>
-            <input type="text" placeholder="Escriba su teléfono" />
-            <label>Tu mensaje:</label>
-            <textarea placeholder="Escriba su consulta aquí..."></textarea>
-            <button onClick={showAlert}>Enviar</button>
+            <input 
+              type="text" 
+              name="telefono"
+              placeholder="Escriba su teléfono (opcional)" 
+              value={formData.telefono}
+              onChange={handleChange}
+              disabled={hasSubmitted || isSubmitting}
+            />
+            <label>Tu mensaje: *</label>
+            <textarea 
+              name="mensaje"
+              placeholder="Escriba su consulta aquí..." 
+              value={formData.mensaje}
+              onChange={handleChange}
+              disabled={hasSubmitted || isSubmitting}
+              required
+            ></textarea>
+            {hasSubmitted ? (
+              <button type="button" disabled className="submitted-btn">
+                Mensaje enviado
+              </button>
+            ) : (
+              <button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Enviando...' : 'Enviar'}
+              </button>
+            )}
           </form>
         </div>
       </div>
