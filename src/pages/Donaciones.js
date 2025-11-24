@@ -57,24 +57,24 @@ export default function Donaciones() {
 
       <div className="cont">
         {/* POR QUÉ DONAR */}
-        <section className="donaciones-why">
-          <span className="section-badge">Tu apoyo marca la diferencia</span>
-          <h2>¿Por qué tu ayuda es crucial?</h2>
+        <section className="donaciones-why" style={{ textAlign: 'center', direction: 'ltr' }}>
+          <span className="section-badge" style={{ textAlign: 'center', display: 'block', margin: '0 auto' }}>Tu apoyo marca la diferencia</span>
+          <h2 style={{ textAlign: 'center', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>¿Por qué tu ayuda es crucial?</h2>
           <div className="why-divider"></div>
-          <p>
+          <p style={{ textAlign: 'center', width: '100%', maxWidth: '100%', boxSizing: 'border-box', wordWrap: 'break-word', overflowWrap: 'break-word', padding: '0', margin: '0 auto 1rem', display: 'block', minWidth: 0 }}>
             Imaginate a final de año todos
             los niños esperan con ilusión recibir regalos, disfrutar de una fiesta
             bonita con comida rica y compartir experiencias que les traigan
             alegría y recuerdos inolvidables. Estas celebraciones y actividades
             especiales quedan fuera de nuestro presupuesto operativo.
           </p>
-          <p>
+          <p style={{ textAlign: 'center', width: '100%', maxWidth: '100%', boxSizing: 'border-box', wordWrap: 'break-word', overflowWrap: 'break-word', padding: '0', margin: '0 auto 1rem', display: 'block', minWidth: 0 }}>
             Hemos enfrentado recortes en el financiamiento y los
             auspicios que recibimos. Esto impacta directamente la vida de nuestros
             niños y niñas. 
           </p>
           
-          <p>
+          <p style={{ textAlign: 'center', width: '100%', maxWidth: '100%', boxSizing: 'border-box', wordWrap: 'break-word', overflowWrap: 'break-word', padding: '0', margin: '0 auto 1rem', display: 'block', minWidth: 0 }}>
             Tu donación 
             permite que estos momentos mágicos sean posibles y que cada niño
             sienta que es especial y merece celebrar, reír y soñar.
@@ -131,6 +131,20 @@ export default function Donaciones() {
             loop={true}
             modules={[Navigation, Pagination]}
             className="donaciones-swiper"
+            breakpoints={{
+              640: {
+                slidesPerView: 1,
+                spaceBetween: 30,
+              },
+              768: {
+                slidesPerView: 1,
+                spaceBetween: 30,
+              },
+              1024: {
+                slidesPerView: 1,
+                spaceBetween: 30,
+              },
+            }}
           >
             {galleryImages.map((img, i) => (
               <SwiperSlide key={i}>
