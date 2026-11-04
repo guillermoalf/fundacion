@@ -31,5 +31,6 @@ yarn-error.log*
 # IDE files
 .vscode/
 .idea/
-# Portal interno (se integra en otro paso; contiene datos reales)
-/_core
+# Datos reales de la fundación: nunca se suben al repo
+src/lib/importacion/__fixtures__/
+/data/
