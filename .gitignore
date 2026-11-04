@@ -27,3 +27,5 @@ yarn-error.log*
 # IDE files
 .vscode/
 .idea/
+# Portal interno (se integra en otro paso; contiene datos reales)
+/_core
