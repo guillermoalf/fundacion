@@ -1,5 +1,7 @@
+"use client";
+
 import React from "react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import "../Footer/footer.scss";
 import kinderLogo from "../../assets/logo-secundario.png";
 import creativeLogo from "../../assets/blanco.png";
@@ -15,8 +17,8 @@ const Footer = () => {
     <footer className="footer">
       <div className="container">
         <div className="left">
-          <Link to="/" onClick={scrollToTop}>
-            <img src={kinderLogo} alt="institucion Logo" />
+          <Link href="/" onClick={scrollToTop}>
+            <img src={kinderLogo.src} alt="institucion Logo" />
           </Link>
         </div>
         <div className="right">
@@ -24,7 +26,7 @@ const Footer = () => {
             <a href="https://wa.me/+50670785225">
               <FaWhatsapp className="icon" />
             </a>
-            <a href="./Contactenos">
+            <a href="/contactenos">
               <FaLocationDot className="icon" />
             </a>
           </div>
@@ -48,7 +50,7 @@ const Footer = () => {
             </p>
             <div className="company-logo">
               <img
-                src={creativeLogo}
+                src={creativeLogo.src}
                 alt="Creative Logo"
                 className="creative-logo"
               />

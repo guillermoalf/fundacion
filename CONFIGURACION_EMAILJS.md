@@ -82,28 +82,18 @@ Por favor responde directamente a: {{from_email}}
 
 ## 💻 PASO 5: Actualizar el Código
 
-1. **Abre el archivo:** `src/pages/Contactenos.js`
-2. **Busca las líneas 94-96** (donde dice `YOUR_SERVICE_ID`, etc.)
-3. **Reemplaza** los valores con los que copiaste:
+Las claves ya no van en el código: se leen de variables de entorno.
 
-```javascript
-const EMAILJS_SERVICE_ID = 'service_abc123xyz';     // ← Tu Service ID aquí
-const EMAILJS_TEMPLATE_ID = 'template_xyz789abc';   // ← Tu Template ID aquí
-const EMAILJS_PUBLIC_KEY = 'abcdefghijklmnop123456'; // ← Tu Public Key aquí
+1. **Copia** `.env.example` a `.env.local` (este archivo no se sube a Git)
+2. **Llena** los valores con los que copiaste:
+
+```bash
+NEXT_PUBLIC_EMAILJS_PUBLIC_KEY=abcdefghijklmnop123456  # ← Tu Public Key
+NEXT_PUBLIC_EMAILJS_SERVICE_ID=service_abc123xyz       # ← Tu Service ID
+NEXT_PUBLIC_EMAILJS_TEMPLATE_ID=template_xyz789abc     # ← Tu Template ID
 ```
 
-### Ejemplo completo:
-```javascript
-// Si tu Service ID es: service_gmail123
-// Si tu Template ID es: template_contacto456
-// Si tu Public Key es: abc123xyz789
-
-const EMAILJS_SERVICE_ID = 'service_gmail123';
-const EMAILJS_TEMPLATE_ID = 'template_contacto456';
-const EMAILJS_PUBLIC_KEY = 'abc123xyz789';
-```
-
-4. **Guarda el archivo**
+3. **En producción**, crea las mismas tres variables en Vercel (Settings → Environment Variables) para Production y Preview, y vuelve a desplegar: los valores se incluyen al momento del build.
 
 ---
 
@@ -111,7 +101,7 @@ const EMAILJS_PUBLIC_KEY = 'abc123xyz789';
 
 1. **Inicia el servidor** (si no está corriendo):
    ```bash
-   npm start
+   npm run dev
    ```
 
 2. **Ve a la página de contacto** en tu navegador

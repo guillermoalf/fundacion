@@ -3,8 +3,12 @@
 /.pnp
 .pnp.js
 
-# Build output
-/build
+# Next.js
+/.next/
+/out/
+next-env.d.ts
+*.tsbuildinfo
+.vercel
 
 # Logs
 npm-debug.log*

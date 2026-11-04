@@ -1,18 +1,22 @@
+"use client";
+
 import React, { useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import "./navbar.scss";
 import logo from "../../assets/logo-abc.png";
 
 const links = [
   { to: "/", label: "Inicio" },
-  { to: "/Nosotros", label: "Nosotros" },
-  { to: "/Servicios", label: "Servicios" },
-  { to: "/Donaciones", label: "Donaciones" },
-  { to: "/Admisiones", label: "Admisiones" },
+  { to: "/nosotros", label: "Nosotros" },
+  { to: "/servicios", label: "Servicios" },
+  { to: "/donaciones", label: "Donaciones" },
+  { to: "/admisiones", label: "Admisiones" },
 ];
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -24,35 +28,30 @@ const Navbar = () => {
     <header className="navbar">
       <div className="navbar__container">
         <div className="navbar__logo">
-          <Link to="/" onClick={closeMenu}>
-            <img src={logo} alt="Fundación Creciendo Feliz" />
+          <Link href="/" onClick={closeMenu}>
+            <img src={logo.src} alt="Fundación Creciendo Feliz" />
           </Link>
         </div>
         <nav
           className={`navbar__links ${isMenuOpen ? "navbar__links--open" : ""}`}
         >
           {links.map(({ to, label }) => (
-            <NavLink
+            <Link
               key={to}
-              to={to}
-              end
+              href={to}
               onClick={closeMenu}
-              className={({ isActive }) =>
-                `navbar__link ${isActive ? "navbar__link--active" : ""}`
-              }
+              className={`navbar__link ${pathname === to ? "navbar__link--active" : ""}`}
             >
               {label}
-            </NavLink>
+            </Link>
           ))}
-          <NavLink
-            to="/Contactenos"
+          <Link
+            href="/contactenos"
             onClick={closeMenu}
-            className={({ isActive }) =>
-              `navbar__button ${isActive ? "navbar__button--active" : ""}`
-            }
+            className={`navbar__button ${pathname === "/contactenos" ? "navbar__button--active" : ""}`}
           >
             Contáctenos
-          </NavLink>
+          </Link>
         </nav>
         <div className="navbar__menu-icon" onClick={toggleMenu}>
           {isMenuOpen ? (

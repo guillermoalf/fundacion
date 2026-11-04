@@ -13,7 +13,7 @@ const ServiceCard = ({ image, title, text, isImageRight }) => {
       className={`${styles.serviceCard} ${isImageRight ? styles.reverse : ""}`}
     >
       <div className={styles.imageContainer}>
-        <img src={image} alt="Service Illustration" />
+        <img src={image.src} alt="Service Illustration" />
       </div>
       <div className={styles.textContainer}>
         <h3 className={styles.serviceTitle}>{title}</h3>

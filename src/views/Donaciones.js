@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import Navbar from "../components/Navbar/Navbar";
 import Copy from "../components/Copy";
@@ -27,25 +29,25 @@ import logoIMAS from "../assets/Logo-IMAS.png";
 export default function Donaciones() {
   const galleryImages = [
     {
-      src: imgCine,
+      src: imgCine.src,
       caption: "Disfrutamos muchisimo viendo los Minions gracias a CCM Cinemas",
     },
     {
-      src: imgTrampolines,
+      src: imgTrampolines.src,
       caption: "Nos divertimos con los trampolines y saltamos un montón",
     },
     {
-      src: imgPolicia,
+      src: imgPolicia.src,
       caption:
         "Aprendimos los labores de la Policia y su importancia para nuestra sociedad",
     },
     {
-      src: imgEnfermeros,
+      src: imgEnfermeros.src,
       caption:
         "Entendimos el cuidado de la salud gracias a la visita de los enfermeros",
     },
     {
-      src: imgTransito,
+      src: imgTransito.src,
       caption:
         "Nos enseñaron sobre las señales de tránsito y cómo mantenernos seguros en las calles",
     },
@@ -165,22 +167,22 @@ export default function Donaciones() {
           </p>
           <div className="logos-grid">
             <div className="logo-item">
-              <img src={logoKFC} alt="KFC" />
+              <img src={logoKFC.src} alt="KFC" />
             </div>
             <div className="logo-item">
-              <img src={logoMuseo} alt="Museo" />
+              <img src={logoMuseo.src} alt="Museo" />
             </div>
             <div className="logo-item">
-              <img src={logoCCM} alt="CCM" />
+              <img src={logoCCM.src} alt="CCM" />
             </div>
             <div className="logo-item">
-              <img src={logoJPS} alt="jps" />
+              <img src={logoJPS.src} alt="jps" />
             </div>
             <div className="logo-item">
-              <img src={logoPANI} alt="pani" />
+              <img src={logoPANI.src} alt="pani" />
             </div>
             <div className="logo-item">
-              <img src={logoIMAS} alt="imas" />
+              <img src={logoIMAS.src} alt="imas" />
             </div>
           </div>
         </section>
@@ -192,7 +194,7 @@ export default function Donaciones() {
           <span className="section-badge">Voces de nuestra comunidad</span>
           <h2>Testimonios</h2>
           <blockquote>
-            "Gracias al transporte donado, y las entradas para el cine, mi hijo disfrutó su primera película con palomitas acompañado de sus amigos."
+            &quot;Gracias al transporte donado, y las entradas para el cine, mi hijo disfrutó su primera película con palomitas acompañado de sus amigos.&quot;
             <span className="author">— Familia González</span>
           </blockquote>
         </section>

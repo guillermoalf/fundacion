@@ -1,5 +1,7 @@
+"use client";
+
 import React from "react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import Copy from "../components/Copy";
 import Navbar from "../components/Navbar/Navbar";
 import "../styles/servicios.scss";
@@ -50,13 +52,13 @@ const Servicios = () => {
                 <span>Ambiente seguro y cálido</span>
               </div>
             </div>
-            <Link to="/Contactenos">
+            <Link href="/contactenos">
               <button className="servicios-button">Contáctanos</button>
             </Link>
           </div>
           <div className="fun-image">
             <div className="image-wrapper">
-              <img src={imagehero} alt="Niños disfrutando actividades" />
+              <img src={imagehero.src} alt="Niños disfrutando actividades" />
             </div>
           </div>
         </div>
@@ -84,32 +86,32 @@ const Servicios = () => {
           >
             <SwiperSlide>
               <div className="slide-wrapper">
-                <img src={img1} alt="Niños jugando" className="swipe-image" />
+                <img src={img1.src} alt="Niños jugando" className="swipe-image" />
               </div>
             </SwiperSlide>
             <SwiperSlide>
               <div className="slide-wrapper">
-                <img src={img2} alt="Clase de arte" className="swipe-image" />
+                <img src={img2.src} alt="Clase de arte" className="swipe-image" />
               </div>
             </SwiperSlide>
             <SwiperSlide>
               <div className="slide-wrapper">
-                <img src={img3} alt="Actividad educativa" className="swipe-image" />
+                <img src={img3.src} alt="Actividad educativa" className="swipe-image" />
               </div>
             </SwiperSlide>
             <SwiperSlide>
               <div className="slide-wrapper">
-                <img src={img5} alt="Actividad educativa" className="swipe-image" />
+                <img src={img5.src} alt="Actividad educativa" className="swipe-image" />
               </div>
             </SwiperSlide>
             <SwiperSlide>
               <div className="slide-wrapper">
-                <img src={img6} alt="Actividad educativa" className="swipe-image" />
+                <img src={img6.src} alt="Actividad educativa" className="swipe-image" />
               </div>
             </SwiperSlide>
             <SwiperSlide>
               <div className="slide-wrapper">
-                <img src={img7} alt="Actividad educativa" className="swipe-image" />
+                <img src={img7.src} alt="Actividad educativa" className="swipe-image" />
               </div>
             </SwiperSlide>
           </Swiper>

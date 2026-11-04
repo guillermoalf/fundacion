@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import Copy from "../components/Copy";
 import Navbar from "../components/Navbar/Navbar";
@@ -10,8 +12,8 @@ import { AiFillLike } from "react-icons/ai";
 import Swal from 'sweetalert2';
 import emailjs from '@emailjs/browser';
 
-// Inicializar EmailJS con tu Public Key
-const EMAILJS_PUBLIC_KEY = '7hT5a0Tx6XeaYKkOk';
+// Inicializar EmailJS con tu Public Key (variables definidas en .env.local / Vercel)
+const EMAILJS_PUBLIC_KEY = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
 emailjs.init(EMAILJS_PUBLIC_KEY);
 
 const Contactenos = () => {
@@ -93,8 +95,8 @@ const Contactenos = () => {
       };
 
       // Send email using EmailJS
-      const EMAILJS_SERVICE_ID = 'service_uawsvcs';
-      const EMAILJS_TEMPLATE_ID = 'template_bmxa59x';
+      const EMAILJS_SERVICE_ID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
+      const EMAILJS_TEMPLATE_ID = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
       
       const response = await emailjs.send(
         EMAILJS_SERVICE_ID,
@@ -160,7 +162,7 @@ const Contactenos = () => {
       <div className="contact-content">
         <div className="contact-info">
           <div className="image-container">
-            <img className="image-contact" src={pic} alt="Contact" />
+            <img className="image-contact" src={pic.src} alt="Contact" />
           </div>
           <div className="info-grid">
             <div className="info-item">

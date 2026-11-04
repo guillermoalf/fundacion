@@ -60,7 +60,7 @@ export default function Nosotros() {
         <section className="equipo">
           <div className="equipo-content">
             <img
-              src={teamPhoto}
+              src={teamPhoto.src}
               alt="Equipo de docentes"
               className="equipo-photo"
             />
