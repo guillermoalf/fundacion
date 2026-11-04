@@ -1,9 +1,9 @@
 import React from "react";
-import Return from "../components/Return";
+import Navbar from "../components/Navbar/Navbar";
 import Copy from "../components/Copy";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
-import { Gift, Truck, ShoppingBag, Film, Museum, Users } from "lucide-react";
+import { Gift, Truck, ShoppingBag, Users } from "lucide-react";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -53,7 +53,7 @@ export default function Donaciones() {
 
   return (
     <div className="donaciones-page">
-      <Return />
+      <Navbar />
 
       <div className="cont">
         {/* POR QUÉ DONAR */}

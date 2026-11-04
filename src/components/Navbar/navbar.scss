@@ -86,13 +86,18 @@
       }
 
       &:hover,
-      &:focus {
+      &:focus,
+      &.navbar__link--active {
         color: #3a9dff;
         &::after {
           width: 100%;
           left: 0;
           transform: none;
         }
+      }
+
+      &.navbar__link--active {
+        font-weight: 700;
       }
 
       @media (max-width: 1080px) {
@@ -156,7 +161,8 @@
     }
 
     &:hover,
-    &:focus {
+    &:focus,
+    &--active {
       background: #3a9dff;
       color: #fff;
     }

@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import Copy from "../components/Copy";
-import Return from "../components/Return";
+import Navbar from "../components/Navbar/Navbar";
 import "../styles/servicios.scss";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
@@ -21,7 +21,7 @@ import img7 from "../assets/slider/6.JPG";
 const Servicios = () => {
   return (
     <div className="servicios-page">
-      <Return />
+      <Navbar />
 
       <div className="cont">
         <div className="Servicios">

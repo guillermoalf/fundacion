@@ -1,6 +1,6 @@
 
 import React from "react";
-import Return from "../components/Return";
+import Navbar from "../components/Navbar/Navbar";
 import Copy from "../components/Copy";
 import teamPhoto from "../assets/grupal3.JPG";
 import "../styles/nosotros.scss";
@@ -9,7 +9,7 @@ import { Target, HeartHandshake } from "lucide-react";
 export default function Nosotros() {
   return (
     <div className="nosotros-page">
-      <Return />
+      <Navbar />
 
       {/* Contenedor central con gutter uniforme */}
       <div className="cont">

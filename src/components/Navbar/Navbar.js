@@ -1,7 +1,15 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import "./navbar.scss";
 import logo from "../../assets/logo-abc.png";
+
+const links = [
+  { to: "/", label: "Inicio" },
+  { to: "/Nosotros", label: "Nosotros" },
+  { to: "/Servicios", label: "Servicios" },
+  { to: "/Donaciones", label: "Donaciones" },
+  { to: "/Admisiones", label: "Admisiones" },
+];
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -10,35 +18,41 @@ const Navbar = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  const closeMenu = () => setIsMenuOpen(false);
+
   return (
     <header className="navbar">
       <div className="navbar__container">
         <div className="navbar__logo">
-          <Link to="/">
+          <Link to="/" onClick={closeMenu}>
             <img src={logo} alt="Fundación Creciendo Feliz" />
           </Link>
         </div>
         <nav
           className={`navbar__links ${isMenuOpen ? "navbar__links--open" : ""}`}
         >
-          <Link to="/" className="navbar__link">
-            Inicio
-          </Link>
-          <Link to="/Nosotros" className="navbar__link">
-            Nosotros
-          </Link>
-          <Link to="/Servicios" className="navbar__link">
-            Servicios
-          </Link>
-          <Link to="/Donaciones" className="navbar__link">
-            Donaciones
-          </Link>
-          <Link to="/Admisiones" className="navbar__link">
-            Admisiones
-          </Link>
-          <Link to="/Contactenos" className="navbar__button">
+          {links.map(({ to, label }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end
+              onClick={closeMenu}
+              className={({ isActive }) =>
+                `navbar__link ${isActive ? "navbar__link--active" : ""}`
+              }
+            >
+              {label}
+            </NavLink>
+          ))}
+          <NavLink
+            to="/Contactenos"
+            onClick={closeMenu}
+            className={({ isActive }) =>
+              `navbar__button ${isActive ? "navbar__button--active" : ""}`
+            }
+          >
             Contáctenos
-          </Link>
+          </NavLink>
         </nav>
         <div className="navbar__menu-icon" onClick={toggleMenu}>
           {isMenuOpen ? (

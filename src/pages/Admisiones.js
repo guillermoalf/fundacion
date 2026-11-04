@@ -1,6 +1,6 @@
 import React from "react";
 import Copy from "../components/Copy";
-import Return from "../components/Return";
+import Navbar from "../components/Navbar/Navbar";
 import StepsIMAS from "../components/StepsIMAS";
 import StepsPANI from "../components/StepsPANI";
 import "../styles/admisiones.scss";
@@ -8,7 +8,7 @@ import "../styles/admisiones.scss";
 const Admisiones = () => {
   return (
     <div>
-      <Return />
+      <Navbar />
       <StepsIMAS />
       <StepsPANI />
       <Copy />

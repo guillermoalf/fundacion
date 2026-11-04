@@ -4,8 +4,6 @@ import "../Footer/footer.scss";
 import kinderLogo from "../../assets/logo-secundario.png";
 import creativeLogo from "../../assets/blanco.png";
 import { FaWhatsapp } from "react-icons/fa";
-import { FaInstagram } from "react-icons/fa";
-import { FaTiktok } from "react-icons/fa";
 import { FaLocationDot } from "react-icons/fa6";
 
 const Footer = () => {
@@ -26,10 +24,6 @@ const Footer = () => {
             <a href="https://wa.me/+50670785225">
               <FaWhatsapp className="icon" />
             </a>
-            <a href="">
-              <FaInstagram className="icon" />
-            </a>
-
             <a href="./Contactenos">
               <FaLocationDot className="icon" />
             </a>

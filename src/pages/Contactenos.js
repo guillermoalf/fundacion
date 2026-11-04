@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Copy from "../components/Copy";
-import Return from "../components/Return";
+import Navbar from "../components/Navbar/Navbar";
 import "../styles/contactenos.scss";
 import pic from "../assets/contact-1.png";
 import { FaLocationDot } from "react-icons/fa6";
@@ -155,7 +155,7 @@ const Contactenos = () => {
 
   return (
     <div className="contact-container">
-      <Return />
+      <Navbar />
 
       <div className="contact-content">
         <div className="contact-info">

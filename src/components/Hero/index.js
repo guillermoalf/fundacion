@@ -21,7 +21,7 @@ const Hero = () => {
           </p>
           <button
             className="hero-button"
-            onClick={() => (window.location.href = "/Admisiones")}
+            onClick={() => navigate("/Admisiones")}
           >
             Más información
           </button>
