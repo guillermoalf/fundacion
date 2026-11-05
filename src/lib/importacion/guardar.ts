@@ -26,54 +26,57 @@ export function tipoUbicacion(n: string) {
 /** Cliente mínimo (compatible con @supabase/supabase-js) para no acoplar este módulo a una versión. */
 interface ClienteDB {
   from(tabla: string): any;
+  rpc(funcion: string, args: Record<string, unknown>): any;
 }
 
+/** El archivo ya se había importado (la base lo detecta por `fila_origen`). Se puede reintentar con `forzar`. */
+export class ImportacionDuplicadaError extends Error {}
+
+/**
+ * Todo se guarda en una sola transacción (función `guardar_importacion_activos`): si una fila falla
+ * no queda nada a medias. Aquí solo se arma el envío: qué ubicaciones faltan y a cuál va cada activo.
+ */
 export async function guardarImportacion(
   db: ClienteDB,
   filas: FilaImportada[],
-  opts: { fuenteCodigo: string; archivo: string; categoriaIdPorNombre: Map<string, number> },
-) {
-  const { data: fuente, error: e1 } = await db.from("fuentes_financiamiento").select("id").eq("codigo", opts.fuenteCodigo).single();
+  opts: { fuenteCodigo: string; archivo: string; categoriaIdPorNombre: Map<string, number>; forzar?: boolean },
+): Promise<{ activos: number; ubicacionesCreadas: string[] }> {
+  const { data: ubic, error: e1 } = await db.from("ubicaciones").select("id, nombre");
   if (e1) throw e1;
+  // Una ubicación existente se reconoce aunque cambien tildes o mayúsculas, y se usa su nombre tal como está guardado
+  const existentes = new Map<string, string>((ubic as { nombre: string }[]).map((u) => [sinTildes(u.nombre), u.nombre]));
+  const nombreFinal = (u: string | null) => {
+    const n = nombreUbicacion(u ?? "Sin ubicación");
+    return existentes.get(sinTildes(n)) ?? n;
+  };
 
-  const { data: ubic, error: e2 } = await db.from("ubicaciones").select("id, nombre");
-  if (e2) throw e2;
-  const porNombre = new Map<string, number>((ubic as { id: number; nombre: string }[]).map((u) => [sinTildes(u.nombre), u.id]));
+  const faltantes = [...new Set(filas.map((f) => nombreFinal(f.ubicacion)))].filter((n) => !existentes.has(sinTildes(n)));
 
-  const faltantes = [...new Set(filas.map((f) => f.ubicacion).filter((u): u is string => !!u).map(nombreUbicacion))]
-    .filter((n) => !porNombre.has(sinTildes(n)));
-  if (faltantes.length) {
-    const { data, error } = await db.from("ubicaciones").insert(faltantes.map((nombre) => ({ nombre, tipo: tipoUbicacion(nombre) }))).select("id, nombre");
-    if (error) throw error;
-    for (const u of data as { id: number; nombre: string }[]) porNombre.set(sinTildes(u.nombre), u.id);
-  }
-  const sinUbicacion = porNombre.get(sinTildes("Sin ubicación"));
-
-  const registros = filas.map((f) => ({
+  const activos = filas.map((f) => ({
     placa: f.placa,
     tipo_bien: f.tipoBien,
     marca: f.marca,
     modelo: f.modelo,
     serie: f.serie,
     categoria_id: f.categoria ? opts.categoriaIdPorNombre.get(f.categoria.nombre) ?? null : null,
-    ubicacion_id: f.ubicacion ? porNombre.get(sinTildes(nombreUbicacion(f.ubicacion))) : sinUbicacion,
-    fuente_id: fuente.id,
+    ubicacion: nombreFinal(f.ubicacion),
     fecha_adquisicion: f.fechaAdquisicion,
     costo: f.costo,
     unidades_compra: f.unidadesCompra,
-    origen: "importacion",
     fila_origen: `${opts.archivo} · fila ${f.filaOrigen}`,
     notas: f.pendientes.length ? f.pendientes.join(" | ") : null,
   }));
-  if (registros.some((r) => r.ubicacion_id === undefined)) throw new Error('Hay filas sin ubicación: cree la ubicación "Sin ubicación" o asigne una');
 
-  const { data: activos, error: e3 } = await db.from("activos").insert(registros).select("id, ubicacion_id");
-  if (e3) throw e3;
-  const { error: e4 } = await db.from("activo_movimientos").insert(
-    (activos as { id: string; ubicacion_id: number }[]).map((a) => ({
-      activo_id: a.id, tipo: "alta", ubicacion_destino_id: a.ubicacion_id, motivo: `Migración desde Excel: ${opts.archivo}`,
-    })),
-  );
-  if (e4) throw e4;
-  return { activos: activos.length, ubicacionesCreadas: faltantes };
+  const { data, error } = await db.rpc("guardar_importacion_activos", {
+    p_fuente: opts.fuenteCodigo,
+    p_archivo: opts.archivo,
+    p_ubicaciones_nuevas: faltantes.map((nombre) => ({ nombre, tipo: tipoUbicacion(nombre) })),
+    p_activos: activos,
+    p_forzar: opts.forzar ?? false,
+  });
+  if (error) {
+    if (error.code === "CF001") throw new ImportacionDuplicadaError(error.message);
+    throw error;
+  }
+  return data as { activos: number; ubicacionesCreadas: string[] };
 }

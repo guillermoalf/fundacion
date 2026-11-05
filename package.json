@@ -26,7 +26,7 @@
     "lint": "eslint .",
     "test": "vitest run",
     "crear-admin": "node scripts/crear-admin.mts",
-    "db:tipos": "supabase gen types typescript --local > src/lib/supabase/tipos.ts"
+    "db:tipos": "supabase gen types typescript > src/lib/supabase/tipos.ts"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.7",

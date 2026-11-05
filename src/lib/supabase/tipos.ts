@@ -584,6 +584,9 @@ isOneToOne: false
 "es_admin":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
+"guardar_importacion_activos":
+{ Args: { "p_activos": Json,"p_archivo": string,"p_forzar"?: boolean,"p_fuente": string,"p_ubicaciones_nuevas": Json }; Returns: Json
+                           },
 "meses_depreciados":
 { Args: { "p_adq": string,"p_corte": string }; Returns: number
                            },
