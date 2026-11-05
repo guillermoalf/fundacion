@@ -26,7 +26,10 @@ export interface ResultadoDepreciacion {
   totalmenteDepreciado: boolean;
 }
 
-const r2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
+// Redondeo a céntimos igual que numeric de Postgres (mitad hacia arriba). Se pasa por 15 dígitos
+// significativos para quitar el error binario: 88193.715 se guarda como 88193.71499999… y sin
+// esto redondearía a .71, mientras la base (depreciacion_acumulada) da .72.
+const r2 = (n: number) => Math.round(Number((n * 100).toPrecision(15))) / 100;
 
 /** Interpreta "YYYY-MM-DD" como fecha local (evita el corrimiento de zona horaria de `new Date(string)`). */
 export function aFecha(f: Date | string): Date {
