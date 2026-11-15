@@ -1,11 +1,11 @@
+"use client";
+
 import React from "react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import "../Footer/footer.scss";
 import kinderLogo from "../../assets/logo-secundario.png";
 import creativeLogo from "../../assets/blanco.png";
 import { FaWhatsapp } from "react-icons/fa";
-import { FaInstagram } from "react-icons/fa";
-import { FaTiktok } from "react-icons/fa";
 import { FaLocationDot } from "react-icons/fa6";
 
 const Footer = () => {
@@ -17,8 +17,8 @@ const Footer = () => {
     <footer className="footer">
       <div className="container">
         <div className="left">
-          <Link to="/" onClick={scrollToTop}>
-            <img src={kinderLogo} alt="institucion Logo" />
+          <Link href="/" onClick={scrollToTop}>
+            <img src={kinderLogo.src} alt="institucion Logo" />
           </Link>
         </div>
         <div className="right">
@@ -26,21 +26,17 @@ const Footer = () => {
             <a href="https://wa.me/+50670785225">
               <FaWhatsapp className="icon" />
             </a>
-            <a href="">
-              <FaInstagram className="icon" />
-            </a>
-
-            <a href="./Contactenos">
+            <a href="/contactenos">
               <FaLocationDot className="icon" />
             </a>
           </div>
           <div className="footer-info">
             <p>
-              Teléfono: <a href="tel:+50612345678">+506 7078 5225</a>
+              Teléfono: <a href="tel:+50670785225">+506 7078 5225</a>
             </p>
             <p>
               Email:{" "}
-              <a href="mailto:info@institucion.com">creciendofelizabc@gmail.com</a>
+              <a href="mailto:creciendofelizabc@gmail.com">creciendofelizabc@gmail.com</a>
             </p>
           </div>
 
@@ -54,7 +50,7 @@ const Footer = () => {
             </p>
             <div className="company-logo">
               <img
-                src={creativeLogo}
+                src={creativeLogo.src}
                 alt="Creative Logo"
                 className="creative-logo"
               />

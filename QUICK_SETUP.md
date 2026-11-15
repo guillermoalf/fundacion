@@ -38,24 +38,19 @@
    - Account → General → Public Key
    - **Copia la Public Key**
 
-5. **Actualiza código:**
-   - Abre `src/pages/Contactenos.js`
-   - Líneas 99-101: Reemplaza `YOUR_SERVICE_ID`, `YOUR_TEMPLATE_ID`, `YOUR_PUBLIC_KEY`
+5. **Configura las variables:**
+   - Copia `.env.example` a `.env.local` y llena los tres valores
+   - En Vercel, crea las mismas variables (Production y Preview) y vuelve a desplegar
 
 ---
 
 ## ✅ Ejemplo de cómo se ve:
 
-```javascript
-// ANTES:
-const EMAILJS_SERVICE_ID = 'YOUR_SERVICE_ID';
-const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
-const EMAILJS_PUBLIC_KEY = 'YOUR_PUBLIC_KEY';
-
-// DESPUÉS (con tus valores reales):
-const EMAILJS_SERVICE_ID = 'service_gmail123';
-const EMAILJS_TEMPLATE_ID = 'template_contacto456';
-const EMAILJS_PUBLIC_KEY = 'abc123xyz789';
+```bash
+# .env.local (y las mismas variables en Vercel → Settings → Environment Variables)
+NEXT_PUBLIC_EMAILJS_PUBLIC_KEY=abc123xyz789
+NEXT_PUBLIC_EMAILJS_SERVICE_ID=service_gmail123
+NEXT_PUBLIC_EMAILJS_TEMPLATE_ID=template_contacto456
 ```
 
 ---

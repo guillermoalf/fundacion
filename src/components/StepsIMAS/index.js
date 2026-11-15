@@ -33,7 +33,7 @@ export default function StepsIMAS() {
       <div className="intro-section">
         <div className="intro-image-wrapper">
           <img
-            src={introImage}
+            src={introImage.src}
             alt="Niños relajados viendo el proceso"
             className="intro-image"
           />

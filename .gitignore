@@ -3,8 +3,12 @@
 /.pnp
 .pnp.js
 
-# Build output
-/build
+# Next.js
+/.next/
+/out/
+next-env.d.ts
+*.tsbuildinfo
+.vercel
 
 # Logs
 npm-debug.log*
@@ -27,3 +31,6 @@ yarn-error.log*
 # IDE files
 .vscode/
 .idea/
+# Datos reales de la fundación: nunca se suben al repo
+src/lib/importacion/__fixtures__/
+/data/

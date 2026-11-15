@@ -1,9 +1,11 @@
+"use client";
+
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import "../Hero/hero.scss";
 import logo from "../../assets/kids-hero.png";
 const Hero = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   return (
     <section className="hero">
       <div className="hero__container">
@@ -21,7 +23,7 @@ const Hero = () => {
           </p>
           <button
             className="hero-button"
-            onClick={() => (window.location.href = "/Admisiones")}
+            onClick={() => router.push("/admisiones")}
           >
             Más información
           </button>
@@ -29,7 +31,7 @@ const Hero = () => {
 
         {/* Right  Section */}
         <div className="hero-image">
-          <img src={logo} alt="Decorative Hero Graphic" />
+          <img src={logo.src} alt="Decorative Hero Graphic" />
         </div>
       </div>
     </section>

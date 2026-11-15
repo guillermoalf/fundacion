@@ -43,21 +43,15 @@ Este mensaje fue enviado desde el sitio web de la Fundación Creciendo Feliz.
 1. Ve a "Account" en el dashboard
 2. En "General", encontrarás tu **Public Key** (también llamada API Key)
 
-### 5. Actualizar el código
-1. Abre `src/pages/Contactenos.js`
-2. En la línea 94-98, reemplaza:
-   - `'YOUR_SERVICE_ID'` con tu Service ID
-   - `'YOUR_TEMPLATE_ID'` con tu Template ID
-   - `'YOUR_PUBLIC_KEY'` con tu Public Key
+### 5. Configurar las variables de entorno
+1. Copia `.env.example` a `.env.local`
+2. Llena los valores:
 
-### Ejemplo:
-```javascript
-const response = await emailjs.send(
-  'service_abc123',      // Tu Service ID
-  'template_xyz789',     // Tu Template ID
-  templateParams,
-  'abcdefghijklmnop'    // Tu Public Key
-);
+```bash
+# .env.local (y las mismas variables en Vercel → Settings → Environment Variables)
+NEXT_PUBLIC_EMAILJS_PUBLIC_KEY=abc123xyz789
+NEXT_PUBLIC_EMAILJS_SERVICE_ID=service_gmail123
+NEXT_PUBLIC_EMAILJS_TEMPLATE_ID=template_contacto456
 ```
 
 ### Notas importantes:

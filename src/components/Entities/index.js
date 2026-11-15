@@ -8,9 +8,9 @@ const Entities = () => {
     <section className="collaboration-section">
       <div className="content-container">
         <div className="logos">
-          <img src={imas} alt="Logo IMAS" className="logo imas" />
-          <img src={pani} alt="Logo PANI" className="logo" />
-          <img src={jps} alt="Logo JPS" className="logo" />
+          <img src={imas.src} alt="Logo IMAS" className="logo imas" />
+          <img src={pani.src} alt="Logo PANI" className="logo" />
+          <img src={jps.src} alt="Logo JPS" className="logo" />
         </div>
 
         <div className="text">

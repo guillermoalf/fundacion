@@ -3,7 +3,6 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import {
-  ArrowDown,
   CreditCard,
   Users,
   CheckCircle,

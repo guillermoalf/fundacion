@@ -1,42 +1,55 @@
+"use client";
+
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import "./navbar.scss";
 import logo from "../../assets/logo-abc.png";
 
+const links = [
+  { to: "/", label: "Inicio" },
+  { to: "/nosotros", label: "Nosotros" },
+  { to: "/servicios", label: "Servicios" },
+  { to: "/donaciones", label: "Donaciones" },
+  { to: "/admisiones", label: "Admisiones" },
+];
+
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  const closeMenu = () => setIsMenuOpen(false);
+
   return (
     <header className="navbar">
       <div className="navbar__container">
         <div className="navbar__logo">
-          <Link to="/">
-            <img src={logo} alt="Fundación Creciendo Feliz" />
+          <Link href="/" onClick={closeMenu}>
+            <img src={logo.src} alt="Fundación Creciendo Feliz" />
           </Link>
         </div>
         <nav
           className={`navbar__links ${isMenuOpen ? "navbar__links--open" : ""}`}
         >
-          <Link to="/" className="navbar__link">
-            Inicio
-          </Link>
-          <Link to="/Nosotros" className="navbar__link">
-            Nosotros
-          </Link>
-          <Link to="/Servicios" className="navbar__link">
-            Servicios
-          </Link>
-          <Link to="/Donaciones" className="navbar__link">
-            Donaciones
-          </Link>
-          <Link to="/Admisiones" className="navbar__link">
-            Admisiones
-          </Link>
-          <Link to="/Contactenos" className="navbar__button">
+          {links.map(({ to, label }) => (
+            <Link
+              key={to}
+              href={to}
+              onClick={closeMenu}
+              className={`navbar__link ${pathname === to ? "navbar__link--active" : ""}`}
+            >
+              {label}
+            </Link>
+          ))}
+          <Link
+            href="/contactenos"
+            onClick={closeMenu}
+            className={`navbar__button ${pathname === "/contactenos" ? "navbar__button--active" : ""}`}
+          >
             Contáctenos
           </Link>
         </nav>
