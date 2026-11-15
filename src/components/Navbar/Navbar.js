@@ -46,6 +46,13 @@ const Navbar = () => {
             </Link>
           ))}
           <Link
+            href="/portal/login"
+            onClick={closeMenu}
+            className="navbar__link"
+          >
+            Ingresar
+          </Link>
+          <Link
             href="/contactenos"
             onClick={closeMenu}
             className={`navbar__button ${pathname === "/contactenos" ? "navbar__button--active" : ""}`}
