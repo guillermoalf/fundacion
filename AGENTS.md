@@ -55,9 +55,12 @@ Ojo: <only if there's a problem, risk or important decision; otherwise leave thi
 
 - **The repo is PUBLIC** (github.com/guillermoalf/fundacion). Never commit `.env*`, keys, `src/lib/importacion/__fixtures__/`, `data/`, or any real data (names, cédulas, salaries, the foundation's Excels). Check `git status` before every commit.
 - **Never `git add -A` or `git add .`**: add files by name.
-- One branch per task: `portal/<feature>` or `sitio/<change>`. Short commits in Spanish, imperative ("agrega importador de activos").
-- **Until launch** (see Launch below), every new branch starts from the latest finished branch (today `portal/auth`), and nothing goes into `main`.
-- **`main` deploys to production** (Vercel, fundacioncreciendofeliz.com). Never merge or push to `main` without Guillermo's explicit "merge" / "suban a producción". You may merge one feature branch into its base once the definition of done passes.
+- **Branch flow (always, without being reminded):**
+  - `staging` is the reference branch and always the newest code. **Every new task starts from an up-to-date `staging`** (`git checkout staging && git pull` → `git checkout -b <prefix>/<name>`). Never branch from `main` or from another feature branch.
+  - One branch per task: `portal/<feature>`, `sitio/<change>` or `docs/<change>`. Short commits in Spanish, imperative ("agrega importador de activos").
+  - When the task is finished and the definition of done passes: push the branch, then merge it into `staging` (`--no-ff`) and push `staging`. You may do this without asking.
+  - **Never delete branches** (neither local nor remote), even after merging them.
+  - **`main` deploys to production** (Vercel, fundacioncreciendofeliz.com). Every now and then `staging` is merged into `main`, only when Guillermo explicitly says "merge a main" / "suban a producción". Never merge or push to `main` otherwise, and never merge a feature branch directly into `main`.
 - Never use `--force`, never rewrite pushed history, never `--no-verify`.
 
 ## Map
@@ -115,9 +118,9 @@ scripts/                         crear-admin.mts, generar-seed.ts, migrar-excel.
 - Duplicate docs: `CONFIGURACION_EMAILJS.md`, `EMAILJS_SETUP.md`, `QUICK_SETUP.md` (merge into the README); `DEBUG_DONACIONES.md` is obsolete.
 - The README doesn't explain how to run the project.
 
-## Launch (production still runs the old CRA build)
+## Launch (Next.js in production since 2026-11-15)
 
-Before merging to `main`: set the Framework Preset to Next.js in Vercel · EmailJS + public Supabase variables in Production and Preview · create the Supabase cloud project and run `db push` · create the first admin · check the 301s for capitalized URLs and the EmailJS forms in the Preview.
+Done: Vercel Framework Preset = Next.js · EmailJS variables in Production and Preview. Pending for the portal to work in production: create the Supabase cloud project and run `db push` · Supabase public variables in Vercel (Production and Preview) · create the first admin · check the 301s for capitalized URLs and the EmailJS forms.
 
 ## Roadmap
 
