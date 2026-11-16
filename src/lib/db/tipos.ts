@@ -180,6 +180,16 @@ export interface ConteosFisicos {
   ubicacion_id: number;
 }
 
+export interface DispositivosKiosko {
+  activo: Generated<boolean>;
+  creado_en: Generated<Timestamp>;
+  creado_por: Generated<string | null>;
+  id: Generated<string>;
+  nombre: string;
+  token_hash: string;
+  ultimo_uso: Timestamp | null;
+}
+
 export interface Empleados {
   activo: Generated<boolean>;
   cedula: string;
@@ -230,12 +240,14 @@ export interface InventarioMovimientos {
 }
 
 export interface Marcas {
+  dispositivo_id: string | null;
+  documento_url: string | null;
   empleado_id: string;
   id: Generated<string>;
   marcado_en: Generated<Timestamp>;
   motivo_manual: string | null;
   origen: OrigenMarca;
-  registrado_por: string | null;
+  registrado_por: Generated<string | null>;
   tipo: TipoMarca;
 }
 
@@ -347,6 +359,7 @@ export interface DB {
   compras: Compras;
   conteo_detalle: ConteoDetalle;
   conteos_fisicos: ConteosFisicos;
+  dispositivos_kiosko: DispositivosKiosko;
   empleados: Empleados;
   fuentes_financiamiento: FuentesFinanciamiento;
   horarios: Horarios;
