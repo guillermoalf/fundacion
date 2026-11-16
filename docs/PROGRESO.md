@@ -9,7 +9,7 @@ Cada módulo vive en su rama `portal/<modulo>`, que sale de la rama del módulo 
 - [x] 0. Base de la interfaz (menú lateral, migas, tabla reutilizable, vacío, "Falta", avisos, formato es-CR) — `portal/ui-base`
 - [x] 1. Usuarios — `portal/usuarios`
 - [x] 2. Activos — `portal/activos`
-- [ ] 3. Pendientes — `portal/pendientes`
+- [x] 3. Pendientes — `portal/pendientes`
 - [ ] 4. Tabla de depreciación — `portal/depreciacion`
 - [ ] 5. Reporte PANI — `portal/reporte-pani`
 - [ ] 6. Proveedores y compras — `portal/compras`
@@ -32,3 +32,4 @@ Cada módulo vive en su rama `portal/<modulo>`, que sale de la rama del módulo 
 - **0. Base**: menú lateral (☰ en celular), migas, tabla con búsqueda/filtros/páginas (tarjetas en celular), vacío, insignia "Falta", avisos, formato es-CR y hora de Costa Rica (`src/lib/portal/formato.ts`), `ejecutar()` para Server Actions con mensajes claros (`src/lib/portal/acciones.ts`), archivos adjuntos en la base (`archivos` + `/portal/archivos/<id>`).
 - **1. Usuarios**: lista, crear con contraseña temporal que se muestra una sola vez (no hay SMTP), cambiar rol/nombre, auditor con fecha de vencimiento, desactivar/activar (cierra sus sesiones), restablecer contraseña. Funciones `usuarios_portal`, `crear_usuario_portal`, `restablecer_contrasena_portal` (security definer, solo admin). Nadie puede cambiarse su propio rol ni desactivarse. Ojo React 19: los formularios se vacían después de guardar → los de edición usan `defaultValue` + `key` con los datos guardados.
 - **2. Activos**: lista con filtros (ubicación, fuente, estado, categoría) y valor en libros al día, ficha con depreciación y calendario (`src/lib/portal/activos.ts` usa `src/lib/calculos`), historial de movimientos, crear/editar (foto opcional), traslado y baja con motivo (no se borra; la baja no se deshace), importar Excel con vista previa y aviso de archivo repetido, etiquetas A4 3×8 con QR que abre la ficha. La ubicación solo se cambia con un traslado (queda en el historial).
+- **3. Pendientes**: tarjetas por tipo (desde `v_activos_alertas`) con qué hacer en cada caso, tabla filtrable con enlace para completar (editar activo) o ir a Compras cuando falta la factura.

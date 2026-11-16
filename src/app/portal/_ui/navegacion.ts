@@ -6,7 +6,10 @@ export type SeccionMenu = { titulo?: string; items: ItemMenu[] };
 /** Menú lateral. `roles` solo oculta el enlace (comodidad): el permiso real lo decide el RLS. */
 export const MENU: SeccionMenu[] = [
   { items: [{ href: "/portal", etiqueta: "Inicio" }] },
-  { titulo: "Activos", items: [{ href: "/portal/activos", etiqueta: "Activos" }] },
+  { titulo: "Activos", items: [
+      { href: "/portal/activos", etiqueta: "Activos" },
+      { href: "/portal/pendientes", etiqueta: "Pendientes" },
+    ] },
   { titulo: "Administración", items: [{ href: "/portal/usuarios", etiqueta: "Usuarios", roles: ["admin"] }] },
   { titulo: "Cuenta", items: [{ href: "/portal/cuenta", etiqueta: "Mi cuenta" }] },
 ];
