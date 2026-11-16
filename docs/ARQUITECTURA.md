@@ -4,14 +4,14 @@
 `fundacioncreciendofeliz.com/portal` → portal interno (solo administración)
 `fundacioncreciendofeliz.com/marcar` → kiosko de asistencia (tablet en la entrada)
 
-Stack: Next.js (App Router) + TypeScript + Tailwind + Postgres en Neon (Kysely, migraciones con dbmate) + Better Auth (login con correo y contraseña). Los archivos (fotos y PDF) irán en Vercel Blob (por implementar).
+Stack: Next.js (App Router) + TypeScript + Tailwind + Postgres en Neon (Kysely, migraciones con dbmate) + Better Auth (login con correo y contraseña). Los archivos (fotos y PDF) se guardan en la tabla `archivos` de la base, con el mismo RLS por rol (ver docs/PROGRESO.md).
 
 ## Principios
 1. **Nada se borra.** La base de datos rechaza los `DELETE`. Un activo se da de baja, una planilla se anula y una marca se corrige registrando otra con su motivo.
 2. **Todo deja rastro.** Cada insert o update queda en `bitacora` con quién lo hizo, cuándo, y el antes y después.
 3. **Cada colón tiene fuente.** Cada compra, activo y salario lleva su `fuente_id` (PANI, IMAS, JPS, propios o donación). Así cada reporte se filtra por ente y no se reporta el mismo gasto a dos instituciones. La Contraloría ya señaló ese riesgo al PANI.
 4. **Las tasas no se queman en el código.** CCSS, días de vacaciones, tolerancia de tardías y salario base están en la tabla `parametros`, cada uno con su fecha de vigencia. En enero se agrega una fila y los cálculos de años anteriores no cambian.
-5. **El documento respalda el dato.** Cada factura, boleta de incapacidad o acta de conteo lleva su foto o PDF guardado como archivo (Vercel Blob, por implementar).
+5. **El documento respalda el dato.** Cada factura, boleta de incapacidad o acta de conteo lleva su foto o PDF en la tabla `archivos` (solo lo ven los roles con lectura).
 
 ## Roles
 | Rol | Quién | Puede |

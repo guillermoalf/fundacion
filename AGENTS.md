@@ -67,7 +67,9 @@ For UI changes, also check in the browser (`npm run dev`) at desktop and mobile 
 ```
 src/app/(sitio)/                 landing: each page.tsx only imports its view from src/views
 src/app/portal/login/            login
-src/app/portal/(protegido)/      protected portal: <route>/page.tsx + acciones.ts (Server Actions) + PascalCase client components
+src/app/portal/(protegido)/      protected portal: <route>/page.tsx + acciones.ts (Server Actions) + PascalCase client components; downloads as route.ts under …/descargar (no dot)
+src/app/portal/_ui/              shared portal UI: menu (navegacion.ts), Encabezado, Tabla, Formulario (FormularioAccion, BotonEnviar, CampoArchivo), Avisos, Insignias (Falta)
+src/app/marcar/                  attendance kiosk (tablet + PIN); server side in src/lib/kiosko.ts (owner connection)
 src/views, src/components        landing in JS (from CRA), each component with its own .scss. Don't migrate to TS unless asked
 src/lib/calculos/                depreciation, payroll (+ tests). SOURCE OF TRUTH for calculations
 src/lib/catalogos/anexo2.ts      Anexo 2 rows + sugerirCategoria
@@ -75,7 +77,7 @@ src/lib/importacion/             Excel importer + guardar.ts (__fixtures__ is ig
 src/lib/export/auxiliarPani.ts   PANI report (official columns)
 src/lib/db/                      index.ts (conUsuario) · conexion.ts (owner connection, don't import) · tipos.ts (GENERATED, don't edit by hand)
 src/lib/auth.ts                  Better Auth (email + password, no public sign-up)
-src/lib/portal/sesion.ts         obtenerSesion() → { usuario, perfil, consultar }, NOMBRE_ROL
+src/lib/portal/                  sesion.ts (obtenerSesion → { usuario, perfil, consultar }) · acciones.ts (ejecutar, friendly errors) · formato.ts (es-CR, Costa Rica time) · archivos.ts · activos/asistencia/planilla helpers
 src/middleware.ts                landing redirects + /portal protection
 db/migrations (dbmate) · seed.sql · tests/ (pgTAP) · Dockerfile (local Postgres 17 + pgTAP, see docker-compose.yml)
 scripts/                         db.mts (migrar/reset/test), crear-admin.mts, generar-seed.ts, migrar-excel.ts, generar-paridad-depreciacion.ts
@@ -88,7 +90,9 @@ scripts/                         db.mts (migrar/reset/test), crear-admin.mts, ge
 - Portal: Tailwind only. Landing: its SCSS, respecting the CSS order in `(sitio)/layout.tsx`.
 - Names in the portal and `lib`: Spanish. Landing components: in English (that's how they are).
 - UI copy: Spanish, addressing the user as "usted", plain language. The directora isn't technical: errors say what happened and what to do ("Falta la fecha de compra. Puede guardarlo así y completarla después."), never technical messages.
-- Server Actions return `{ ok: true, ... } | { ok: false, error: string }`; don't throw exceptions to the UI.
+- Server Actions return `{ ok: true, ... } | { ok: false, error: string }` via `ejecutar()`; don't throw exceptions to the UI. Client forms use `<FormularioAccion>` (not `<form action>`: React 19 empties the form even when saving fails).
+- Files (photos, PDFs) go in the `archivos` table through `guardarArchivo()`; `*_url` columns store `/portal/archivos/<id>`.
+- Constants shared by server and client components live in files without "use client".
 - Forms must work on a phone (physical counts are done walking around the classrooms).
 
 ## Business rules (non-negotiable)
@@ -111,8 +115,10 @@ scripts/                         db.mts (migrar/reset/test), crear-admin.mts, ge
 
 ## Known issues (don't rediscover them; fix when the task touches them or he asks)
 
-- The middleware matcher excludes routes with a dot: a future `/portal/...xlsx` would be unprotected. → Serve downloads without an extension in the path, or adjust the matcher.
-- No user-management screen (only `crear-admin`) and no password recovery (no SMTP).
+- The middleware matcher excludes routes with a dot: downloads are served without an extension (`…/descargar`) and their route handlers also check the session. Keep it that way.
+- No password recovery by email (no SMTP): the admin generates a temporary password in Usuarios.
+- Report templates in `data/plantillas/` were not available when building the food/cleaning reports: compare and adjust columns (see docs/PROGRESO.md).
+- Salary (`empleados.salario_mensual`) and payroll are readable by every role with read access, including coordinación.
 - `npm audit`: 23 vulnerabilities to review (3 critical).
 - CRA leftovers: `public/index.html`, `src/components/Button.js`, `src/assets/not-used/`.
 - Duplicate docs: `CONFIGURACION_EMAILJS.md`, `EMAILJS_SETUP.md`, `QUICK_SETUP.md` (merge into the README); `DEBUG_DONACIONES.md` is obsolete.
