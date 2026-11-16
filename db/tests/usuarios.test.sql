@@ -17,7 +17,7 @@ select throws_ok($$select * from usuarios_portal()$$, '42501', null, 'coordinaci
 select throws_ok($$select crear_usuario_portal('x@x.com', 'X', 'admin', 'hash')$$, '42501', null, 'coordinación no crea usuarios');
 
 set local app.usuario_id = '00000000-0000-0000-0000-0000000000a1';
-select is((select count(*) from usuarios_portal()), 2::bigint, 'admin ve los usuarios con su correo');
+select is((select count(*) from usuarios_portal() where correo like '%@pgtap.test'), 2::bigint, 'admin ve los usuarios con su correo');
 select isnt(crear_usuario_portal('Nueva@Prueba.com ', 'Nueva Persona', 'coordinacion', 'hash-x'), null, 'admin crea un usuario');
 select is((select correo from usuarios_portal() where nombre = 'Nueva Persona'), 'nueva@prueba.com', 'el correo se guarda en minúsculas');
 select throws_like($$select crear_usuario_portal('nueva@prueba.com', 'Otra', 'coordinacion', 'h')$$, '%Ya existe%', 'no se repite el correo');
