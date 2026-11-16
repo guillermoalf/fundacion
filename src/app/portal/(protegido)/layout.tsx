@@ -2,21 +2,16 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import logo from "@/assets/logo-abc.png";
 import { NOMBRE_ROL, obtenerSesion } from "@/lib/portal/sesion";
+import { fecha } from "@/lib/portal/formato";
 import { cerrarSesion } from "../acciones";
-
-// Cada pantalla de la fase 1 agrega aquí su enlace.
-const NAVEGACION = [
-  { href: "/portal", etiqueta: "Inicio" },
-  { href: "/portal/cuenta", etiqueta: "Mi cuenta" },
-];
+import { ProveedorAvisos } from "../_ui/Avisos";
+import Menu from "../_ui/Menu";
+import { MENU } from "../_ui/navegacion";
 
 function BotonSalir() {
   return (
     <form action={cerrarSesion}>
-      <button
-        type="submit"
-        className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
-      >
+      <button type="submit" className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-base font-medium text-slate-700 hover:bg-slate-100">
         Cerrar sesión
       </button>
     </form>
@@ -30,8 +25,8 @@ export default async function PortalProtegidoLayout({ children }: { children: Re
     return (
       <main className="flex min-h-screen items-center justify-center px-4">
         <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm">
-          <h1 className="text-lg font-semibold">Sin acceso al portal</h1>
-          <p className="mt-2 text-sm text-slate-600">
+          <h1 className="text-xl font-semibold">Sin acceso al portal</h1>
+          <p className="mt-2 text-base text-slate-600">
             El usuario <span className="font-medium">{usuario.correo}</span> no tiene acceso: está inactivo, su acceso
             temporal venció o todavía no tiene un perfil asignado. Comuníquese con la dirección.
           </p>
@@ -43,35 +38,33 @@ export default async function PortalProtegidoLayout({ children }: { children: Re
     );
   }
 
+  const secciones = MENU.map((s) => ({ ...s, items: s.items.filter((i) => !i.roles || i.roles.includes(perfil.rol)) })).filter((s) => s.items.length);
+
   return (
-    <>
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-          <div className="flex items-center gap-6">
-            <Link href="/portal" className="shrink-0">
-              <img src={logo.src} alt="Fundación Creciendo Feliz" className="h-10 w-auto" />
-            </Link>
-            <nav className="flex flex-wrap gap-1 text-sm">
-              {NAVEGACION.map(({ href, etiqueta }) => (
-                <Link key={href} href={href} className="rounded-md px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-100">
-                  {etiqueta}
-                </Link>
-              ))}
-            </nav>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="text-right text-sm leading-tight">
-              <div className="font-medium">{perfil.nombre}</div>
-              <div className="text-slate-500">
+    <ProveedorAvisos>
+      <Menu
+        secciones={secciones}
+        cabecera={
+          <Link href="/portal" className="block shrink-0">
+            <img src={logo.src} alt="Fundación Creciendo Feliz" className="h-10 w-auto lg:h-12" />
+          </Link>
+        }
+        pie={
+          <div className="space-y-3">
+            <div className="text-base leading-tight">
+              <div className="font-semibold">{perfil.nombre}</div>
+              <div className="text-sm text-slate-500">
                 {NOMBRE_ROL[perfil.rol]}
-                {perfil.acceso_hasta && ` · acceso hasta ${perfil.acceso_hasta.split("-").reverse().join("/")}`}
+                {perfil.acceso_hasta && ` · acceso hasta ${fecha(perfil.acceso_hasta)}`}
               </div>
             </div>
             <BotonSalir />
           </div>
-        </div>
-      </header>
-      <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
-    </>
+        }
+      />
+      <main className="px-4 py-6 sm:px-6 lg:ml-72 lg:px-10 lg:py-8">
+        <div className="mx-auto max-w-6xl">{children}</div>
+      </main>
+    </ProveedorAvisos>
   );
 }

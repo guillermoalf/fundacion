@@ -89,6 +89,16 @@ export interface Activos {
   valor_residual: Generated<Numeric>;
 }
 
+export interface Archivos {
+  contenido: Buffer;
+  creado_en: Generated<Timestamp>;
+  id: Generated<string>;
+  nombre: string;
+  subido_por: Generated<string | null>;
+  tamano: number;
+  tipo: string;
+}
+
 export interface Ausencias {
   aprobado_por: Generated<string | null>;
   creado_en: Generated<Timestamp>;
@@ -329,6 +339,7 @@ export interface VSaldoInventario {
 export interface DB {
   activo_movimientos: ActivoMovimientos;
   activos: Activos;
+  archivos: Archivos;
   ausencias: Ausencias;
   bitacora: Bitacora;
   categorias_activo: CategoriasActivo;
