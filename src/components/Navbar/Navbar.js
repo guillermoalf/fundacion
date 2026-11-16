@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { CircleUserRound } from "lucide-react";
 import "./navbar.scss";
 import logo from "../../assets/logo-abc.png";
 
@@ -46,18 +47,20 @@ const Navbar = () => {
             </Link>
           ))}
           <Link
-            href="/portal/login"
-            onClick={closeMenu}
-            className="navbar__link"
-          >
-            Ingresar
-          </Link>
-          <Link
             href="/contactenos"
             onClick={closeMenu}
             className={`navbar__button ${pathname === "/contactenos" ? "navbar__button--active" : ""}`}
           >
             Contáctenos
+          </Link>
+          <Link
+            href="/portal/login"
+            onClick={closeMenu}
+            className="navbar__portal"
+            aria-label="Ingresar al portal administrativo"
+            title="Ingresar al portal"
+          >
+            <CircleUserRound size={28} strokeWidth={1.75} aria-hidden="true" />
           </Link>
         </nav>
         <div className="navbar__menu-icon" onClick={toggleMenu}>

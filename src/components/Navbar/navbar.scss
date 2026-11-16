@@ -180,6 +180,29 @@
     }
   }
 
+  .navbar__portal {
+    display: flex;
+    align-items: center;
+    padding: 0.25rem;
+    border-radius: 50%;
+    color: #6ec1ff;
+
+    // Sin el subrayado animado de los demás enlaces
+    &::after {
+      display: none !important;
+    }
+
+    &:hover,
+    &:focus-visible {
+      color: #3a9dff;
+    }
+
+    @media (max-width: 900px) {
+      color: #3b82f6;
+      margin-bottom: 10px;
+    }
+  }
+
   &__menu-icon {
     display: none;
     font-size: 1.5rem;
