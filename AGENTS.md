@@ -57,9 +57,9 @@ For UI changes, also check in the browser (`npm run dev`) at desktop and mobile 
 - **Branch flow (always, without being reminded):**
   - `staging` is the reference branch and always the newest code. **Every new task starts from an up-to-date `staging`** (`git checkout staging && git pull` → `git checkout -b <prefix>/<name>`). Never branch from `main` or from another feature branch.
   - One branch per task: `portal/<feature>`, `sitio/<change>` or `docs/<change>`. Short commits in Spanish, imperative ("agrega importador de activos").
-  - When the task is finished and the definition of done passes: push the branch, then merge it into `staging` (`--no-ff`) and push `staging`. You may do this without asking.
+  - When the task is finished and the definition of done passes: push the branch and tell him it's ready for review. **Merge into `staging` (`--no-ff`) and push it only after his OK**: `staging` is production.
   - **Never delete branches** (neither local nor remote), even after merging them.
-  - **`main` deploys to production** (Vercel, fundacioncreciendofeliz.com). Every now and then `staging` is merged into `main`, only when Guillermo explicitly says "merge a main" / "suban a producción". Never merge or push to `main` otherwise, and never merge a feature branch directly into `main`.
+  - **`staging` deploys to production** (Vercel production branch → fundacioncreciendofeliz.com; every merge applies pending migrations to the production database). Feature branches get their own Preview URL for review. `main` is no longer used: never push or merge to it.
 - Never use `--force`, never rewrite pushed history, never `--no-verify`.
 
 ## Map
@@ -120,7 +120,7 @@ scripts/                         db.mts (migrar/reset/test), crear-admin.mts, ge
 
 ## Launch (Next.js in production since 2026-11-15)
 
-Done: Vercel Framework Preset = Next.js · EmailJS variables in Production and Preview. Pending for the portal to work in production: create the Neon database from Vercel (Storage → Neon, Production and Preview) · `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL` in Vercel · create the first admin (`npm run crear-admin` with the Neon URL) · check the 301s for capitalized URLs and the EmailJS forms.
+Done: Vercel Framework Preset = Next.js · EmailJS variables · Neon database connected (Production and Preview share it) · `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL`. Pending: Vercel production branch = `staging` · create the first admin (`npm run crear-admin` with the Neon URL) · one Neon branch per Preview before loading real data · check the 301s for capitalized URLs and the EmailJS forms.
 
 ## Roadmap
 
