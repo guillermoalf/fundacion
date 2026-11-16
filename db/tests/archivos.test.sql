@@ -25,7 +25,7 @@ select throws_ok($$insert into archivos (nombre, tipo, tamano, contenido) values
   '42501', null, 'el auditor no sube archivos');
 
 reset role;
-select ok((select not (despues ? 'contenido') and despues->>'nombre' = 'factura.jpg' from bitacora where tabla = 'archivos'),
+select ok((select not (despues ? 'contenido') and despues->>'nombre' = 'factura.jpg' from bitacora where tabla = 'archivos' and registro_id = '00000000-0000-0000-0000-00000000aaa1'),
   'la bitácora guarda el archivo sin su contenido');
 
 select * from finish();

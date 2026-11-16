@@ -22,7 +22,7 @@ select lives_ok($$select asignar_pin_empleado('00000000-0000-0000-0000-00000000e
 select throws_ok($$select * from empleados_pin$$, '42501', null, 'nadie lee los PIN desde el portal');
 select ok('00000000-0000-0000-0000-00000000e001'::uuid in (select empleados_con_pin()), 'se puede saber quién tiene PIN');
 reset role;
-select is((select pin_hash from empleados_pin), 'hash-2', 'queda el último PIN');
+select is((select pin_hash from empleados_pin where empleado_id = '00000000-0000-0000-0000-00000000e001'), 'hash-2', 'queda el último PIN');
 
 select * from finish();
 rollback;
