@@ -186,12 +186,12 @@ export interface Empleados {
   creado_en: Generated<Timestamp>;
   fecha_ingreso: string;
   fecha_salida: string | null;
+  foto_url: string | null;
   fuente_id: number | null;
   horas_jornada_diaria: Generated<Numeric>;
   id: Generated<string>;
   nombre: string;
   perfil_id: string | null;
-  pin_hash: string | null;
   puesto: string;
   salario_mensual: Numeric;
   ubicacion_id: number | null;

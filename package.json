@@ -33,7 +33,7 @@
     "db:migrar": "node scripts/db.mts migrar",
     "db:reset": "node scripts/db.mts reset",
     "db:test": "node scripts/db.mts test",
-    "db:tipos": "kysely-codegen --dialect postgres --date-parser string --env-file .env.local --exclude-pattern \"{schema_migrations,usuarios,sesiones,cuentas,verificaciones}\" --out-file src/lib/db/tipos.ts"
+    "db:tipos": "kysely-codegen --dialect postgres --date-parser string --env-file .env.local --exclude-pattern \"{schema_migrations,usuarios,sesiones,cuentas,verificaciones,empleados_pin}\" --out-file src/lib/db/tipos.ts"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.7",

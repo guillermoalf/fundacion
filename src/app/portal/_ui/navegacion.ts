@@ -16,6 +16,7 @@ export const MENU: SeccionMenu[] = [
       { href: "/portal/proveedores", etiqueta: "Proveedores" },
       { href: "/portal/inventario", etiqueta: "Inventario" },
     ] },
+  { titulo: "Personal", items: [{ href: "/portal/personal", etiqueta: "Personal" }] },
   { titulo: "Reportes", items: [{ href: "/portal/reportes", etiqueta: "Reportes" }] },
   { titulo: "Administración", items: [{ href: "/portal/usuarios", etiqueta: "Usuarios", roles: ["admin"] }] },
   { titulo: "Cuenta", items: [{ href: "/portal/cuenta", etiqueta: "Mi cuenta" }] },
