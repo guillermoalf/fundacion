@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from "react";
+import { createContext, startTransition, useContext, useEffect, useRef, useState, type FormHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from "react";
 import { useFormStatus } from "react-dom";
 import { estiloBoton, estiloEtiqueta, estiloInput } from "./estilos";
 
@@ -64,9 +64,43 @@ export function Casilla({ etiqueta, ...props }: { etiqueta: ReactNode } & InputH
   );
 }
 
+const ContextoPendiente = createContext<boolean | null>(null);
+
+/**
+ * Formulario que llama a una Server Action sin vaciarse si hay un error.
+ * (Con <form action>, React 19 vacía el formulario después de cada envío, también cuando falla:
+ * la directora perdería lo que escribió.) Si sale bien, se vacía (`reiniciar`, por defecto sí).
+ */
+export function FormularioAccion({
+  accion, estado, pendiente, reiniciar = true, children, ...props
+}: { accion: (fd: FormData) => void; estado: { ok: boolean } | null; pendiente: boolean; reiniciar?: boolean } & Omit<FormHTMLAttributes<HTMLFormElement>, "action">) {
+  const ref = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    if (estado?.ok && reiniciar) ref.current?.reset();
+  }, [estado, reiniciar]);
+  return (
+    <ContextoPendiente.Provider value={pendiente}>
+      <form
+        ref={ref}
+        {...props}
+        onSubmit={(e) => {
+          props.onSubmit?.(e);
+          if (e.defaultPrevented) return;
+          e.preventDefault();
+          const fd = new FormData(e.currentTarget, (e.nativeEvent as SubmitEvent).submitter);
+          startTransition(() => accion(fd));
+        }}
+      >
+        {children}
+      </form>
+    </ContextoPendiente.Provider>
+  );
+}
+
 /** Botón de envío que se desactiva mientras se guarda. */
 export function BotonEnviar({ children, pendiente = "Guardando…", variante = "primario", ...props }: { children: ReactNode; pendiente?: string; variante?: keyof typeof estiloBoton } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  const { pending } = useFormStatus();
+  const { pending: pendienteForm } = useFormStatus();
+  const pending = useContext(ContextoPendiente) ?? pendienteForm;
   return (
     <button type="submit" disabled={pending || props.disabled} className={estiloBoton[variante]} {...props}>
       {pending ? pendiente : children}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useMemo, useState } from "react";
-import { AreaTexto, BotonEnviar, Campo, CampoArchivo, MensajeError, Seleccion } from "../../../_ui/Formulario";
+import { AreaTexto, BotonEnviar, Campo, CampoArchivo, MensajeError, Seleccion, FormularioAccion } from "../../../_ui/Formulario";
 import { estiloBoton, estiloEtiqueta, estiloInput } from "../../../_ui/estilos";
 import { colones } from "@/lib/portal/formato";
 import { registrarCompra, type LineaCompra } from "../acciones";
@@ -84,13 +84,13 @@ function Linea({ l, i, cambiar, quitar, productos, ubicaciones, categorias }: {
 export default function FormularioCompra({ proveedores, fuentes, productos, ubicaciones, categorias, hoy }: {
   proveedores: Opcion[]; fuentes: Opcion[]; productos: Producto[]; ubicaciones: Opcion[]; categorias: Opcion[]; hoy: string;
 }) {
-  const [estado, accion] = useActionState(registrarCompra, null);
+  const [estado, accion, accionPendiente] = useActionState(registrarCompra, null);
   const [lineas, setLineas] = useState<LineaCompra[]>([nueva()]);
   const [iva, setIva] = useState("0");
   const subtotal = useMemo(() => lineas.reduce((s, l) => s + Math.round(aNumero(l.cantidad) * aNumero(l.precio) * 100) / 100, 0), [lineas]);
 
   return (
-    <form action={accion} className="space-y-6">
+    <FormularioAccion accion={accion} estado={estado} pendiente={accionPendiente} className="space-y-6">
       <fieldset className="grid gap-4 sm:grid-cols-2">
         <legend className="mb-2 text-lg font-semibold">Factura</legend>
         <Seleccion etiqueta="Proveedor" name="proveedor_id" opciones={proveedores} vacio="Elija…" required />
@@ -122,6 +122,6 @@ export default function FormularioCompra({ proveedores, fuentes, productos, ubic
       <input type="hidden" name="lineas" value={JSON.stringify(lineas)} />
       <MensajeError estado={estado} />
       <BotonEnviar pendiente="Guardando la compra…">Registrar compra</BotonEnviar>
-    </form>
+    </FormularioAccion>
   );
 }

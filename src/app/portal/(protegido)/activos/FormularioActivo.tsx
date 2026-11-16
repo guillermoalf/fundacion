@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { AreaTexto, BotonEnviar, Campo, CampoArchivo, MensajeError, Seleccion } from "../../_ui/Formulario";
+import { AreaTexto, BotonEnviar, Campo, CampoArchivo, MensajeError, Seleccion, FormularioAccion } from "../../_ui/Formulario";
 import { useAvisoResultado } from "../../_ui/Avisos";
 import { crearActivo, editarActivo } from "./acciones";
 
@@ -21,10 +21,10 @@ const ESTADOS = [
 
 export default function FormularioActivo({ v = {}, ubicaciones, fuentes, categorias }: { v?: ValoresActivo; ubicaciones: Opcion[]; fuentes: Opcion[]; categorias: Opcion[] }) {
   const editando = !!v.id;
-  const [estado, accion] = useActionState(editando ? editarActivo : crearActivo, null);
+  const [estado, accion, accionPendiente] = useActionState(editando ? editarActivo : crearActivo, null);
   useAvisoResultado(estado, "Guardado.");
   return (
-    <form action={accion} className="space-y-6">
+    <FormularioAccion accion={accion} estado={estado} pendiente={accionPendiente} className="space-y-6">
       {editando && <input type="hidden" name="id" value={v.id} />}
       <fieldset className="grid gap-4 sm:grid-cols-2">
         <legend className="mb-2 text-lg font-semibold">Qué es</legend>
@@ -61,6 +61,6 @@ export default function FormularioActivo({ v = {}, ubicaciones, fuentes, categor
       </fieldset>
       <MensajeError estado={estado} />
       <BotonEnviar>{editando ? "Guardar cambios" : "Registrar activo"}</BotonEnviar>
-    </form>
+    </FormularioAccion>
   );
 }

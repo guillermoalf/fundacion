@@ -51,6 +51,21 @@ export default async function ReportesPage({ searchParams }: { searchParams: Pro
           <a href={`/portal/reportes/pani/descargar?${params}&pendientes=1`} className={estiloBoton.secundario}>Descargar con hoja de pendientes (uso interno)</a>
         </div>
       </section>
+
+      <section className={`${estiloTarjeta} mt-6 space-y-4`}>
+        <div>
+          <h2 className="text-xl font-semibold">Control mensual de inventario</h2>
+          <p className="text-slate-600">Saldo inicial, entradas, salidas, mermas y saldo final de cada producto, más la lista de entregas del mes para firmar.</p>
+        </div>
+        <form action="/portal/reportes/inventario/descargar" className="flex flex-wrap items-end gap-3">
+          <label className="space-y-1.5">
+            <span className={estiloEtiqueta}>Mes</span>
+            <input type="month" name="mes" defaultValue={corte.slice(0, 7)} className={estiloInput} />
+          </label>
+          <button type="submit" name="tipo" value="alimentos" className={estiloBoton.primario}>Alimentos (Formulario 1)</button>
+          <button type="submit" name="tipo" value="limpieza" className={estiloBoton.secundario}>Limpieza</button>
+        </form>
+      </section>
     </>
   );
 }

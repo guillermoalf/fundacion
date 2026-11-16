@@ -1,18 +1,18 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { AreaTexto, BotonEnviar, Campo, CampoArchivo, MensajeError, Seleccion } from "../../../_ui/Formulario";
+import { AreaTexto, BotonEnviar, Campo, CampoArchivo, MensajeError, Seleccion, FormularioAccion } from "../../../_ui/Formulario";
 import { useAvisoResultado } from "../../../_ui/Avisos";
 import { estiloBoton } from "../../../_ui/estilos";
 import { darDeBaja, trasladarActivo } from "../acciones";
 
 export function Traslado({ id, ubicaciones, hoy }: { id: string; ubicaciones: { valor: number; texto: string }[]; hoy: string }) {
   const [abierto, setAbierto] = useState(false);
-  const [estado, accion] = useActionState(trasladarActivo, null);
+  const [estado, accion, accionPendiente] = useActionState(trasladarActivo, null);
   useAvisoResultado(estado, "Traslado registrado.");
   if (!abierto) return <button type="button" className={estiloBoton.secundario} onClick={() => setAbierto(true)}>Trasladar a otra ubicación</button>;
   return (
-    <form action={accion} className="space-y-4" key={estado?.ok ? "ok" : "f"}>
+    <FormularioAccion accion={accion} estado={estado} pendiente={accionPendiente} className="space-y-4" key={estado?.ok ? "ok" : "f"}>
       <input type="hidden" name="id" value={id} />
       <Seleccion etiqueta="¿A dónde va?" name="destino" opciones={ubicaciones} vacio="Elija…" required />
       <Campo etiqueta="Fecha" name="fecha" type="date" defaultValue={hoy} required />
@@ -23,18 +23,18 @@ export function Traslado({ id, ubicaciones, hoy }: { id: string; ubicaciones: { 
         <BotonEnviar>Registrar traslado</BotonEnviar>
         <button type="button" className={estiloBoton.secundario} onClick={() => setAbierto(false)}>Cancelar</button>
       </div>
-    </form>
+    </FormularioAccion>
   );
 }
 
 export function Baja({ id, hoy }: { id: string; hoy: string }) {
   const [abierto, setAbierto] = useState(false);
-  const [estado, accion] = useActionState(darDeBaja, null);
+  const [estado, accion, accionPendiente] = useActionState(darDeBaja, null);
   useAvisoResultado(estado, "El activo quedó dado de baja.");
   if (!abierto) return <button type="button" className={estiloBoton.peligro} onClick={() => setAbierto(true)}>Dar de baja</button>;
   return (
-    <form
-      action={accion}
+    <FormularioAccion
+      accion={accion} estado={estado} pendiente={accionPendiente}
       onSubmit={(e) => { if (!confirm("¿Dar de baja este activo? No se puede deshacer: queda en el historial con el motivo.")) e.preventDefault(); }}
       className="space-y-4 rounded-xl border border-red-200 bg-red-50 p-4"
     >
@@ -48,6 +48,6 @@ export function Baja({ id, hoy }: { id: string; hoy: string }) {
         <BotonEnviar variante="peligro">Confirmar la baja</BotonEnviar>
         <button type="button" className={estiloBoton.secundario} onClick={() => setAbierto(false)}>Cancelar</button>
       </div>
-    </form>
+    </FormularioAccion>
   );
 }

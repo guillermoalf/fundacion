@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { BotonEnviar, Campo, MensajeError, Seleccion } from "../../_ui/Formulario";
+import { BotonEnviar, Campo, MensajeError, Seleccion, FormularioAccion } from "../../_ui/Formulario";
 import { useAvisoResultado } from "../../_ui/Avisos";
 import { estiloBoton } from "../../_ui/estilos";
 import { actualizarAcceso, cambiarActivo, crearUsuario, restablecerContrasena, type ResultadoContrasena } from "./acciones";
@@ -28,14 +28,14 @@ function ContrasenaUnaVez({ estado }: { estado: ResultadoContrasena }) {
 }
 
 export function FormularioNuevoUsuario() {
-  const [estado, accion] = useActionState(crearUsuario, null);
+  const [estado, accion, accionPendiente] = useActionState(crearUsuario, null);
   const [rol, setRol] = useState("coordinacion");
   useAvisoResultado(estado, "Usuario creado.");
   // React vacía el formulario después de guardar: el rol vuelve al valor por defecto.
   useEffect(() => { if (estado?.ok) setRol("coordinacion"); }, [estado]);
   return (
     <div className="space-y-4">
-      <form action={accion} className="grid gap-4 sm:grid-cols-2">
+      <FormularioAccion accion={accion} estado={estado} pendiente={accionPendiente} className="grid gap-4 sm:grid-cols-2">
         <Campo etiqueta="Nombre completo" name="nombre" required autoComplete="off" />
         <Campo etiqueta="Correo" name="correo" type="email" required autoComplete="off" ayuda="Es el usuario para entrar al portal." />
         <Seleccion etiqueta="Rol" name="rol" opciones={OPCIONES_ROL} defaultValue="coordinacion" onChange={(e) => setRol(e.target.value)} required />
@@ -48,20 +48,20 @@ export function FormularioNuevoUsuario() {
         <div className="sm:col-span-2">
           <BotonEnviar pendiente="Creando…">Crear usuario</BotonEnviar>
         </div>
-      </form>
+      </FormularioAccion>
       <ContrasenaUnaVez estado={estado} />
     </div>
   );
 }
 
 export function FormularioAcceso({ id, nombre, rol: rolInicial, accesoHasta, propio }: { id: string; nombre: string; rol: string; accesoHasta: string | null; propio: boolean }) {
-  const [estado, accion] = useActionState(actualizarAcceso, null);
+  const [estado, accion, accionPendiente] = useActionState(actualizarAcceso, null);
   const [rol, setRol] = useState(rolInicial);
   useEffect(() => setRol(rolInicial), [rolInicial]);
   useAvisoResultado(estado, "Cambios guardados.");
   return (
     // key: después de guardar, React vacía el formulario; al cambiar los datos se vuelve a armar con los valores guardados.
-    <form key={`${nombre}|${rolInicial}|${accesoHasta}`} action={accion} className="grid gap-4 sm:grid-cols-2">
+    <FormularioAccion key={`${nombre}|${rolInicial}|${accesoHasta}`} accion={accion} estado={estado} pendiente={accionPendiente} className="grid gap-4 sm:grid-cols-2">
       <input type="hidden" name="id" value={id} />
       <Campo etiqueta="Nombre" name="nombre" defaultValue={nombre} required />
       <Seleccion etiqueta="Rol" name="rol" opciones={OPCIONES_ROL} defaultValue={rolInicial} onChange={(e) => setRol(e.target.value)} disabled={propio} required />
@@ -74,17 +74,17 @@ export function FormularioAcceso({ id, nombre, rol: rolInicial, accesoHasta, pro
       <div className="sm:col-span-2">
         <BotonEnviar>Guardar cambios</BotonEnviar>
       </div>
-    </form>
+    </FormularioAccion>
   );
 }
 
 export function BotonActivo({ id, activo }: { id: string; activo: boolean }) {
-  const [estado, accion] = useActionState(cambiarActivo, null);
+  const [estado, accion, accionPendiente] = useActionState(cambiarActivo, null);
   useAvisoResultado(estado, activo ? "Usuario desactivado. Ya no puede entrar." : "Usuario activado de nuevo.");
   return (
-    <form
+    <FormularioAccion
       key={String(activo)}
-      action={accion}
+      accion={accion} estado={estado} pendiente={accionPendiente}
       onSubmit={(e) => {
         if (activo && !confirm("¿Desactivar a este usuario? Se cierra su sesión y ya no podrá entrar hasta que lo active de nuevo.")) e.preventDefault();
       }}
@@ -96,16 +96,16 @@ export function BotonActivo({ id, activo }: { id: string; activo: boolean }) {
       <button type="submit" className={activo ? estiloBoton.peligro : estiloBoton.secundario}>
         {activo ? "Desactivar usuario" : "Activar usuario"}
       </button>
-    </form>
+    </FormularioAccion>
   );
 }
 
 export function BotonRestablecer({ id, nombre }: { id: string; nombre: string }) {
-  const [estado, accion] = useActionState(restablecerContrasena, null);
+  const [estado, accion, accionPendiente] = useActionState(restablecerContrasena, null);
   return (
     <div className="space-y-3">
-      <form
-        action={accion}
+      <FormularioAccion
+        accion={accion} estado={estado} pendiente={accionPendiente}
         onSubmit={(e) => {
           if (!confirm(`¿Darle una contraseña nueva a ${nombre}? La anterior deja de servir y se cierra su sesión.`)) e.preventDefault();
         }}
@@ -113,7 +113,7 @@ export function BotonRestablecer({ id, nombre }: { id: string; nombre: string })
         <input type="hidden" name="id" value={id} />
         <input type="hidden" name="nombre" value={nombre} />
         <BotonEnviar variante="secundario" pendiente="Generando…">Darle una contraseña nueva</BotonEnviar>
-      </form>
+      </FormularioAccion>
       <MensajeError estado={estado} />
       <ContrasenaUnaVez estado={estado} />
     </div>

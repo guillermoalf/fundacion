@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { BotonEnviar, Campo, MensajeError } from "../../_ui/Formulario";
+import { BotonEnviar, Campo, MensajeError, FormularioAccion } from "../../_ui/Formulario";
 import { useAvisoResultado } from "../../_ui/Avisos";
 import { estiloBoton } from "../../_ui/estilos";
 import { cambiarActiva, crearCategoria, editarCategoria } from "./acciones";
@@ -10,11 +10,11 @@ type V = { id?: number; nombre?: string; tasa_anual?: string; anios_vida?: numbe
 
 export function FormularioCategoria({ v = {}, enUso = 0 }: { v?: V; enUso?: number }) {
   const editando = v.id !== undefined;
-  const [estado, accion] = useActionState(editando ? editarCategoria : crearCategoria, null);
+  const [estado, accion, accionPendiente] = useActionState(editando ? editarCategoria : crearCategoria, null);
   useAvisoResultado(estado, "Fila agregada a la tabla.");
   const bloqueada = editando && enUso > 0;
   return (
-    <form action={accion} className="grid gap-4 sm:grid-cols-2">
+    <FormularioAccion accion={accion} estado={estado} pendiente={accionPendiente} className="grid gap-4 sm:grid-cols-2">
       {editando && <input type="hidden" name="id" value={v.id} />}
       <Campo etiqueta="Nombre de la fila" name="nombre" defaultValue={v.nombre} required className="sm:col-span-2" placeholder="Ej.: Instrumentos musicales" />
       <Campo etiqueta="Tasa anual (%)" name="tasa_anual" inputMode="decimal" defaultValue={v.tasa_anual} required readOnly={bloqueada} />
@@ -35,19 +35,19 @@ export function FormularioCategoria({ v = {}, enUso = 0 }: { v?: V; enUso?: numb
       />
       <div className="sm:col-span-2"><MensajeError estado={estado} /></div>
       <div className="sm:col-span-2"><BotonEnviar>{editando ? "Guardar cambios" : "Agregar fila"}</BotonEnviar></div>
-    </form>
+    </FormularioAccion>
   );
 }
 
 export function BotonActiva({ id, activa }: { id: number; activa: boolean }) {
-  const [estado, accion] = useActionState(cambiarActiva, null);
+  const [estado, accion, accionPendiente] = useActionState(cambiarActiva, null);
   useAvisoResultado(estado, activa ? "Fila retirada: ya no se ofrece para activos nuevos." : "Fila disponible otra vez.");
   return (
-    <form action={accion} key={String(activa)} className="space-y-2">
+    <FormularioAccion accion={accion} estado={estado} pendiente={accionPendiente} key={String(activa)} className="space-y-2">
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="activa" value={String(!activa)} />
       <MensajeError estado={estado} />
       <button type="submit" className={estiloBoton.secundario}>{activa ? "Retirar esta fila" : "Volver a usar esta fila"}</button>
-    </form>
+    </FormularioAccion>
   );
 }

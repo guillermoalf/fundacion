@@ -13,7 +13,7 @@ Cada módulo vive en su rama `portal/<modulo>`, que sale de la rama del módulo 
 - [x] 4. Tabla de depreciación — `portal/depreciacion`
 - [x] 5. Reporte PANI — `portal/reporte-pani`
 - [x] 6. Proveedores y compras — `portal/compras`
-- [ ] 7. Inventario — `portal/inventario`
+- [x] 7. Inventario — `portal/inventario`
 - [ ] 8. Personal — `portal/personal`
 - [ ] 9. Kiosko de asistencia — `portal/kiosko`
 - [ ] 10. Ausencias — `portal/ausencias`
@@ -36,3 +36,4 @@ Cada módulo vive en su rama `portal/<modulo>`, que sale de la rama del módulo 
 - **4. Tabla de depreciación**: lista con cuántos activos usan cada fila, agregar fila, editar (tasa y años bloqueados si la fila está en uso, como manda el trigger), retirar/volver a usar. Solo admin edita (RLS).
 - **5. Reporte PANI**: `/portal/reportes` con corte + fuente, resumen en pantalla y descarga `.xlsx` por `/portal/reportes/pani/descargar` (sin punto en la ruta: la protege el middleware; además la ruta revisa la sesión). Opción con hoja interna de pendientes. El middleware ahora lee la cookie de sesión directo (quitó el aviso del Edge Runtime por `jose`).
 - **6. Compras y proveedores**: proveedores (lista con total comprado, crear/editar/inactivar). Registrar factura con foto/PDF, fuente y líneas consumible/activo/servicio, todo en una transacción: un activo por unidad (placas separadas por coma; las que falten quedan en Pendientes) con movimiento de alta, y entrada al inventario con vencimiento. Detalle de la factura enlaza sus activos y entradas; permite adjuntar la factura después y ligar activos importados que no tenían factura. Constantes compartidas van en archivos sin "use client" (si no, el servidor las recibe como referencia de cliente).
+- **7. Inventario**: saldos por producto con alertas de mínimo y de vencimiento (15 días), salidas (a quién se entregó), mermas y donaciones (no deja sacar más de lo que hay), productos (crear/editar/inactivar) con kárdex y saldo corrido, consumo de los últimos 6 meses, reportes Excel de alimentos (Formulario 1) y limpieza con hoja de entregas para firmar (`src/lib/export/controlInventario.ts`, con tests). **Cambio transversal**: `FormularioAccion` reemplaza `<form action>` en todo el portal: si hay un error ya no se borra lo escrito.

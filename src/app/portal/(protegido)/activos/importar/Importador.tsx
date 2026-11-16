@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 import { useActionState, useState } from "react";
-import { BotonEnviar, MensajeError, Seleccion } from "../../../_ui/Formulario";
+import { BotonEnviar, MensajeError, Seleccion, FormularioAccion } from "../../../_ui/Formulario";
 import { Falta, Insignia } from "../../../_ui/Insignias";
 import { estiloBoton, estiloEtiqueta } from "../../../_ui/estilos";
 import { colones, fecha } from "@/lib/portal/formato";
 import { confirmar, previsualizar } from "./acciones";
 
 export default function Importador({ fuentes }: { fuentes: { valor: string; texto: string }[] }) {
-  const [vista, accionVista] = useActionState(previsualizar, null);
-  const [guardado, accionGuardar] = useActionState(confirmar, null);
+  const [vista, accionVista, accionVistaPendiente] = useActionState(previsualizar, null);
+  const [guardado, accionGuardar, accionGuardarPendiente] = useActionState(confirmar, null);
   const [soloPendientes, setSoloPendientes] = useState(false);
 
   if (guardado?.ok) {
@@ -28,7 +28,7 @@ export default function Importador({ fuentes }: { fuentes: { valor: string; text
 
   return (
     <div className="space-y-6">
-      <form action={accionVista} className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+      <FormularioAccion accion={accionVista} estado={vista} pendiente={accionVistaPendiente} className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
         <div className="space-y-1.5">
           <label htmlFor="archivo" className={estiloEtiqueta}>Archivo de Excel (.xlsx) <span className="text-red-600">*</span></label>
           <input id="archivo" name="archivo" type="file" accept=".xlsx" required className="block w-full text-base file:mr-3 file:rounded-xl file:border-0 file:bg-sky-50 file:px-4 file:py-2.5 file:font-semibold file:text-sky-700" />
@@ -36,7 +36,7 @@ export default function Importador({ fuentes }: { fuentes: { valor: string; text
         <Seleccion etiqueta="¿Con qué se compraron?" name="fuente" opciones={fuentes} defaultValue="PANI" required />
         <BotonEnviar pendiente="Leyendo…">Ver vista previa</BotonEnviar>
         <div className="sm:col-span-3"><MensajeError estado={vista} /></div>
-      </form>
+      </FormularioAccion>
 
       {vista?.ok && (
         <div className="space-y-4">
@@ -82,7 +82,7 @@ export default function Importador({ fuentes }: { fuentes: { valor: string; text
               </tbody>
             </table>
           </div>
-          <form action={accionGuardar} className="space-y-3">
+          <FormularioAccion accion={accionGuardar} estado={guardado} pendiente={accionGuardarPendiente} className="space-y-3">
             <input type="hidden" name="filas" value={JSON.stringify(vista.filas)} />
             <input type="hidden" name="fuente" value={vista.fuente} />
             <input type="hidden" name="archivo" value={vista.archivo} />
@@ -91,7 +91,7 @@ export default function Importador({ fuentes }: { fuentes: { valor: string; text
             {guardado?.duplicado && <p className="text-base text-slate-700">Si de verdad es otro archivo con el mismo nombre, presione de nuevo para importarlo igual.</p>}
             <BotonEnviar pendiente="Guardando…">{guardado?.duplicado ? "Importar de todos modos" : `Confirmar y guardar ${vista.resumen.activos} activos`}</BotonEnviar>
             <p className="text-sm text-slate-500">Los datos que faltan no se inventan: quedan vacíos y aparecen en Pendientes para completarlos después.</p>
-          </form>
+          </FormularioAccion>
         </div>
       )}
     </div>
