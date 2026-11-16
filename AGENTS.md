@@ -41,14 +41,13 @@ For UI changes, also check in the browser (`npm run dev`) at desktop and mobile 
 
 **While you work: write NOTHING.** No "now I'll...", "I already have...", "I apply...", no explaining what you read or why. Only tool calls. Every intermediate sentence costs tokens and nobody reads it.
 
-**When you finish: only this, nothing else:**
-```
-¿Listo?: sí / no / parcial: one line on what changed
-Necesito de usted: <what you need from me, or "nada">
-Ojo: <only if there's a problem, risk or important decision; otherwise leave this line out>
-```
-- If there's a plan or a question, it goes after that, as short as possible (plan ≤10 lines).
-- Don't list the checks you ran: if the definition of done passed, "sí" covers it. If something failed, it goes in "Ojo".
+**When you finish: as little text as possible, no fixed template, no headings or labels like "¿Listo?: sí".**
+- Done: one short line saying what changed. Nothing else.
+- Not done: why not, and exactly what you need from him to finish.
+- Flag only what a professional developer would raise: a real risk, a failure, or an important decision you made. Skip it if there's nothing.
+- A plan or a question goes as short as possible (plan ≤10 lines).
+- Questions that aren't tasks (e.g. "what do I put in this field?"): answer directly in a line or two.
+- Don't list the checks you ran: if the definition of done passed, saying it's done covers it.
 - Don't include commit hashes, file names, test counts or technical details unless asked.
 
 ## Git
