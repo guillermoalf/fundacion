@@ -161,3 +161,65 @@ export function diasHabiles(desde: Date | string, hasta: Date | string, opts: { 
   }
   return n;
 }
+
+// ---------------------------------------------------------------- Línea de planilla mensual
+export interface EntradaLineaPlanilla {
+  salarioMensual: number;
+  /** días sin goce: permisos sin goce y ausencias injustificadas */
+  diasSinGoce: number;
+  /** días de incapacidad CCSS en el mes y, aparte, los días 1–3 de cada incapacidad que paga el patrono */
+  diasIncapacidadCCSS: number;
+  diasIncapacidadCCSSPatrono: number;
+  /** días de incapacidad INS (los paga el INS) */
+  diasIncapacidadINS: number;
+  diasLicenciaMaternidad: number;
+  montoHorasExtra?: number;
+  rebajoTardias?: number;
+  impuestoRenta?: number;
+  otrasDeducciones?: number;
+  parametros: {
+    ccssObreroPct: number;
+    ccssPatronalPct: number;
+    incapacidadPatronoPctDias1a3: number;
+    licenciaMaternidadPatronoPct: number;
+    aguinaldoDivisor: number;
+    vacacionesDiasAnuales: number;
+  };
+}
+
+/**
+ * Línea de una planilla mensual (salario diario = mensual ÷ 30).
+ * - Los días de ausencia sin goce, incapacidad y licencia se rebajan del salario.
+ * - El patrono paga un % de los días 1–3 de cada incapacidad CCSS (subsidio: no lleva cargas sociales)
+ *   y un % de la licencia de maternidad (sí es salario).
+ * - Provisión de aguinaldo = bruto ÷ divisor; de vacaciones = salario diario del bruto × días anuales ÷ 12.
+ */
+export function calcularLineaPlanilla(e: EntradaLineaPlanilla) {
+  const p = e.parametros;
+  const diario = salarioDiario(e.salarioMensual);
+  const diasRebajados = e.diasSinGoce + e.diasIncapacidadCCSS + e.diasIncapacidadINS + e.diasLicenciaMaternidad;
+  const rebajoAusencias = r2(Math.min(e.salarioMensual, diario * diasRebajados));
+  const pagoIncapacidad = pagoPatronoIncapacidadCCSS(e.salarioMensual, e.diasIncapacidadCCSSPatrono, p.incapacidadPatronoPctDias1a3);
+  const pagoLicencia = r2(diario * e.diasLicenciaMaternidad * (p.licenciaMaternidadPatronoPct / 100));
+  const horasExtra = r2(e.montoHorasExtra ?? 0);
+  const rebajoTardias = r2(e.rebajoTardias ?? 0);
+  const bruto = r2(e.salarioMensual - rebajoAusencias - rebajoTardias + horasExtra + pagoIncapacidad + pagoLicencia);
+  const cargas = calcularCargas(r2(bruto - pagoIncapacidad), { obreroPct: p.ccssObreroPct, patronalPct: p.ccssPatronalPct });
+  const renta = r2(e.impuestoRenta ?? 0);
+  const otras = r2(e.otrasDeducciones ?? 0);
+  return {
+    diasLaborados: Math.max(0, 30 - diasRebajados),
+    montoHorasExtra: horasExtra,
+    rebajoAusencias,
+    rebajoTardias,
+    pagoIncapacidadPatrono: r2(pagoIncapacidad + pagoLicencia),
+    salarioBruto: bruto,
+    ccssObrero: cargas.ccssObrero,
+    impuestoRenta: renta,
+    otrasDeducciones: otras,
+    salarioNeto: r2(bruto - cargas.ccssObrero - renta - otras),
+    cargasPatronales: cargas.cargasPatronales,
+    provisionAguinaldo: r2(bruto / p.aguinaldoDivisor),
+    provisionVacaciones: r2((bruto / 30) * (p.vacacionesDiasAnuales / 12)),
+  };
+}
