@@ -4,14 +4,14 @@
 `fundacioncreciendofeliz.com/portal` → portal interno (solo administración)
 `fundacioncreciendofeliz.com/marcar` → kiosko de asistencia (tablet en la entrada)
 
-Stack: Next.js (App Router) + TypeScript + Tailwind + Supabase (Postgres, Auth, Storage).
+Stack: Next.js (App Router) + TypeScript + Tailwind + Postgres en Neon (Kysely, migraciones con dbmate) + Better Auth (login con correo y contraseña). Los archivos (fotos y PDF) irán en Vercel Blob (por implementar).
 
 ## Principios
 1. **Nada se borra.** La base de datos rechaza los `DELETE`. Un activo se da de baja, una planilla se anula y una marca se corrige registrando otra con su motivo.
 2. **Todo deja rastro.** Cada insert o update queda en `bitacora` con quién lo hizo, cuándo, y el antes y después.
 3. **Cada colón tiene fuente.** Cada compra, activo y salario lleva su `fuente_id` (PANI, IMAS, JPS, propios o donación). Así cada reporte se filtra por ente y no se reporta el mismo gasto a dos instituciones. La Contraloría ya señaló ese riesgo al PANI.
 4. **Las tasas no se queman en el código.** CCSS, días de vacaciones, tolerancia de tardías y salario base están en la tabla `parametros`, cada uno con su fecha de vigencia. En enero se agrega una fila y los cálculos de años anteriores no cambian.
-5. **El documento respalda el dato.** Cada factura, boleta de incapacidad o acta de conteo lleva su foto o PDF en Storage.
+5. **El documento respalda el dato.** Cada factura, boleta de incapacidad o acta de conteo lleva su foto o PDF guardado como archivo (Vercel Blob, por implementar).
 
 ## Roles
 | Rol | Quién | Puede |
@@ -24,7 +24,7 @@ Stack: Next.js (App Router) + TypeScript + Tailwind + Supabase (Postgres, Auth, 
 El rol `auditor` permite darle acceso al revisor por una semana durante la visita, en vez de imprimir todo.
 
 ## Personal sin computadora ni teléfono
-- **Kiosko:** una tablet fija en la entrada (o un teléfono viejo en un soporte) abre `/marcar`. La persona toca su foto, digita su PIN de 4 dígitos y elige *Entrada* o *Salida*. Una ruta de servidor con `service_role` valida el PIN y que la petición venga de la tablet registrada (token del dispositivo), y luego inserta en `marcas` con `origen = 'kiosko'`. No necesita usuario en el portal.
+- **Kiosko:** una tablet fija en la entrada (o un teléfono viejo en un soporte) abre `/marcar`. La persona toca su foto, digita su PIN de 4 dígitos y elige *Entrada* o *Salida*. Una ruta de servidor con la conexión del dueño de la base (sin RLS) valida el PIN y que la petición venga de la tablet registrada (token del dispositivo), y luego inserta en `marcas` con `origen = 'kiosko'`. No necesita usuario en el portal.
 - **Plan B:** si se va la luz o el internet, se usa la hoja de asistencia en papel. Administración la digita después (`origen = 'hoja_firmada'`) y adjunta la foto de la hoja firmada.
 - **Ausencias:** la colaboradora entrega la boleta de la CCSS o del INS, o la solicitud de vacaciones firmada. Administración la registra y adjunta la foto.
 - **Responsables de aula:** no usan el portal. Firman el acta del conteo físico de su aula, que administración imprime desde el portal y luego sube firmada.

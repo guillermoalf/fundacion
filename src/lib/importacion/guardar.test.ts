@@ -10,14 +10,15 @@ const fila = (p: Partial<FilaImportada>): FilaImportada => ({
 });
 
 /** Cliente falso: devuelve las ubicaciones dadas y guarda lo que se le manda a la función. */
-function clienteFalso(ubicaciones: string[], respuestaRpc: { data?: unknown; error?: unknown } = {}) {
+function clienteFalso(ubicaciones: string[], error?: Error) {
   const llamadas: { funcion: string; args: Record<string, any> }[] = [];
   return {
     llamadas,
-    from: () => ({ select: async () => ({ data: ubicaciones.map((nombre, i) => ({ id: i + 1, nombre })), error: null }) }),
-    rpc: async (funcion: string, args: Record<string, any>) => {
-      llamadas.push({ funcion, args });
-      return { data: respuestaRpc.data ?? { activos: 0, ubicacionesCreadas: [] }, error: respuestaRpc.error ?? null };
+    nombresUbicaciones: async () => ubicaciones,
+    guardarImportacionActivos: async (args: Record<string, any>) => {
+      llamadas.push({ funcion: "guardar_importacion_activos", args });
+      if (error) throw error;
+      return { activos: 0, ubicacionesCreadas: [] };
     },
   };
 }
@@ -57,7 +58,7 @@ describe("guardarImportacion", () => {
   });
 
   it("avisa con un error propio cuando el archivo ya se había importado", async () => {
-    const db = clienteFalso(["Cocina"], { error: { code: "CF001", message: 'El archivo "a.xlsx" ya se importó.' } });
+    const db = clienteFalso(["Cocina"], new ImportacionDuplicadaError('El archivo "a.xlsx" ya se importó.'));
     await expect(guardarImportacion(db, [fila({})], { fuenteCodigo: "PANI", archivo: "a.xlsx", categoriaIdPorNombre: new Map() }))
       .rejects.toBeInstanceOf(ImportacionDuplicadaError);
   });

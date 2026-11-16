@@ -1,0 +1,18 @@
+# Base de datos local para desarrollo y tests (Postgres 17, igual que Neon, + pgTAP).
+# npm run db:levantar  →  luego npm run db:reset
+services:
+  db:
+    build: ./db
+    container_name: fundacion-db
+    environment:
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - fundacion-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 2s
+      retries: 30
+volumes:
+  fundacion-db:

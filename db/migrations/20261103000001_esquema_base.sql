@@ -1,3 +1,4 @@
+-- migrate:up
 -- =====================================================================
 -- Fundación Creciendo Feliz — Portal administrativo
 -- Migración 1: esquema base
@@ -7,7 +8,6 @@
 -- Principio: nada se borra. Todo cambio queda en bitácora con usuario y fecha.
 -- =====================================================================
 
-create extension if not exists pgcrypto;
 
 -- ---------------------------------------------------------------------
 -- Tipos
@@ -31,7 +31,7 @@ create type estado_planilla as enum ('borrador', 'aprobada', 'pagada', 'anulada'
 -- Usuarios del portal (solo administración del kinder)
 -- ---------------------------------------------------------------------
 create table perfiles (
-  id uuid primary key references auth.users(id) on delete restrict,
+  id uuid primary key references usuarios(id) on delete restrict,
   nombre text not null,
   rol rol_portal not null default 'coordinacion',
   activo boolean not null default true,
@@ -43,7 +43,7 @@ create table perfiles (
 create or replace function rol_actual() returns rol_portal
 language sql stable security definer set search_path = public as $$
   select rol from perfiles
-  where id = auth.uid() and activo
+  where id = usuario_actual() and activo
     and (acceso_hasta is null or acceso_hasta >= current_date)
 $$;
 
@@ -145,9 +145,9 @@ create table compras (
   subtotal numeric(14,2) not null default 0,
   iva numeric(14,2) not null default 0,
   total numeric(14,2) not null,
-  factura_url text,                     -- foto o PDF de la factura (Supabase Storage)
+  factura_url text,                     -- foto o PDF de la factura (almacenamiento de archivos, por definir)
   observaciones text,
-  registrado_por uuid references perfiles(id) default auth.uid(),
+  registrado_por uuid references perfiles(id) default usuario_actual(),
   creado_en timestamptz not null default now(),
   unique (proveedor_id, numero_factura)
 );
@@ -223,7 +223,7 @@ create table activo_movimientos (
   ubicacion_destino_id smallint references ubicaciones(id),
   motivo text not null,
   documento_url text,                   -- acta, boleta de reparación, etc.
-  registrado_por uuid references perfiles(id) default auth.uid(),
+  registrado_por uuid references perfiles(id) default usuario_actual(),
   creado_en timestamptz not null default now()
 );
 
@@ -233,7 +233,7 @@ create table conteos_fisicos (
   ubicacion_id smallint not null references ubicaciones(id),
   fecha date not null default current_date,
   responsable_id uuid not null references empleados(id),
-  realizado_por uuid references perfiles(id) default auth.uid(),
+  realizado_por uuid references perfiles(id) default usuario_actual(),
   acta_firmada_url text,                -- foto del acta firmada por la responsable
   observaciones text,
   cerrado boolean not null default false
@@ -276,7 +276,7 @@ create table inventario_movimientos (
   fecha_vencimiento date,               -- perecederos
   entregado_a text,                     -- p. ej. cocinera / encargada de limpieza
   motivo text,
-  registrado_por uuid references perfiles(id) default auth.uid(),
+  registrado_por uuid references perfiles(id) default usuario_actual(),
   creado_en timestamptz not null default now(),
   check (tipo <> 'entrada' or compra_linea_id is not null or motivo is not null)
 );
@@ -315,7 +315,7 @@ create table ausencias (
   dias_habiles numeric(5,2) not null check (dias_habiles >= 0),
   numero_boleta text,                   -- boleta de incapacidad CCSS / INS
   documento_url text,
-  aprobado_por uuid references perfiles(id) default auth.uid(),
+  aprobado_por uuid references perfiles(id) default usuario_actual(),
   observaciones text,
   creado_en timestamptz not null default now(),
   check (hasta >= desde),
@@ -467,7 +467,7 @@ create table bitacora (
   accion text not null,                 -- INSERT / UPDATE / DELETE
   antes jsonb,
   despues jsonb,
-  usuario uuid default auth.uid(),
+  usuario uuid default usuario_actual(),
   en timestamptz not null default now()
 );
 create index on bitacora (tabla, registro_id);
@@ -537,3 +537,5 @@ alter table bitacora enable row level security;
 create policy bitacora_lectura on bitacora for select using (rol_actual() in ('admin','auditor','contabilidad'));
 create trigger bitacora_no_delete before delete on bitacora for each row execute function bloquear_delete();
 create policy bitacora_sin_update on bitacora for update using (false);
+
+-- migrate:down

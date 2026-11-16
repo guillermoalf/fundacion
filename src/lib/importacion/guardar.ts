@@ -1,7 +1,9 @@
 /**
- * Guarda en Supabase lo que devolvió `importarActivosExcel`, después de que la directora revisó la vista previa.
+ * Guarda en la base lo que devolvió `importarActivosExcel`, después de que la directora revisó la vista previa.
  * Crea las ubicaciones que no existan y registra cada activo con origen = 'importacion' y su movimiento de alta.
  */
+import { sql } from "kysely";
+import type { Tx } from "@/lib/db";
 import type { FilaImportada } from "./activosExcel";
 
 const ROMANOS = /\b(Ii|Iii|Iv|Vi)\b/g;
@@ -23,11 +25,38 @@ export function tipoUbicacion(n: string) {
   return "area_comun";
 }
 
-/** Cliente mínimo (compatible con @supabase/supabase-js) para no acoplar este módulo a una versión. */
-interface ClienteDB {
-  from(tabla: string): any;
-  rpc(funcion: string, args: Record<string, unknown>): any;
+type ArgsGuardar = {
+  p_fuente: string;
+  p_archivo: string;
+  p_ubicaciones_nuevas: { nombre: string; tipo: string }[];
+  p_activos: Record<string, unknown>[];
+  p_forzar: boolean;
+};
+type Resultado = { activos: number; ubicacionesCreadas: string[] };
+
+/** Lo único que este módulo necesita de la base (en los tests se reemplaza por uno falso). */
+export interface ClienteDB {
+  nombresUbicaciones(): Promise<string[]>;
+  guardarImportacionActivos(args: ArgsGuardar): Promise<Resultado>;
 }
+
+/** Cliente real: corre dentro de la transacción del usuario (conUsuario), así aplica el RLS y la bitácora. */
+export const clienteDB = (tx: Tx): ClienteDB => ({
+  async nombresUbicaciones() {
+    return (await tx.selectFrom("ubicaciones").select("nombre").execute()).map((u) => u.nombre);
+  },
+  async guardarImportacionActivos(a) {
+    try {
+      const { rows } = await sql<{ r: Resultado }>`select guardar_importacion_activos(
+        ${a.p_fuente}, ${a.p_archivo}, ${JSON.stringify(a.p_ubicaciones_nuevas)}::jsonb,
+        ${JSON.stringify(a.p_activos)}::jsonb, ${a.p_forzar}) as r`.execute(tx);
+      return rows[0].r;
+    } catch (e) {
+      if ((e as { code?: string }).code === "CF001") throw new ImportacionDuplicadaError((e as Error).message);
+      throw e;
+    }
+  },
+});
 
 /** El archivo ya se había importado (la base lo detecta por `fila_origen`). Se puede reintentar con `forzar`. */
 export class ImportacionDuplicadaError extends Error {}
@@ -40,11 +69,9 @@ export async function guardarImportacion(
   db: ClienteDB,
   filas: FilaImportada[],
   opts: { fuenteCodigo: string; archivo: string; categoriaIdPorNombre: Map<string, number>; forzar?: boolean },
-): Promise<{ activos: number; ubicacionesCreadas: string[] }> {
-  const { data: ubic, error: e1 } = await db.from("ubicaciones").select("id, nombre");
-  if (e1) throw e1;
+): Promise<Resultado> {
   // Una ubicación existente se reconoce aunque cambien tildes o mayúsculas, y se usa su nombre tal como está guardado
-  const existentes = new Map<string, string>((ubic as { nombre: string }[]).map((u) => [sinTildes(u.nombre), u.nombre]));
+  const existentes = new Map<string, string>((await db.nombresUbicaciones()).map((n) => [sinTildes(n), n]));
   const nombreFinal = (u: string | null) => {
     const n = nombreUbicacion(u ?? "Sin ubicación");
     return existentes.get(sinTildes(n)) ?? n;
@@ -67,16 +94,11 @@ export async function guardarImportacion(
     notas: f.pendientes.length ? f.pendientes.join(" | ") : null,
   }));
 
-  const { data, error } = await db.rpc("guardar_importacion_activos", {
+  return db.guardarImportacionActivos({
     p_fuente: opts.fuenteCodigo,
     p_archivo: opts.archivo,
     p_ubicaciones_nuevas: faltantes.map((nombre) => ({ nombre, tipo: tipoUbicacion(nombre) })),
     p_activos: activos,
     p_forzar: opts.forzar ?? false,
   });
-  if (error) {
-    if (error.code === "CF001") throw new ImportacionDuplicadaError(error.message);
-    throw error;
-  }
-  return data as { activos: number; ubicacionesCreadas: string[] };
 }

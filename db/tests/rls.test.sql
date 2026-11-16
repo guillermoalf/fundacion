@@ -1,17 +1,17 @@
 -- Permisos del portal: lo que cada rol puede leer y escribir lo decide el RLS de la base.
--- Corre con: npx supabase test db   (todo ocurre dentro de una transacción que se revierte)
+-- Corre con: npm run db:test   (todo ocurre dentro de una transacción que se revierte)
 begin;
-create extension if not exists pgtap with schema extensions;
-select plan(24);
+create extension if not exists pgtap;
+select plan(27);
 
 -- Usuarios de prueba, uno por rol, más un auditor con el acceso vencido y un perfil inactivo
-insert into auth.users (id, email) values
+insert into usuarios (id, correo, nombre) select id::uuid, correo, correo from (values
   ('00000000-0000-0000-0000-0000000000a1', 'admin@pgtap.test'),
   ('00000000-0000-0000-0000-0000000000c1', 'conta@pgtap.test'),
   ('00000000-0000-0000-0000-0000000000d1', 'coord@pgtap.test'),
   ('00000000-0000-0000-0000-0000000000e1', 'auditor@pgtap.test'),
   ('00000000-0000-0000-0000-0000000000e2', 'vencido@pgtap.test'),
-  ('00000000-0000-0000-0000-0000000000f1', 'inactivo@pgtap.test');
+  ('00000000-0000-0000-0000-0000000000f1', 'inactivo@pgtap.test')) v(id, correo);
 insert into perfiles (id, nombre, rol, acceso_hasta, activo) values
   ('00000000-0000-0000-0000-0000000000a1', 'Admin', 'admin', null, true),
   ('00000000-0000-0000-0000-0000000000c1', 'Contabilidad', 'contabilidad', null, true),
@@ -23,23 +23,22 @@ insert into activos (placa, tipo_bien, ubicacion_id, fuente_id) values ('T-001',
 
 create function pg_temp.como(usuario uuid) returns void language plpgsql as $$
 begin
-  perform set_config('role', 'authenticated', true);
-  perform set_config('request.jwt.claims', json_build_object('sub', usuario, 'role', 'authenticated')::text, true);
+  perform set_config('role', 'app_portal', true);
+  perform set_config('app.usuario_id', usuario::text, true);
 end $$;
-create function pg_temp.anonimo() returns void language plpgsql as $$
+create function pg_temp.sin_sesion() returns void language plpgsql as $$
 begin
-  perform set_config('role', 'anon', true);
-  perform set_config('request.jwt.claims', '{"role":"anon"}', true);
+  perform set_config('role', 'app_portal', true);
+  perform set_config('app.usuario_id', '', true);
 end $$;
-grant execute on all functions in schema pg_temp to anon, authenticated;
 
--- Sin sesión (anon key pública): no ve nada, tampoco por las vistas
-select pg_temp.anonimo();
-select is((select count(*) from activos), 0::bigint, 'anon no ve activos');
-select is((select count(*) from v_activos_alertas), 0::bigint, 'anon no ve v_activos_alertas');
-select is((select count(*) from v_saldo_inventario), 0::bigint, 'anon no ve v_saldo_inventario');
-select is((select count(*) from activos_al_corte(current_date)), 0::bigint, 'anon no ve activos_al_corte');
-select throws_ok($$insert into activos (tipo_bien, ubicacion_id, fuente_id) values ('x', 1, 1)$$, '42501', null, 'anon no inserta activos');
+-- Sin sesión (el portal sin usuario identificado): no ve nada, tampoco por las vistas
+select pg_temp.sin_sesion();
+select is((select count(*) from activos), 0::bigint, 'sin sesión no ve activos');
+select is((select count(*) from v_activos_alertas), 0::bigint, 'sin sesión no ve v_activos_alertas');
+select is((select count(*) from v_saldo_inventario), 0::bigint, 'sin sesión no ve v_saldo_inventario');
+select is((select count(*) from activos_al_corte(current_date)), 0::bigint, 'sin sesión no ve activos_al_corte');
+select throws_ok($$insert into activos (tipo_bien, ubicacion_id, fuente_id) values ('x', 1, 1)$$, '42501', null, 'sin sesión no inserta activos');
 
 -- Auditor vigente: lee todo, no escribe
 select pg_temp.como('00000000-0000-0000-0000-0000000000e1');
@@ -73,8 +72,13 @@ select pg_temp.como('00000000-0000-0000-0000-0000000000a1');
 select isnt_empty($$update perfiles set acceso_hasta = current_date + 14 where id = '00000000-0000-0000-0000-0000000000e1' returning id$$, 'admin extiende el acceso de un auditor');
 select lives_ok($$insert into categorias_activo (nombre, tasa_anual, anios_vida) values ('Fila de prueba', 10, 10)$$, 'admin agrega filas de depreciación');
 
--- Nada se borra, ni siquiera el admin (RLS sin política de DELETE: no afecta filas)
-select is_empty($$delete from activos returning id$$, 'admin no borra activos');
+-- Las tablas del login (contraseñas y sesiones) solo las usa Better Auth: el portal no las lee
+select throws_ok($$select * from cuentas$$, '42501', null, 'el portal no lee las contraseñas');
+select throws_ok($$select * from sesiones$$, '42501', null, 'el portal no lee las sesiones');
+select throws_ok($$select * from usuarios$$, '42501', null, 'el portal no lee la tabla de usuarios del login');
+
+-- Nada se borra, ni siquiera el admin: el rol del portal no tiene permiso de DELETE
+select throws_ok($$delete from activos$$, '42501', null, 'admin no borra activos');
 reset role;
 select throws_ok($$delete from activos where placa = 'T-001'$$, 'P0001', null, 'el trigger bloquea el DELETE aun sin RLS');
 -- (se revisa sin rol: coordinación, a propósito, no puede leer la bitácora)

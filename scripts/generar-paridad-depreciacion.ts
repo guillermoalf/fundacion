@@ -2,10 +2,12 @@
  * Genera src/lib/calculos/paridad-sql.json: casos sintéticos con el resultado de la función SQL
  * depreciacion_acumulada. El test paridad.test.ts verifica que calcularDepreciacion (TS) dé lo mismo,
  * sin necesitar una base de datos en CI. Regenerar si cambia la fórmula en la migración.
- * Uso (con `npx supabase start` corriendo): npx vite-node scripts/generar-paridad-depreciacion.ts
+ * Uso (con la base local corriendo y migrada): npx vite-node scripts/generar-paridad-depreciacion.ts
  */
-import { execFileSync } from "node:child_process";
-import { writeFileSync } from "node:fs";
+import { existsSync, writeFileSync } from "node:fs";
+import pg from "pg";
+
+if (existsSync(".env.local")) process.loadEnvFile(".env.local");
 
 let semilla = 42;
 const rnd = () => (semilla = (semilla * 1103515245 + 12345) % 2 ** 31) / 2 ** 31;
@@ -28,11 +30,11 @@ const casos = Array.from({ length: 2000 }, () => {
 const valores = casos
   .map((c, i) => `(${i},${c.costo},${c.valorResidual},${c.tasaAnual},${c.aniosVida},'${c.metodo}'::metodo_depreciacion,'${c.fechaAdquisicion}'::date,'${c.corte}'::date)`)
   .join(",");
-const sql = `select depreciacion_acumulada(c,r,t,a,m,ad,co) from (values ${valores}) v(i,c,r,t,a,m,ad,co) order by i`;
-const salida = execFileSync(
-  "docker", ["exec", "-i", "supabase_db_creciendo-feliz", "psql", "-U", "postgres", "-tA"],
-  { input: sql, maxBuffer: 1e8 },
-).toString().trim().split("\n");
+const sql = `select depreciacion_acumulada(c,r,t,a,m,ad,co) as d from (values ${valores}) v(i,c,r,t,a,m,ad,co) order by i`;
+const cliente = new pg.Client({ connectionString: process.env.DATABASE_URL });
+await cliente.connect();
+const salida = (await cliente.query<{ d: string | null }>(sql)).rows.map((r) => r.d);
+await cliente.end();
 
 const conSql = casos.map((c, i) => ({ ...c, sql: Number(salida[i]) }));
 writeFileSync(new URL("../src/lib/calculos/paridad-sql.json", import.meta.url), JSON.stringify(conSql) + "\n");

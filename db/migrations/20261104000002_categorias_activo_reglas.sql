@@ -1,3 +1,4 @@
+-- migrate:up
 -- Tabla de depreciación (filas del Anexo 2). Decisiones de la fundación (04/11/2026):
 -- 1. Solo admin (la directora) agrega o edita filas.
 -- 2. La tasa y los años de vida de una fila que ya usan activos no se editan: para otra tasa se
@@ -38,3 +39,5 @@ begin
 end $$;
 create trigger activos_categoria_activa before insert or update of categoria_id on activos
   for each row execute function validar_categoria_activa();
+
+-- migrate:down

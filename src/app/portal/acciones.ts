@@ -1,11 +1,11 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { crearClienteServidor } from "@/lib/supabase/server";
-import { RUTA_LOGIN } from "@/lib/supabase/middleware";
+import { auth } from "@/lib/auth";
+import { RUTA_LOGIN } from "@/lib/portal/rutas";
 
 export async function cerrarSesion() {
-  const supabase = await crearClienteServidor();
-  await supabase.auth.signOut();
+  await auth.api.signOut({ headers: await headers() }).catch(() => {});
   redirect(RUTA_LOGIN);
 }

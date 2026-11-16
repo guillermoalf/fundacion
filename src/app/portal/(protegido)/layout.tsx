@@ -24,7 +24,7 @@ function BotonSalir() {
 }
 
 export default async function PortalProtegidoLayout({ children }: { children: ReactNode }) {
-  const { user, perfil } = await obtenerSesion();
+  const { usuario, perfil } = await obtenerSesion();
 
   if (!perfil) {
     return (
@@ -32,7 +32,7 @@ export default async function PortalProtegidoLayout({ children }: { children: Re
         <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm">
           <h1 className="text-lg font-semibold">Sin acceso al portal</h1>
           <p className="mt-2 text-sm text-slate-600">
-            El usuario <span className="font-medium">{user.email}</span> no tiene acceso: está inactivo, su acceso
+            El usuario <span className="font-medium">{usuario.correo}</span> no tiene acceso: está inactivo, su acceso
             temporal venció o todavía no tiene un perfil asignado. Comuníquese con la dirección.
           </p>
           <div className="mt-5 flex justify-center">
