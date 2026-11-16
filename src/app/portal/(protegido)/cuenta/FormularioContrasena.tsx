@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { cambiarContrasena, type EstadoContrasena } from "./acciones";
 
-const inicial: EstadoContrasena = { error: null, listo: false };
+const inicial: EstadoContrasena = { error: null };
 const estiloInput =
   "block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/30";
 
@@ -12,6 +12,12 @@ export default function FormularioContrasena() {
 
   return (
     <form action={accion} className="space-y-4">
+      <div className="space-y-1.5">
+        <label htmlFor="actual" className="block text-sm font-medium text-slate-700">
+          Contraseña actual
+        </label>
+        <input id="actual" name="actual" type="password" autoComplete="current-password" required className={estiloInput} />
+      </div>
       <div className="space-y-1.5">
         <label htmlFor="nueva" className="block text-sm font-medium text-slate-700">
           Contraseña nueva
@@ -27,11 +33,6 @@ export default function FormularioContrasena() {
       {estado.error && (
         <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
           {estado.error}
-        </p>
-      )}
-      {estado.listo && (
-        <p role="status" className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-          Contraseña actualizada.
         </p>
       )}
       <button

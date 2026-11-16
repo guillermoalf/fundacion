@@ -1,5 +1,5 @@
 /**
- * Genera supabase/seed.sql: fuentes, categorías del Anexo 2, ubicaciones, proveedores, productos y parámetros.
+ * Genera db/seed.sql: fuentes, categorías del Anexo 2, ubicaciones, proveedores, productos y parámetros.
  * Uso: npx tsx scripts/generar-seed.ts
  */
 import { readFileSync, writeFileSync } from "node:fs";
@@ -76,5 +76,5 @@ insert into parametros (clave, valor, vigente_desde, fuente_legal) values
 
 commit;
 `;
-writeFileSync(new URL("../supabase/seed.sql", import.meta.url), sql);
+writeFileSync(new URL("../db/seed.sql", import.meta.url), sql);
 console.log(`seed.sql: ${ANEXO2.length} categorías, ${ubicaciones.length} ubicaciones, ${productos.length} productos`);

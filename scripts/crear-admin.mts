@@ -1,64 +1,73 @@
 /**
  * Crea el primer usuario administrador (rol admin) del portal.
  *
- * Usa la service_role, que se salta el RLS: crea el usuario en Supabase Auth y su fila en `perfiles`.
- * Es la única escritura que queda en la bitácora sin usuario (no hay sesión todavía).
- * Por eso se niega si ya existe un admin, salvo que se pase --otro.
+ * Se conecta como dueño de la base (se salta el RLS): crea el usuario del login, su contraseña
+ * y su fila en `perfiles`, todo en una transacción. Es la única escritura que queda en la bitácora
+ * sin usuario (no hay sesión todavía). Por eso se niega si ya existe un admin, salvo que se pase --otro.
  *
  * Uso: npm run crear-admin -- correo@ejemplo.com "Nombre Apellido"
- *   Local: toma la URL y la clave de .env.local.
- *   Nube: NEXT_PUBLIC_SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... npm run crear-admin -- ...
- *         (las variables del entorno tienen prioridad sobre .env.local)
+ *   Local: toma DATABASE_URL de .env.local.
+ *   Neon:  DATABASE_URL="<cadena de conexión de Neon>" npm run crear-admin -- ...
+ *          (las variables del entorno tienen prioridad sobre .env.local)
  */
 import { existsSync } from "node:fs";
 import { randomBytes } from "node:crypto";
-import { createClient } from "@supabase/supabase-js";
-import type { Database } from "../src/lib/supabase/tipos.ts";
+import pg from "pg";
+import { hashPassword } from "better-auth/crypto";
 
 if (existsSync(".env.local")) process.loadEnvFile(".env.local");
 
 const args = process.argv.slice(2).filter((a) => a !== "--");
 const otro = args.includes("--otro");
-const [correo, nombre] = args.filter((a) => !a.startsWith("--"));
-if (!correo || !nombre) {
+const [correoArg, nombre] = args.filter((a) => !a.startsWith("--"));
+if (!correoArg || !nombre) {
   console.error('Uso: npm run crear-admin -- correo@ejemplo.com "Nombre Apellido"');
   process.exit(1);
 }
+const correo = correoArg.trim().toLowerCase();
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const clave = process.env.SUPABASE_SERVICE_ROLE_KEY;
-if (!url || !clave) {
-  console.error("Faltan NEXT_PUBLIC_SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY (en .env.local o en el entorno).");
+const url = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
+if (!url) {
+  console.error("Falta DATABASE_URL (en .env.local o en el entorno).");
   process.exit(1);
 }
 
-const db = createClient<Database>(url, clave, { auth: { persistSession: false, autoRefreshToken: false } });
+const db = new pg.Client({ connectionString: url });
+await db.connect();
+try {
+  const { rows } = await db.query<{ n: number }>("select count(*)::int as n from perfiles where rol = 'admin'");
+  if (rows[0].n && !otro) {
+    console.error(`Ya existe ${rows[0].n === 1 ? "un admin" : `${rows[0].n} admins`}. Si de verdad necesita otro desde aquí, agregue --otro.`);
+    process.exit(1);
+  }
+  const existe = await db.query("select 1 from usuarios where correo = $1", [correo]);
+  if (existe.rowCount) {
+    console.error(`Ya existe un usuario con el correo ${correo}.`);
+    process.exit(1);
+  }
 
-const { count, error: errorConteo } = await db.from("perfiles").select("id", { count: "exact", head: true }).eq("rol", "admin");
-if (errorConteo) {
-  console.error("No se pudo consultar perfiles:", errorConteo.message);
-  process.exit(1);
-}
-if (count && !otro) {
-  console.error(`Ya existe ${count === 1 ? "un admin" : `${count} admins`}. Si de verdad necesita otro desde aquí, agregue --otro.`);
-  process.exit(1);
-}
+  const contrasena = randomBytes(12).toString("base64url");
+  const hash = await hashPassword(contrasena);
 
-const contrasena = randomBytes(12).toString("base64url");
-const { data, error } = await db.auth.admin.createUser({ email: correo, password: contrasena, email_confirm: true });
-if (error) {
-  console.error("No se pudo crear el usuario:", error.message);
-  process.exit(1);
-}
+  await db.query("begin");
+  const {
+    rows: [{ id }],
+  } = await db.query<{ id: string }>(
+    "insert into usuarios (nombre, correo, correo_verificado) values ($1, $2, true) returning id",
+    [nombre, correo],
+  );
+  // Better Auth guarda la contraseña en `cuentas` con proveedor 'credential' y cuenta_id = id del usuario.
+  await db.query("insert into cuentas (usuario_id, cuenta_id, proveedor_id, contrasena) values ($1::uuid, $1::text, 'credential', $2)", [id, hash]);
+  await db.query("insert into perfiles (id, nombre, rol) values ($1, $2, 'admin')", [id, nombre]);
+  await db.query("commit");
 
-const { error: errorPerfil } = await db.from("perfiles").insert({ id: data.user.id, nombre, rol: "admin" });
-if (errorPerfil) {
-  // Sin perfil el usuario no sirve: se elimina de Auth (perfiles no se borra, pero aquí no se llegó a crear).
-  await db.auth.admin.deleteUser(data.user.id);
-  console.error("No se pudo crear el perfil:", errorPerfil.message);
-  process.exit(1);
+  console.log(`Admin creado: ${nombre} <${correo}>`);
+  console.log(`Contraseña temporal: ${contrasena}`);
+  console.log("Entréguela en persona y no la guarde en ningún otro lado. Se cambia en Portal → Mi cuenta.");
+} catch (e) {
+  await db.query("rollback").catch(() => {});
+  console.error("No se pudo crear el admin:", (e as Error).message);
+  process.exitCode = 1;
+} finally {
+  await db.end();
 }
-
-console.log(`Admin creado: ${nombre} <${correo}>`);
-console.log(`Contraseña temporal: ${contrasena}`);
-console.log("Entréguela en persona y no la guarde en ningún otro lado.");

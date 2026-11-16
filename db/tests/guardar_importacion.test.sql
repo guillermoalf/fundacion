@@ -1,12 +1,12 @@
 -- guardar_importacion_activos: todo o nada, sin duplicar archivos, con RLS y bitácora.
--- Corre con: npx supabase test db
+-- Corre con: npm run db:test
 begin;
-create extension if not exists pgtap with schema extensions;
+create extension if not exists pgtap;
 select plan(12);
 
-insert into auth.users (id, email) values
+insert into usuarios (id, correo, nombre) select id::uuid, correo, correo from (values
   ('00000000-0000-0000-0000-0000000000d1', 'coord@pgtap.test'),
-  ('00000000-0000-0000-0000-0000000000e1', 'auditor@pgtap.test');
+  ('00000000-0000-0000-0000-0000000000e1', 'auditor@pgtap.test')) v(id, correo);
 insert into perfiles (id, nombre, rol) values
   ('00000000-0000-0000-0000-0000000000d1', 'Coordinación', 'coordinacion'),
   ('00000000-0000-0000-0000-0000000000e1', 'Auditor', 'auditor');
@@ -17,10 +17,9 @@ returns jsonb language sql as $$
     'categoria_id', (select id from categorias_activo where nombre = categoria), 'costo', costo,
     'fecha_adquisicion', '2024-01-15', 'fila_origen', 'prueba.xlsx · fila ' || placa)
 $$;
-grant execute on all functions in schema pg_temp to authenticated;
 
-set local role authenticated;
-set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000d1","role":"authenticated"}';
+set local role app_portal;
+set local app.usuario_id = '00000000-0000-0000-0000-0000000000d1';
 
 -- Una fila inválida (costo negativo) hace fallar todo: no queda ni la ubicación nueva ni los otros activos
 select throws_ok(
@@ -60,7 +59,7 @@ select throws_like(
   '%"No Existe" no existe%', 'una ubicación que no existe se rechaza');
 
 -- Un auditor no puede importar (RLS)
-set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000e1","role":"authenticated"}';
+set local app.usuario_id = '00000000-0000-0000-0000-0000000000e1';
 select throws_ok(
   $$select guardar_importacion_activos('PANI', 'auditor.xlsx', '[]', jsonb_build_array(pg_temp.activo('P05', 'Cocina')))$$,
   '42501', null, 'un auditor no puede importar');

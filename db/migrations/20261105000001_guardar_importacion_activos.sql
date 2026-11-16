@@ -1,10 +1,11 @@
+-- migrate:up
 -- Guardado de una importación de Excel en una sola transacción.
 -- Antes guardar.ts hacía varios inserts sueltos (ubicaciones, activos, movimientos): si uno fallaba
 -- a la mitad quedaban activos sin su movimiento de alta, y como nada se borra no había cómo deshacerlo.
 -- Una función de Postgres es atómica: o se guarda todo o no se guarda nada.
 --
 -- security invoker (por defecto): corre con los permisos de quien llama, así que aplica el RLS
--- (puede_escribir) y la bitácora registra auth.uid() como autor de cada fila.
+-- (puede_escribir) y la bitácora registra usuario_actual() como autor de cada fila.
 --
 -- p_ubicaciones_nuevas: [{ "nombre": "Aula 3", "tipo": "aula" }, ...]
 -- p_activos: [{ placa, tipo_bien, marca, modelo, serie, categoria_id, ubicacion, fecha_adquisicion,
@@ -67,3 +68,5 @@ begin
 
   return jsonb_build_object('activos', v_activos, 'ubicacionesCreadas', to_jsonb(v_creadas));
 end $$;
+
+-- migrate:down

@@ -1,15 +1,15 @@
--- Reglas de la tabla de depreciación (migración 20261104000002). Corre con: npx supabase test db
+-- Reglas de la tabla de depreciación (migración 20261104000002). Corre con: npm run db:test
 begin;
-create extension if not exists pgtap with schema extensions;
+create extension if not exists pgtap;
 select plan(7);
 
-insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000a1', 'admin@pgtap.test');
+insert into usuarios (id, correo, nombre) select id::uuid, correo, correo from (values ('00000000-0000-0000-0000-0000000000a1', 'admin@pgtap.test')) v(id, correo);
 insert into perfiles (id, nombre, rol) values ('00000000-0000-0000-0000-0000000000a1', 'Admin', 'admin');
 insert into activos (placa, tipo_bien, ubicacion_id, fuente_id, categoria_id)
   values ('T-1', 'Lavadora de prueba', 1, 1, (select id from categorias_activo where nombre = 'Equipo de lavandería'));
 
-set local role authenticated;
-set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated"}';
+set local role app_portal;
+set local app.usuario_id = '00000000-0000-0000-0000-0000000000a1';
 
 select throws_like(
   $$update categorias_activo set tasa_anual = 20 where nombre = 'Equipo de lavandería'$$,

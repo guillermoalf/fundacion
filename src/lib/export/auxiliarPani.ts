@@ -5,8 +5,8 @@
  *   Costo de adquisición | Depreciación acumulada | Valor en Libros
  *
  * Uso en una Route Handler de Next.js:
- *   const { data } = await supabase.rpc("activos_al_corte", { p_corte: "2026-10-31", p_fuente: "PANI" });
- *   const buf = await generarAuxiliarPani(data.map(filaDesdeRpc), { corte: "2026-10-31", programa: "Fundación Creciendo Feliz ABC" });
+ *   const { rows } = await sql`select * from activos_al_corte(${"2026-10-31"}, ${"PANI"})`.execute(tx);
+ *   const buf = await generarAuxiliarPani(rows.map(filaDesdeRpc), { corte: "2026-10-31", programa: "Fundación Creciendo Feliz ABC" });
  *   return new Response(buf, { headers: { "Content-Type": XLSX_MIME, "Content-Disposition": 'attachment; filename="Auxiliar_PANI_2026-10-31.xlsx"' } });
  */
 import ExcelJS from "exceljs";

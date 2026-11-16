@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { obtenerUsuario } from "@/lib/portal/sesion";
 import logo from "@/assets/logo-secundario.png";
 import FormularioLogin from "./FormularioLogin";
 
@@ -10,6 +12,8 @@ export default async function LoginPage({
   searchParams: Promise<{ siguiente?: string }>;
 }) {
   const { siguiente } = await searchParams;
+  // Con una sesión válida no tiene sentido el login. (El middleware solo ve si hay cookie, no si sirve.)
+  if (await obtenerUsuario()) redirect("/portal");
 
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-12">

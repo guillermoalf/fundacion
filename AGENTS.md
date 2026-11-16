@@ -16,7 +16,7 @@ Guillermo writes in Spanish, casually, sometimes with loose ideas. Work out what
 ## Saving tokens
 
 - Search with grep/glob first; read only the relevant section. Don't reread files already in context.
-- Never explore `node_modules/`, `.next/`, `public/`, `src/assets/` or `supabase/.temp/`.
+- Never explore `node_modules/`, `.next/`, `public/`, `src/assets/`.
 - Don't paste code or diffs in replies unless he asks. He sees the changes in the editor.
 - While iterating, run only the tests involved (`npx vitest run <path>`). Run the full suite once, at the end.
 - Prefer editing existing files over creating new ones. Don't create docs he didn't ask for.
@@ -30,9 +30,9 @@ npm run lint
 npm run build
 npm test                         # vitest
 # if there's a migration:
-npx supabase db reset            # migrations + seed from scratch
-npx supabase test db             # pgTAP
-npm run db:tipos                 # regenerates src/lib/supabase/tipos.ts
+npm run db:reset                 # local only: migrations + seed from scratch (needs `npm run db:levantar`)
+npm run db:test                  # pgTAP
+npm run db:tipos                 # regenerates src/lib/db/tipos.ts
 ```
 
 For UI changes, also check in the browser (`npm run dev`) at desktop and mobile width.
@@ -74,17 +74,18 @@ src/lib/calculos/                depreciation, payroll (+ tests). SOURCE OF TRUT
 src/lib/catalogos/anexo2.ts      Anexo 2 rows + sugerirCategoria
 src/lib/importacion/             Excel importer + guardar.ts (__fixtures__ is ignored by git)
 src/lib/export/auxiliarPani.ts   PANI report (official columns)
-src/lib/supabase/                client.ts · server.ts · middleware.ts · tipos.ts (GENERATED, don't edit by hand)
-src/lib/portal/sesion.ts         obtenerSesion(), NOMBRE_ROL
+src/lib/db/                      index.ts (conUsuario) · conexion.ts (owner connection, don't import) · tipos.ts (GENERATED, don't edit by hand)
+src/lib/auth.ts                  Better Auth (email + password, no public sign-up)
+src/lib/portal/sesion.ts         obtenerSesion() → { usuario, perfil, consultar }, NOMBRE_ROL
 src/middleware.ts                landing redirects + /portal protection
-supabase/migrations · seed.sql · tests/ (pgTAP)
-scripts/                         crear-admin.mts, generar-seed.ts, migrar-excel.ts, generar-paridad-depreciacion.ts
+db/migrations (dbmate) · seed.sql · tests/ (pgTAP) · Dockerfile (local Postgres 17 + pgTAP, see docker-compose.yml)
+scripts/                         db.mts (migrar/reset/test), crear-admin.mts, generar-seed.ts, migrar-excel.ts, generar-paridad-depreciacion.ts
 ```
 
 ## Code conventions
 
 - Portal and `lib`: strict TypeScript. Landing: JS. Alias `@/*` → `src/*`.
-- Supabase: `crearClienteServidor()` (async) in Server Components and Actions; `crearClienteNavegador()` only in client components. Never create clients any other way.
+- Database: Postgres on Neon, queried with Kysely. Server Components and Actions use `obtenerSesion().consultar(tx => ...)` (or `conUsuario()` from `@/lib/db`). Never import `@/lib/db/conexion` or `pg` in `src/` (ESLint blocks it). Client components never touch the database: they call Server Actions.
 - Portal: Tailwind only. Landing: its SCSS, respecting the CSS order in `(sitio)/layout.tsx`.
 - Names in the portal and `lib`: Spanish. Landing components: in English (that's how they are).
 - UI copy: Spanish, addressing the user as "usted", plain language. The directora isn't technical: errors say what happened and what to do ("Falta la fecha de compra. Puede guardarlo así y completarla después."), never technical messages.
@@ -94,7 +95,7 @@ scripts/                         crear-admin.mts, generar-seed.ts, migrar-excel.
 ## Business rules (non-negotiable)
 
 1. **Never DELETE.** The database blocks it. Use statuses (`dado_de_baja`, `anulada`, `activo = false`). Corrections are new records with a reason.
-2. **Every write goes through the authenticated client.** That's how the audit log (`bitacora`) records who did it. `service_role` only in `scripts/` and in the attendance kiosk.
+2. **Every query goes through `conUsuario()`.** It switches to the `app_portal` role and sets `app.usuario_id`: that's how RLS applies and the audit log (`bitacora`) records who did it. The owner connection (bypasses RLS) only in `scripts/`, Better Auth and the attendance kiosk.
 3. **Permissions live only in RLS.** The UI hides buttons for usability, not for security.
 4. **Calculations live only in `src/lib/calculos`** (and their SQL mirror in the migration, kept in parity with `scripts/generar-paridad-depreciacion.ts`). Never compute depreciation, aguinaldo or payroll charges inside components.
 5. **Missing data = `null`, never 0, never invented.** If an asset has no cost or date, depreciation and book value stay empty and show up as a pending item. The system calculates everything from the item's cost; no accountant is involved.
@@ -105,9 +106,9 @@ scripts/                         crear-admin.mts, generar-seed.ts, migrar-excel.
 
 ## Migrations
 
-- Never edit an already-applied migration: create a new one (`npx supabase migration new <nombre>`).
-- Every new table: RLS + audit trigger + delete block (follow the pattern in the base migration), plus a pgTAP test in `supabase/tests/`.
-- Afterwards: `db reset` → `test db` → `npm run db:tipos`.
+- Never edit an already-applied migration: create a new one (`db/migrations/<YYYYMMDDHHMMSS>_<nombre>.sql`, starting with `-- migrate:up`).
+- Every new table: RLS + audit trigger + delete block (follow the pattern in the base migration), plus a pgTAP test in `db/tests/` (users: insert into `usuarios`, then `set local role app_portal; set local app.usuario_id = '<uuid>'`). `app_portal` gets SELECT/INSERT/UPDATE automatically (default privileges); never grant DELETE.
+- Afterwards: `npm run db:reset` → `npm run db:test` → `npm run db:tipos`. Vercel applies pending migrations on every deploy (`vercel-build` → `db:migrar`), so a broken migration fails the deploy.
 
 ## Known issues (don't rediscover them; fix when the task touches them or he asks)
 
@@ -120,7 +121,7 @@ scripts/                         crear-admin.mts, generar-seed.ts, migrar-excel.
 
 ## Launch (Next.js in production since 2026-11-15)
 
-Done: Vercel Framework Preset = Next.js · EmailJS variables in Production and Preview. Pending for the portal to work in production: create the Supabase cloud project and run `db push` · Supabase public variables in Vercel (Production and Preview) · create the first admin · check the 301s for capitalized URLs and the EmailJS forms.
+Done: Vercel Framework Preset = Next.js · EmailJS variables in Production and Preview. Pending for the portal to work in production: create the Neon database from Vercel (Storage → Neon, Production and Preview) · `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL` in Vercel · create the first admin (`npm run crear-admin` with the Neon URL) · check the 301s for capitalized URLs and the EmailJS forms.
 
 ## Roadmap
 
