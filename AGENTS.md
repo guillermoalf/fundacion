@@ -120,7 +120,7 @@ scripts/                         db.mts (migrar/reset/test), crear-admin.mts, ge
 
 ## Launch (Next.js in production since 2026-11-15)
 
-Done: Vercel Framework Preset = Next.js · EmailJS variables · Neon database connected (Production and Preview share it) · `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL`. Pending: Vercel production branch = `staging` · create the first admin (`npm run crear-admin` with the Neon URL) · one Neon branch per Preview before loading real data · check the 301s for capitalized URLs and the EmailJS forms.
+Done: Vercel Framework Preset = Next.js · EmailJS variables · Neon database connected (each Preview gets its own Neon branch) · `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL` · Vercel production branch = `staging`. First admin created. Pending: check the 301s for capitalized URLs and the EmailJS forms.
 
 ## Roadmap
 
