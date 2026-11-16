@@ -7,7 +7,7 @@ Cada módulo vive en su rama `portal/<modulo>`, que sale de la rama del módulo 
 ## Módulos
 
 - [x] 0. Base de la interfaz (menú lateral, migas, tabla reutilizable, vacío, "Falta", avisos, formato es-CR) — `portal/ui-base`
-- [ ] 1. Usuarios — `portal/usuarios`
+- [x] 1. Usuarios — `portal/usuarios`
 - [ ] 2. Activos — `portal/activos`
 - [ ] 3. Pendientes — `portal/pendientes`
 - [ ] 4. Tabla de depreciación — `portal/depreciacion`
@@ -30,3 +30,4 @@ Cada módulo vive en su rama `portal/<modulo>`, que sale de la rama del módulo 
 ## Bitácora de avance
 
 - **0. Base**: menú lateral (☰ en celular), migas, tabla con búsqueda/filtros/páginas (tarjetas en celular), vacío, insignia "Falta", avisos, formato es-CR y hora de Costa Rica (`src/lib/portal/formato.ts`), `ejecutar()` para Server Actions con mensajes claros (`src/lib/portal/acciones.ts`), archivos adjuntos en la base (`archivos` + `/portal/archivos/<id>`).
+- **1. Usuarios**: lista, crear con contraseña temporal que se muestra una sola vez (no hay SMTP), cambiar rol/nombre, auditor con fecha de vencimiento, desactivar/activar (cierra sus sesiones), restablecer contraseña. Funciones `usuarios_portal`, `crear_usuario_portal`, `restablecer_contrasena_portal` (security definer, solo admin). Nadie puede cambiarse su propio rol ni desactivarse. Ojo React 19: los formularios se vacían después de guardar → los de edición usan `defaultValue` + `key` con los datos guardados.
