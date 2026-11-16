@@ -141,3 +141,23 @@ export function horasTrabajadas(marcasDelDia: Marca[]) {
   if (abierta) inconsistente = true;
   return { horas: r2(ms / 3_600_000), inconsistente };
 }
+
+// ---------------------------------------------------------------- Días hábiles
+/**
+ * Días hábiles entre dos fechas (ambas incluidas): lunes a viernes, o lunes a sábado si la jornada incluye
+ * sábado. Los feriados se restan aparte (se pasan en `feriados`, "YYYY-MM-DD").
+ */
+export function diasHabiles(desde: Date | string, hasta: Date | string, opts: { incluyeSabado?: boolean; feriados?: string[] } = {}): number {
+  const ini = aFecha(desde);
+  const fin = aFecha(hasta);
+  if (fin < ini) return 0;
+  const feriados = new Set(opts.feriados ?? []);
+  let n = 0;
+  for (const d = new Date(ini); d <= fin; d.setDate(d.getDate() + 1)) {
+    const dia = diaSemanaISO(d);
+    if (dia === 7 || (dia === 6 && !opts.incluyeSabado)) continue;
+    if (feriados.has(ymd(d))) continue;
+    n++;
+  }
+  return n;
+}

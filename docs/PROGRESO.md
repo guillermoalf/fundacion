@@ -16,7 +16,7 @@ Cada módulo vive en su rama `portal/<modulo>`, que sale de la rama del módulo 
 - [x] 7. Inventario — `portal/inventario`
 - [x] 8. Personal — `portal/personal`
 - [x] 9. Kiosko de asistencia — `portal/kiosko`
-- [ ] 10. Ausencias — `portal/ausencias`
+- [x] 10. Ausencias — `portal/ausencias`
 - [ ] 11. Planilla — `portal/planilla`
 - [ ] 12. Conteo físico — `portal/conteo`
 - [ ] 13. Bitácora — `portal/bitacora`
@@ -39,3 +39,4 @@ Cada módulo vive en su rama `portal/<modulo>`, que sale de la rama del módulo 
 - **7. Inventario**: saldos por producto con alertas de mínimo y de vencimiento (15 días), salidas (a quién se entregó), mermas y donaciones (no deja sacar más de lo que hay), productos (crear/editar/inactivar) con kárdex y saldo corrido, consumo de los últimos 6 meses, reportes Excel de alimentos (Formulario 1) y limpieza con hoja de entregas para firmar (`src/lib/export/controlInventario.ts`, con tests). **Cambio transversal**: `FormularioAccion` reemplaza `<form action>` en todo el portal: si hay un error ya no se borra lo escrito.
 - **8. Personal**: lista (aula, fuente que paga el salario, si tiene PIN), crear/editar con foto, salida con fecha (no se borra), horario semanal con vigencia (el anterior se cierra un día antes: las tardías pasadas no cambian), PIN de 4 dígitos con scrypt. **El PIN salió de `empleados`** a `empleados_pin`, que app_portal no puede leer (un hash de 4 dígitos se adivina en segundos); se asigna con `asignar_pin_empleado()`. Pendiente de decidir: el salario es visible para todos los roles con lectura (también coordinación).
 - **9. Kiosko**: `/marcar` a pantalla completa (toca su foto → PIN en teclado grande → Entrada/Salida → confirmación 4 s). Solo funciona en tablets registradas por admin en `/portal/kiosko` (token aleatorio en cookie httpOnly con path `/marcar`; en la base solo el SHA-256). El servidor (`src/lib/kiosko.ts`, conexión del dueño) valida token + PIN y frena: 5 PIN malos por persona o 20 por tablet en 15 min (tabla `intentos_pin`, sirve aunque Vercel use varias instancias). Marcas manuales desde la hoja en papel con foto en `/portal/asistencia` (origen hoja_firmada, o manual sin foto); quedan con quién las digitó.
+- **10. Ausencias**: registro de vacaciones, incapacidades CCSS/INS (boleta obligatoria + foto), licencias y permisos con días hábiles sugeridos (`diasHabiles` nuevo en `src/lib/calculos/planilla.ts`, con tests; editable por feriados o medio día). Saldo de vacaciones con `calcularVacaciones` y el parámetro de días anuales. Tardías y horas del mes en `/portal/asistencia/resumen` (`src/lib/portal/asistencia.ts`: usa el horario que regía cada día y pasa las marcas a hora de Costa Rica), con aviso de días con marcas sin pareja.
