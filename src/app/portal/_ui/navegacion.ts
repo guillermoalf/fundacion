@@ -26,6 +26,7 @@ export const MENU: SeccionMenu[] = [
   { titulo: "Reportes", items: [{ href: "/portal/reportes", etiqueta: "Reportes" }] },
   { titulo: "Administración", items: [{ href: "/portal/usuarios", etiqueta: "Usuarios", roles: ["admin"] },
       { href: "/portal/kiosko", etiqueta: "Kiosko de asistencia", roles: ["admin"] },
+      { href: "/portal/bitacora", etiqueta: "Bitácora", roles: ["admin", "contabilidad", "auditor"] },
     ] },
   { titulo: "Cuenta", items: [{ href: "/portal/cuenta", etiqueta: "Mi cuenta" }] },
 ];

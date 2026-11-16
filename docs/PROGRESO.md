@@ -19,7 +19,7 @@ Cada módulo vive en su rama `portal/<modulo>`, que sale de la rama del módulo 
 - [x] 10. Ausencias — `portal/ausencias`
 - [x] 11. Planilla — `portal/planilla`
 - [x] 12. Conteo físico — `portal/conteo`
-- [ ] 13. Bitácora — `portal/bitacora`
+- [x] 13. Bitácora — `portal/bitacora`
 - [ ] 14. Inicio — `portal/inicio`
 
 ## Decisiones
@@ -42,3 +42,4 @@ Cada módulo vive en su rama `portal/<modulo>`, que sale de la rama del módulo 
 - **10. Ausencias**: registro de vacaciones, incapacidades CCSS/INS (boleta obligatoria + foto), licencias y permisos con días hábiles sugeridos (`diasHabiles` nuevo en `src/lib/calculos/planilla.ts`, con tests; editable por feriados o medio día). Saldo de vacaciones con `calcularVacaciones` y el parámetro de días anuales. Tardías y horas del mes en `/portal/asistencia/resumen` (`src/lib/portal/asistencia.ts`: usa el horario que regía cada día y pasa las marcas a hora de Costa Rica), con aviso de días con marcas sin pareja.
 - **11. Planilla**: planilla mensual en borrador calculada con `calcularLineaPlanilla` (nueva en `src/lib/calculos/planilla.ts`, con tests): rebajo por ausencias sin goce, incapacidades y licencia (salario ÷ 30), pago del patrono por días 1–3 de incapacidad CCSS (sin cargas) y 50 % de licencia de maternidad (parámetro nuevo `licencia_maternidad_patrono_pct`), CCSS obrera/patronal, provisiones de aguinaldo y vacaciones; considera ingreso/salida a mitad de mes. Ajustes en borrador (horas extra, rebajo por tardías —se muestra cuántas hubo; el monto depende del reglamento interno—, renta, otras deducciones) y se recalcula. Aprobación por admin/contabilidad; la base congela montos al aprobar y solo deja avanzar borrador → aprobada → pagada (o anular). Aguinaldo con las planillas aprobadas dic–nov. Totales por fuente en pantalla y Excel por fuente (`/portal/reportes/planilla/descargar`). El impuesto de renta no se calcula solo (faltan los tramos en `parametros`): se digita.
 - **12. Conteo físico**: empezar por aula con su responsable, lista en el celular con botones grandes Está/No está, escaneo de QR con la cámara (BarcodeDetector, Chrome en Android; en iPhone se escribe la placa) o búsqueda por placa, aviso si el activo está registrado en otra ubicación. Al cerrar, lo no marcado queda «no encontrado» y ya no se cambia (trigger); acta imprimible con firmas y subida del acta firmada (una sola vez).
+- **13. Bitácora**: lista paginada (50 por página, del servidor) con filtros por qué, quién (incluye «Sistema / kiosko») y fechas; muestra solo lo que cambió (antes tachado → después) y enlace al historial de ese registro. Visible para admin, contabilidad y auditor (lo decide el RLS).
