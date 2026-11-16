@@ -11,7 +11,7 @@ Cada módulo vive en su rama `portal/<modulo>`, que sale de la rama del módulo 
 - [x] 2. Activos — `portal/activos`
 - [x] 3. Pendientes — `portal/pendientes`
 - [x] 4. Tabla de depreciación — `portal/depreciacion`
-- [ ] 5. Reporte PANI — `portal/reporte-pani`
+- [x] 5. Reporte PANI — `portal/reporte-pani`
 - [ ] 6. Proveedores y compras — `portal/compras`
 - [ ] 7. Inventario — `portal/inventario`
 - [ ] 8. Personal — `portal/personal`
@@ -34,3 +34,4 @@ Cada módulo vive en su rama `portal/<modulo>`, que sale de la rama del módulo 
 - **2. Activos**: lista con filtros (ubicación, fuente, estado, categoría) y valor en libros al día, ficha con depreciación y calendario (`src/lib/portal/activos.ts` usa `src/lib/calculos`), historial de movimientos, crear/editar (foto opcional), traslado y baja con motivo (no se borra; la baja no se deshace), importar Excel con vista previa y aviso de archivo repetido, etiquetas A4 3×8 con QR que abre la ficha. La ubicación solo se cambia con un traslado (queda en el historial).
 - **3. Pendientes**: tarjetas por tipo (desde `v_activos_alertas`) con qué hacer en cada caso, tabla filtrable con enlace para completar (editar activo) o ir a Compras cuando falta la factura.
 - **4. Tabla de depreciación**: lista con cuántos activos usan cada fila, agregar fila, editar (tasa y años bloqueados si la fila está en uso, como manda el trigger), retirar/volver a usar. Solo admin edita (RLS).
+- **5. Reporte PANI**: `/portal/reportes` con corte + fuente, resumen en pantalla y descarga `.xlsx` por `/portal/reportes/pani/descargar` (sin punto en la ruta: la protege el middleware; además la ruta revisa la sesión). Opción con hoja interna de pendientes. El middleware ahora lee la cookie de sesión directo (quitó el aviso del Edge Runtime por `jose`).

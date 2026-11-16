@@ -1,5 +1,4 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getSessionCookie } from "better-auth/cookies";
 import { RUTA_LOGIN } from "@/lib/portal/rutas";
 
 // Rutas públicas del sitio. Antes se servían con mayúscula (/Nosotros); ahora
@@ -11,9 +10,14 @@ const PUBLIC_ROUTES = ["/nosotros", "/servicios", "/donaciones", "/admisiones", 
  * no consulta la base); que la sesión sea válida lo revisa obtenerSesion() en cada página, y qué puede ver
  * o hacer cada rol lo decide el RLS de la base.
  */
+// Nombre de la cookie de Better Auth (con prefijo __Secure- en https). Se lee directo para no cargar
+// better-auth en el middleware (arrastra librerías que el Edge Runtime no soporta).
+const tieneCookieDeSesion = (r: NextRequest) =>
+  r.cookies.has("better-auth.session_token") || r.cookies.has("__Secure-better-auth.session_token");
+
 function protegerPortal(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
-  if (pathname === RUTA_LOGIN || getSessionCookie(request)) return NextResponse.next();
+  if (pathname === RUTA_LOGIN || tieneCookieDeSesion(request)) return NextResponse.next();
 
   const url = request.nextUrl.clone();
   url.pathname = RUTA_LOGIN;

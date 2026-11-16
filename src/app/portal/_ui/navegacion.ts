@@ -11,6 +11,7 @@ export const MENU: SeccionMenu[] = [
       { href: "/portal/pendientes", etiqueta: "Pendientes" },
       { href: "/portal/depreciacion", etiqueta: "Tabla de depreciación" },
     ] },
+  { titulo: "Reportes", items: [{ href: "/portal/reportes", etiqueta: "Reportes" }] },
   { titulo: "Administración", items: [{ href: "/portal/usuarios", etiqueta: "Usuarios", roles: ["admin"] }] },
   { titulo: "Cuenta", items: [{ href: "/portal/cuenta", etiqueta: "Mi cuenta" }] },
 ];
