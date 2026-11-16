@@ -10,6 +10,7 @@ export const MENU: SeccionMenu[] = [
       { href: "/portal/activos", etiqueta: "Activos" },
       { href: "/portal/pendientes", etiqueta: "Pendientes" },
       { href: "/portal/depreciacion", etiqueta: "Tabla de depreciación" },
+      { href: "/portal/conteos", etiqueta: "Conteo físico" },
     ] },
   { titulo: "Compras", items: [
       { href: "/portal/compras", etiqueta: "Compras" },
