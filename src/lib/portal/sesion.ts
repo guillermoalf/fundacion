@@ -15,6 +15,7 @@ export const NOMBRE_ROL: Record<Rol, string> = {
   contabilidad: "Contabilidad",
   coordinacion: "Coordinación",
   auditor: "Auditoría",
+  superadmin: "Superadministrador",
 };
 
 /** Usuario con sesión válida, o null. No redirige: sirve para el login y las Server Actions. */
@@ -49,7 +50,8 @@ export const obtenerSesion = cache(async () => {
   });
 
   // Solo para mostrar u ocultar: el RLS (ve_salarios / edita_salarios) es el que decide.
-  const veSalarios = !!perfil && ["admin", "contabilidad", "auditor"].includes(perfil.rol);
-  const editaSalarios = !!perfil && ["admin", "contabilidad"].includes(perfil.rol);
-  return { usuario, perfil, puedeEscribir, esAdmin, veSalarios, editaSalarios, consultar };
+  const veSalarios = !!perfil && ["admin", "contabilidad", "auditor", "superadmin"].includes(perfil.rol);
+  const editaSalarios = !!perfil && ["admin", "contabilidad", "superadmin"].includes(perfil.rol);
+  const esSuperadmin = perfil?.rol === "superadmin";
+  return { usuario, perfil, puedeEscribir, esAdmin, esSuperadmin, veSalarios, editaSalarios, consultar };
 });

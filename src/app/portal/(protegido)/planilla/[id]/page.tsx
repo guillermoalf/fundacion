@@ -17,7 +17,7 @@ export default async function PlanillaDetallePage({ params }: { params: Promise<
   const { id } = await params;
   const { consultar, perfil, veSalarios } = await obtenerSesion();
   if (!veSalarios) return <SinPermiso que="la planilla" quien="dirección, contabilidad o auditoría" />;
-  const puedeArmar = perfil?.rol === "admin" || perfil?.rol === "contabilidad";
+  const puedeArmar = perfil?.rol === "admin" || perfil?.rol === "contabilidad" || perfil?.rol === "superadmin";
   const d = await consultar(async (tx) => {
     const p = await tx.selectFrom("planillas as p").leftJoin("perfiles as u", "u.id", "p.aprobada_por").select(["p.id", "p.periodo_inicio", "p.periodo_fin", "p.tipo", "p.estado", "p.aprobada_en", "u.nombre as aprobo"]).where("p.id", "=", id).executeTakeFirst();
     if (!p) return null;

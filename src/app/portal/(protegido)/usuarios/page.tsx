@@ -11,7 +11,7 @@ import { FormularioNuevoUsuario } from "./Formularios";
 export const metadata: Metadata = { title: "Usuarios" };
 
 export default async function UsuariosPage() {
-  const { esAdmin, consultar } = await obtenerSesion();
+  const { esAdmin, esSuperadmin, consultar } = await obtenerSesion();
   if (!esAdmin) return <SinPermiso que="la gestión de usuarios" />;
   const usuarios = await listarUsuarios(consultar);
 
@@ -43,7 +43,7 @@ export default async function UsuariosPage() {
           <p className="mb-4 text-slate-600">
             El portal todavía no envía correos: al crear el usuario se muestra una contraseña temporal para entregarla en persona.
           </p>
-          <FormularioNuevoUsuario />
+          <FormularioNuevoUsuario conSuper={esSuperadmin} />
         </section>
       </div>
     </>

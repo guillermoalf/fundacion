@@ -38,7 +38,7 @@ export default async function PortalProtegidoLayout({ children }: { children: Re
     );
   }
 
-  const secciones = MENU.map((s) => ({ ...s, items: s.items.filter((i) => !i.roles || i.roles.includes(perfil.rol)) })).filter((s) => s.items.length);
+  const secciones = MENU.map((s) => ({ ...s, items: s.items.filter((i) => !i.roles || i.roles.includes(perfil.rol) || perfil.rol === "superadmin") })).filter((s) => s.items.length);
 
   return (
     <ProveedorAvisos>

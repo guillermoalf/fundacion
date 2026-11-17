@@ -57,9 +57,29 @@ async function cargarSeedSiHaceFalta() {
   });
 }
 
+/**
+ * Superadministrador: si la variable SUPERADMIN_CORREO (Vercel, solo producción) nombra a un usuario existente,
+ * se le da ese rol. Va por configuración y no en una migración para no publicar el correo en el repositorio.
+ */
+async function asignarSuperadmin() {
+  const correo = process.env.SUPERADMIN_CORREO?.trim().toLowerCase();
+  if (!correo) return;
+  await conCliente(async (c) => {
+    const { rowCount } = await c.query(
+      `update perfiles set rol = 'superadmin', activo = true, acceso_hasta = null
+       where id = (select id from usuarios where correo = $1) and rol <> 'superadmin'`,
+      [correo],
+    );
+    const existe = await c.query("select 1 from usuarios where correo = $1", [correo]);
+    if (rowCount) console.log("Superadministrador asignado.");
+    else if (!existe.rowCount) console.warn("⚠ SUPERADMIN_CORREO no corresponde a ningún usuario todavía: créelo en Usuarios y vuelva a publicar.");
+  });
+}
+
 async function migrar() {
   dbmate("up");
   await cargarSeedSiHaceFalta();
+  await asignarSuperadmin();
 }
 
 async function reset() {

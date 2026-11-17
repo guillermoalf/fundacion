@@ -98,7 +98,8 @@ scripts/                         db.mts (migrar/reset/test), crear-admin.mts, ge
 
 ## Business rules (non-negotiable)
 
-1. **Never DELETE.** The database blocks it. Use statuses (`dado_de_baja`, `anulada`, `activo = false`). Corrections are new records with a reason.
+1. **Never DELETE.** The database blocks it, for every role. Use statuses (`dado_de_baja`, `anulada`, `activo = false`). Corrections are new records with a reason, or a superadmin correction.
+10. **Superadmin (Guillermo) can correct anything**, including closed/approved records (payroll, counts, marks, rates in use, users), via `/portal/corregir` (link on each Bitácora entry). Every lock trigger lets `correccion_autorizada()` through only with a reason (`app.motivo`), which is stored in `bitacora.motivo`. Only a superadmin grants or changes that role; the production user comes from Vercel's `SUPERADMIN_CORREO` (applied by `db:migrar` on deploy). New lock triggers must allow `correccion_autorizada()`.
 2. **Every query goes through `conUsuario()`.** It switches to the `app_portal` role and sets `app.usuario_id`: that's how RLS applies and the audit log (`bitacora`) records who did it. The owner connection (bypasses RLS) only in `scripts/`, Better Auth and the attendance kiosk.
 3. **Permissions live only in RLS.** The UI hides buttons for usability, not for security.
 4. **Calculations live only in `src/lib/calculos`** (and their SQL mirror in the migration, kept in parity with `scripts/generar-paridad-depreciacion.ts`). Never compute depreciation, aguinaldo or payroll charges inside components.
