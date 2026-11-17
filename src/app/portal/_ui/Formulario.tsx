@@ -117,8 +117,10 @@ export function MensajeError({ estado }: { estado: { ok: boolean; error?: string
   );
 }
 
-const TOPE_BYTES = 4 * 1024 * 1024;
+const TOPE_BYTES = 5 * 1024 * 1024;
+const PARTE = 3 * 1024 * 1024;
 
+/** Fotos: lado más largo 1600 px, JPEG al 80 %. Si así no pesa menos, se deja la original. */
 async function comprimirImagen(archivo: File): Promise<File> {
   if (!archivo.type.startsWith("image/") || archivo.type === "image/gif") return archivo;
   const bitmap = await createImageBitmap(archivo).catch(() => null);
@@ -133,12 +135,38 @@ async function comprimirImagen(archivo: File): Promise<File> {
   return new File([blob], archivo.name.replace(/\.\w+$/, "") + ".jpg", { type: "image/jpeg" });
 }
 
+/** Sube el archivo en partes de 3 MB (Vercel no acepta más de 4,5 MB por petición) y devuelve su id. */
+async function subirPorPartes(archivo: File, progreso: (pct: number) => void): Promise<string> {
+  const subida = crypto.randomUUID();
+  const partes = Math.ceil(archivo.size / PARTE);
+  for (let i = 0; i < partes; i++) {
+    const r = await fetch(`/portal/archivos/subir?subida=${subida}&parte=${i}`, { method: "POST", body: archivo.slice(i * PARTE, (i + 1) * PARTE) });
+    const d = await r.json().catch(() => ({ ok: false, error: "No se pudo subir el archivo. Revise el internet e intente de nuevo." }));
+    if (!d.ok) throw new Error(d.error);
+    progreso(Math.round(((i + 1) / partes) * 100));
+  }
+  const r = await fetch(`/portal/archivos/subir?subida=${subida}&completar=1`, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nombre: archivo.name, tipo: archivo.type }),
+  });
+  const d = await r.json().catch(() => ({ ok: false, error: "No se pudo terminar de subir el archivo." }));
+  if (!d.ok) throw new Error(d.error);
+  return d.id as string;
+}
+
 /**
- * Foto o PDF. Las fotos se achican en el navegador antes de subirlas (las del celular pesan varios MB).
+ * Foto o PDF. Se sube apenas se elige (las fotos se comprimen antes) y el formulario solo envía su id.
  * En el celular ofrece la cámara directamente.
  */
 export function CampoArchivo({ etiqueta, name, ayuda, required, aceptar = "image/*,application/pdf" }: { etiqueta: string; name: string; ayuda?: ReactNode; required?: boolean; aceptar?: string }) {
-  const [aviso, setAviso] = useState<string | null>(null);
+  const [estado, setEstado] = useState<{ t: "nada" } | { t: "subiendo"; pct: number } | { t: "listo"; id: string; kb: number } | { t: "error"; msg: string }>({ t: "nada" });
+  const ref = useRef<HTMLInputElement>(null);
+  // Cuando el formulario se vacía después de guardar, el archivo ya usado se olvida.
+  useEffect(() => {
+    const form = ref.current?.form;
+    const limpiar = () => setEstado({ t: "nada" });
+    form?.addEventListener("reset", limpiar);
+    return () => form?.removeEventListener("reset", limpiar);
+  }, []);
   return (
     <div className="space-y-1.5">
       <label htmlFor={name} className={estiloEtiqueta}>
@@ -146,8 +174,8 @@ export function CampoArchivo({ etiqueta, name, ayuda, required, aceptar = "image
         {required && <span className="text-red-600"> *</span>}
       </label>
       <input
+        ref={ref}
         id={name}
-        name={name}
         type="file"
         accept={aceptar}
         required={required}
@@ -155,22 +183,37 @@ export function CampoArchivo({ etiqueta, name, ayuda, required, aceptar = "image
         onChange={async (e) => {
           const input = e.currentTarget;
           const original = input.files?.[0];
-          setAviso(null);
-          if (!original) return;
+          input.setCustomValidity("");
+          if (!original) { setEstado({ t: "nada" }); return; }
+          if (!original.type.startsWith("image/") && original.type !== "application/pdf") {
+            input.value = "";
+            setEstado({ t: "error", msg: "Solo fotos o PDF." });
+            return;
+          }
           const final = await comprimirImagen(original);
           if (final.size > TOPE_BYTES) {
             input.value = "";
-            setAviso("El archivo pesa más de 4 MB. Tome la foto otra vez o use un PDF más liviano.");
+            setEstado({ t: "error", msg: "El archivo pesa más de 5 MB. Tome la foto otra vez o use un PDF más liviano." });
             return;
           }
-          if (final !== original) {
-            const dt = new DataTransfer();
-            dt.items.add(final);
-            input.files = dt.files;
+          input.setCustomValidity("Espere a que termine de subir el archivo.");
+          setEstado({ t: "subiendo", pct: 0 });
+          try {
+            const id = await subirPorPartes(final, (pct) => setEstado({ t: "subiendo", pct }));
+            input.setCustomValidity("");
+            setEstado({ t: "listo", id, kb: Math.max(1, Math.round(final.size / 1024)) });
+          } catch (err) {
+            input.value = "";
+            input.setCustomValidity("");
+            setEstado({ t: "error", msg: (err as Error).message });
           }
         }}
       />
-      {aviso ? <p className="text-sm text-red-700">{aviso}</p> : ayuda && <p className="text-sm text-slate-500">{ayuda}</p>}
+      <input type="hidden" name={name} value={estado.t === "listo" ? estado.id : ""} />
+      {estado.t === "subiendo" && <p className="text-sm text-sky-700">Subiendo… {estado.pct} %</p>}
+      {estado.t === "listo" && <p className="text-sm text-emerald-700">Listo ({estado.kb} KB).</p>}
+      {estado.t === "error" && <p className="text-sm text-red-700">{estado.msg}</p>}
+      {estado.t === "nada" && ayuda && <p className="text-sm text-slate-500">{ayuda}</p>}
     </div>
   );
 }

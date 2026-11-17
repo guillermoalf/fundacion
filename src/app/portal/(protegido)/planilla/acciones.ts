@@ -77,7 +77,10 @@ export async function ajustarLinea(_: R, f: FormData): Promise<R> {
       const l = await tx.selectFrom("planilla_lineas").select(["detalle"]).where("planilla_id", "=", planilla).where("empleado_id", "=", empleado).executeTakeFirstOrThrow();
       const d = l.detalle as unknown as DetalleLinea;
       if (!d?.entrada) throw new ErrorUsuario("Esta línea no se ajusta aquí (por ejemplo, el aguinaldo).");
-      const entrada = { ...d.entrada, montoHorasExtra: valor("monto_horas_extra"), rebajoTardias: valor("rebajo_tardias"), impuestoRenta: valor("impuesto_renta"), otrasDeducciones: valor("otras_deducciones") };
+      const base = { ...d.entrada, montoHorasExtra: valor("monto_horas_extra"), rebajoTardias: valor("rebajo_tardias"), otrasDeducciones: valor("otras_deducciones"), impuestoRenta: undefined };
+      const renta = valor("impuesto_renta");
+      // Si la renta digitada es la misma que la calculada, se deja automática (sigue los tramos si cambian los montos).
+      const entrada = renta === calcularLineaPlanilla(base).impuestoRentaAutomatico ? base : { ...base, impuestoRenta: renta };
       const c = calcularLineaPlanilla(entrada);
       const fila = filaLinea(planilla, { empleado_id: empleado, fuente_id: null, entrada, calculo: c, detalle: { ...d, entrada } });
       const montos: Partial<typeof fila> = { ...fila };

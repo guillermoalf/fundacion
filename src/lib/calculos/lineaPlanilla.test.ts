@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calcularLineaPlanilla } from "./planilla";
+import { calcularImpuestoRenta, calcularLineaPlanilla } from "./planilla";
 
 const parametros = { ccssObreroPct: 10.83, ccssPatronalPct: 26.83, incapacidadPatronoPctDias1a3: 50, licenciaMaternidadPatronoPct: 50, aguinaldoDivisor: 12, vacacionesDiasAnuales: 10 };
 const base = { salarioMensual: 450000, diasSinGoce: 0, diasIncapacidadCCSS: 0, diasIncapacidadCCSSPatrono: 0, diasIncapacidadINS: 0, diasLicenciaMaternidad: 0, parametros };
@@ -35,5 +35,32 @@ describe("línea de planilla", () => {
   });
   it("el rebajo nunca pasa el salario", () => {
     expect(calcularLineaPlanilla({ ...base, diasSinGoce: 40 }).salarioBruto).toBe(0);
+  });
+});
+
+// Decreto 45333-H, tramos mensuales 2026
+const TRAMOS_2026 = [
+  { desde: 0, hasta: 918000, tasa: 0 },
+  { desde: 918000, hasta: 1347000, tasa: 10 },
+  { desde: 1347000, hasta: 2364000, tasa: 15 },
+  { desde: 2364000, hasta: 4727000, tasa: 20 },
+  { desde: 4727000, hasta: null, tasa: 25 },
+];
+
+describe("impuesto sobre la renta al salario", () => {
+  it("exento hasta el primer tramo", () => {
+    expect(calcularImpuestoRenta(450000, TRAMOS_2026)).toBe(0);
+    expect(calcularImpuestoRenta(918000, TRAMOS_2026)).toBe(0);
+  });
+  it("grava solo el exceso de cada tramo", () => {
+    expect(calcularImpuestoRenta(1000000, TRAMOS_2026)).toBe(8200);
+    expect(calcularImpuestoRenta(2500000, TRAMOS_2026)).toBe(42900 + 152550 + 27200);
+    expect(calcularImpuestoRenta(5000000, TRAMOS_2026)).toBe(42900 + 152550 + 472600 + 68250);
+  });
+  it("la planilla lo calcula sola y el ajuste manual lo reemplaza", () => {
+    const auto = calcularLineaPlanilla({ ...base, salarioMensual: 1000000, tramosRenta: TRAMOS_2026 });
+    expect(auto.impuestoRenta).toBe(8200);
+    expect(calcularLineaPlanilla({ ...base, salarioMensual: 1000000, tramosRenta: TRAMOS_2026, impuestoRenta: 5000 }).impuestoRenta).toBe(5000);
+    expect(calcularLineaPlanilla({ ...base, salarioMensual: 1000000, tramosRenta: null }).impuestoRenta).toBe(0);
   });
 });

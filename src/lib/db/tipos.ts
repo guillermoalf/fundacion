@@ -99,6 +99,14 @@ export interface Archivos {
   tipo: string;
 }
 
+export interface ArchivosPartes {
+  contenido: Buffer;
+  creado_en: Generated<Timestamp>;
+  parte: number;
+  subida_id: string;
+  subido_por: Generated<string>;
+}
+
 export interface Ausencias {
   aprobado_por: Generated<string | null>;
   creado_en: Generated<Timestamp>;
@@ -203,7 +211,6 @@ export interface Empleados {
   nombre: string;
   perfil_id: string | null;
   puesto: string;
-  salario_mensual: Numeric;
   ubicacion_id: number | null;
 }
 
@@ -323,6 +330,23 @@ export interface Proveedores {
   tipo: string | null;
 }
 
+export interface Salarios {
+  creado_en: Generated<Timestamp>;
+  empleado_id: string;
+  motivo: string | null;
+  registrado_por: Generated<string | null>;
+  salario_mensual: Numeric;
+  vigente_desde: string;
+}
+
+export interface TramosRenta {
+  desde: Numeric;
+  fuente_legal: string;
+  hasta: Numeric | null;
+  tasa: Numeric;
+  vigente_desde: string;
+}
+
 export interface Ubicaciones {
   activo: Generated<boolean>;
   id: Generated<number>;
@@ -352,6 +376,7 @@ export interface DB {
   activo_movimientos: ActivoMovimientos;
   activos: Activos;
   archivos: Archivos;
+  archivos_partes: ArchivosPartes;
   ausencias: Ausencias;
   bitacora: Bitacora;
   categorias_activo: CategoriasActivo;
@@ -371,6 +396,8 @@ export interface DB {
   planillas: Planillas;
   productos: Productos;
   proveedores: Proveedores;
+  salarios: Salarios;
+  tramos_renta: TramosRenta;
   ubicaciones: Ubicaciones;
   v_activos_alertas: VActivosAlertas;
   v_saldo_inventario: VSaldoInventario;

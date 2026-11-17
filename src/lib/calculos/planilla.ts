@@ -162,6 +162,26 @@ export function diasHabiles(desde: Date | string, hasta: Date | string, opts: { 
   return n;
 }
 
+// ---------------------------------------------------------------- Impuesto sobre la renta al salario
+export interface TramoRenta {
+  desde: number;
+  /** null = en adelante */
+  hasta: number | null;
+  /** % sobre el exceso de `desde` dentro del tramo */
+  tasa: number;
+}
+
+/** Impuesto mensual al salario: cada tramo grava solo la parte de la base que cae dentro de él. */
+export function calcularImpuestoRenta(baseMensual: number, tramos: TramoRenta[]): number {
+  let total = 0;
+  for (const t of tramos) {
+    if (baseMensual <= t.desde) continue;
+    const tope = t.hasta === null ? baseMensual : Math.min(baseMensual, t.hasta);
+    total += ((tope - t.desde) * t.tasa) / 100;
+  }
+  return r2(total);
+}
+
 // ---------------------------------------------------------------- Línea de planilla mensual
 export interface EntradaLineaPlanilla {
   salarioMensual: number;
@@ -175,7 +195,10 @@ export interface EntradaLineaPlanilla {
   diasLicenciaMaternidad: number;
   montoHorasExtra?: number;
   rebajoTardias?: number;
+  /** si se pasa, reemplaza al cálculo automático con los tramos (ajuste manual en el borrador) */
   impuestoRenta?: number;
+  /** tramos vigentes; null = faltan cargar (el impuesto queda en 0 y la planilla avisa) */
+  tramosRenta?: TramoRenta[] | null;
   otrasDeducciones?: number;
   parametros: {
     ccssObreroPct: number;
@@ -205,7 +228,9 @@ export function calcularLineaPlanilla(e: EntradaLineaPlanilla) {
   const rebajoTardias = r2(e.rebajoTardias ?? 0);
   const bruto = r2(e.salarioMensual - rebajoAusencias - rebajoTardias + horasExtra + pagoIncapacidad + pagoLicencia);
   const cargas = calcularCargas(r2(bruto - pagoIncapacidad), { obreroPct: p.ccssObreroPct, patronalPct: p.ccssPatronalPct });
-  const renta = r2(e.impuestoRenta ?? 0);
+  // Base de la renta: el salario devengado; el subsidio de incapacidad que paga el patrono no es salario.
+  const rentaAutomatica = e.tramosRenta ? calcularImpuestoRenta(r2(bruto - pagoIncapacidad), e.tramosRenta) : 0;
+  const renta = r2(e.impuestoRenta ?? rentaAutomatica);
   const otras = r2(e.otrasDeducciones ?? 0);
   return {
     diasLaborados: Math.max(0, 30 - diasRebajados),
@@ -216,6 +241,7 @@ export function calcularLineaPlanilla(e: EntradaLineaPlanilla) {
     salarioBruto: bruto,
     ccssObrero: cargas.ccssObrero,
     impuestoRenta: renta,
+    impuestoRentaAutomatico: rentaAutomatica,
     otrasDeducciones: otras,
     salarioNeto: r2(bruto - cargas.ccssObrero - renta - otras),
     cargasPatronales: cargas.cargasPatronales,

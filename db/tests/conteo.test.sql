@@ -5,8 +5,8 @@ select plan(5);
 
 insert into usuarios (id, correo, nombre) values ('00000000-0000-0000-0000-0000000000d1', 'coord@pgtap.test', 'c');
 insert into perfiles (id, nombre, rol) values ('00000000-0000-0000-0000-0000000000d1', 'Coordinación', 'coordinacion');
-insert into empleados (id, cedula, nombre, puesto, fecha_ingreso, salario_mensual)
-  values ('00000000-0000-0000-0000-00000000e001', '7-7777-7777', 'Maestra', 'Docente', '2024-01-08', 1);
+insert into empleados (id, cedula, nombre, puesto, fecha_ingreso)
+  values ('00000000-0000-0000-0000-00000000e001', '7-7777-7777', 'Maestra', 'Docente', '2024-01-08');
 insert into activos (id, placa, tipo_bien, ubicacion_id, fuente_id) values ('00000000-0000-0000-0000-00000000ac01', 'C-1', 'Silla', 1, 1);
 insert into conteos_fisicos (id, ubicacion_id, responsable_id) values ('00000000-0000-0000-0000-00000000c001', 1, '00000000-0000-0000-0000-00000000e001');
 

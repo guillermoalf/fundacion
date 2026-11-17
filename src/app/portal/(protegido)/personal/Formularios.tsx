@@ -3,15 +3,15 @@
 import { useActionState } from "react";
 import { BotonEnviar, Campo, CampoArchivo, Casilla, FormularioAccion, MensajeError, Seleccion } from "../../_ui/Formulario";
 import { useAvisoResultado } from "../../_ui/Avisos";
-import { asignarPin, crearEmpleado, editarEmpleado, guardarHorario } from "./acciones";
+import { asignarPin, cambiarSalario, crearEmpleado, editarEmpleado, guardarHorario } from "./acciones";
 
 type Opcion = { valor: number | string; texto: string };
 type V = {
   id?: string; cedula?: string; nombre?: string; puesto?: string; ubicacion_id?: number | null; fuente_id?: number | null; fecha_ingreso?: string;
-  fecha_salida?: string | null; salario_mensual?: string; horas_jornada_diaria?: string; activo?: boolean;
+  fecha_salida?: string | null; horas_jornada_diaria?: string; activo?: boolean;
 };
 
-export function FormularioEmpleado({ v = {}, ubicaciones, fuentes }: { v?: V; ubicaciones: Opcion[]; fuentes: Opcion[] }) {
+export function FormularioEmpleado({ v = {}, ubicaciones, fuentes, conSalario = false }: { v?: V; ubicaciones: Opcion[]; fuentes: Opcion[]; conSalario?: boolean }) {
   const editando = !!v.id;
   const [estado, accion, pendiente] = useActionState(editando ? editarEmpleado : crearEmpleado, null);
   return (
@@ -22,7 +22,7 @@ export function FormularioEmpleado({ v = {}, ubicaciones, fuentes }: { v?: V; ub
       <Campo etiqueta="Puesto" name="puesto" defaultValue={v.puesto} required placeholder="Docente, asistente, cocinera…" />
       <Seleccion etiqueta="Aula a cargo" name="ubicacion_id" opciones={ubicaciones} vacio="Ninguna" defaultValue={v.ubicacion_id ?? ""} />
       <Seleccion etiqueta="Su salario lo paga" name="fuente_id" opciones={fuentes} vacio="Sin definir" defaultValue={v.fuente_id ?? ""} />
-      <Campo etiqueta="Salario mensual (₡)" name="salario_mensual" inputMode="decimal" defaultValue={v.salario_mensual} required />
+      {!editando && conSalario && <Campo etiqueta="Salario mensual (₡)" name="salario_mensual" inputMode="decimal" ayuda="Lo ven solo dirección, contabilidad y auditoría." />}
       <Campo etiqueta="Fecha de ingreso" name="fecha_ingreso" type="date" defaultValue={v.fecha_ingreso} required />
       <Campo etiqueta="Horas de la jornada diaria" name="horas_jornada_diaria" inputMode="decimal" defaultValue={v.horas_jornada_diaria ?? "8"} />
       <CampoArchivo etiqueta={editando ? "Cambiar foto" : "Foto (para el kiosko)"} name="foto" aceptar="image/*" />
@@ -71,6 +71,21 @@ export function FormularioPin({ id, tiene }: { id: string; tiene: boolean }) {
       </div>
       <MensajeError estado={estado} />
       <BotonEnviar variante="secundario">{tiene ? "Cambiar PIN" : "Asignar PIN"}</BotonEnviar>
+    </FormularioAccion>
+  );
+}
+
+export function FormularioSalario({ id, hoy }: { id: string; hoy: string }) {
+  const [estado, accion, pendiente] = useActionState(cambiarSalario, null);
+  useAvisoResultado(estado, "Salario guardado.");
+  return (
+    <FormularioAccion accion={accion} estado={estado} pendiente={pendiente} className="grid gap-3 sm:grid-cols-2">
+      <input type="hidden" name="id" value={id} />
+      <Campo etiqueta="Salario mensual (₡)" name="salario_mensual" inputMode="decimal" required />
+      <Campo etiqueta="Rige desde" name="vigente_desde" type="date" defaultValue={hoy} required />
+      <Campo etiqueta="Motivo" name="motivo" placeholder="Ej.: aumento de ley, cambio de jornada" className="sm:col-span-2" />
+      <div className="sm:col-span-2"><MensajeError estado={estado} /></div>
+      <div className="sm:col-span-2"><BotonEnviar variante="secundario">Guardar salario</BotonEnviar></div>
     </FormularioAccion>
   );
 }

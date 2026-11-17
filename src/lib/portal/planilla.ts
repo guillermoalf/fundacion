@@ -29,6 +29,12 @@ export async function parametrosPlanilla(tx: Tx, fecha: string): Promise<Entrada
   return Object.fromEntries(valores) as EntradaLineaPlanilla["parametros"];
 }
 
+/** Tramos de renta vigentes en una fecha, o null si no hay ninguno cargado. */
+export async function tramosVigentes(tx: Tx, fecha: string) {
+  const { rows } = await sql<{ desde: string; hasta: string | null; tasa: string }>`select * from tramos_renta_vigentes(${fecha}::date)`.execute(tx);
+  return rows.length ? rows.map((t) => ({ desde: Number(t.desde), hasta: t.hasta === null ? null : Number(t.hasta), tasa: Number(t.tasa) })) : null;
+}
+
 const maxF = (a: string, b: string) => (a > b ? a : b);
 const minF = (a: string, b: string) => (a < b ? a : b);
 const diasNaturales = (a: string, b: string) => Math.max(0, Math.round((Date.parse(b) - Date.parse(a)) / 86_400_000) + 1);
@@ -38,12 +44,15 @@ export type DetalleLinea = { entrada: EntradaLineaPlanilla; notas: string[]; tar
 export async function lineasMensuales(tx: Tx, mes: string) {
   const { desde, hasta } = rangoMes(mes);
   const parametros = await parametrosPlanilla(tx, hasta);
+  const tramos = await tramosVigentes(tx, hasta);
   const [empleados, ausencias, asistencia] = await Promise.all([
-    tx.selectFrom("empleados").select(["id", "nombre", "salario_mensual", "fuente_id", "fecha_ingreso", "fecha_salida"])
+    tx.selectFrom("empleados").select(["id", "nombre", "fuente_id", "fecha_ingreso", "fecha_salida", sql<string | null>`salario_vigente(id, ${hasta}::date)`.as("salario_mensual")])
       .where("fecha_ingreso", "<=", hasta).where((eb) => eb.or([eb("fecha_salida", "is", null), eb("fecha_salida", ">=", desde)])).orderBy("nombre").execute(),
     tx.selectFrom("ausencias").select(["empleado_id", "tipo", "desde", "hasta", "dias_habiles"]).where("desde", "<=", hasta).where("hasta", ">=", desde).execute(),
     resumenAsistenciaMes(tx, mes),
   ]);
+  const sinSalario = empleados.filter((e) => e.salario_mensual === null).map((e) => e.nombre);
+  if (sinSalario.length) throw new ErrorUsuario(`Falta el salario de: ${sinSalario.join(", ")}. Regístrelo en Personal antes de generar la planilla.`);
   return empleados.map((e) => {
     const notas: string[] = [];
     // Días de la ausencia dentro del mes: si cae entera en el mes se usa lo registrado (puede tener correcciones).
@@ -63,9 +72,10 @@ export async function lineasMensuales(tx: Tx, mes: string) {
     const tardias = asistencia.filas.find((f) => f.empleadoId === e.id)?.tardias.length ?? 0;
     if (tardias) notas.push(`${tardias} ${tardias === 1 ? "llegada tardía" : "llegadas tardías"} en el mes: el rebajo depende del reglamento interno, anótelo si corresponde.`);
     if (!e.fuente_id) notas.push("Falta la fuente que paga su salario.");
+    if (!tramos) notas.push("Falta cargar los tramos del impuesto de renta: la renta quedó en ₡0. Cárguelos en Parámetros o digítela abajo.");
     const entrada: EntradaLineaPlanilla = {
       salarioMensual: Number(e.salario_mensual), diasSinGoce, diasIncapacidadCCSS: suma(["incapacidad_ccss"]), diasIncapacidadCCSSPatrono: diasCCSSPatrono,
-      diasIncapacidadINS: suma(["incapacidad_ins"]), diasLicenciaMaternidad: suma(["licencia_maternidad"]), parametros,
+      diasIncapacidadINS: suma(["incapacidad_ins"]), diasLicenciaMaternidad: suma(["licencia_maternidad"]), parametros, tramosRenta: tramos,
     };
     return { empleado_id: e.id, nombre: e.nombre, fuente_id: e.fuente_id, entrada, calculo: calcularLineaPlanilla(entrada), detalle: { entrada, notas, tardias } satisfies DetalleLinea };
   });

@@ -9,8 +9,8 @@ insert into usuarios (id, correo, nombre) select id::uuid, correo, correo from (
 insert into perfiles (id, nombre, rol) values
   ('00000000-0000-0000-0000-0000000000c1', 'Contabilidad', 'contabilidad'),
   ('00000000-0000-0000-0000-0000000000d1', 'Coordinación', 'coordinacion');
-insert into empleados (id, cedula, nombre, puesto, fecha_ingreso, salario_mensual)
-  values ('00000000-0000-0000-0000-00000000e001', '8-8888-8888', 'Prueba', 'Docente', '2024-01-08', 450000);
+insert into empleados (id, cedula, nombre, puesto, fecha_ingreso)
+  values ('00000000-0000-0000-0000-00000000e001', '8-8888-8888', 'Prueba', 'Docente', '2024-01-08');
 insert into planillas (id, periodo_inicio, periodo_fin, tipo) values ('00000000-0000-0000-0000-0000000000f1', '2030-01-01', '2030-01-31', 'mensual');
 
 set local role app_portal;

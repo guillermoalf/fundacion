@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { obtenerSesion } from "@/lib/portal/sesion";
 import { colones, fecha, fechaHora, mesLargo } from "@/lib/portal/formato";
+import SinPermiso from "../../../_ui/SinPermiso";
 import Encabezado from "../../../_ui/Encabezado";
 import { Insignia } from "../../../_ui/Insignias";
 import { estiloBoton, estiloTarjeta } from "../../../_ui/estilos";
@@ -14,7 +15,8 @@ const n = (v: string | number | null) => Number(v ?? 0);
 
 export default async function PlanillaDetallePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { consultar, perfil } = await obtenerSesion();
+  const { consultar, perfil, veSalarios } = await obtenerSesion();
+  if (!veSalarios) return <SinPermiso que="la planilla" quien="dirección, contabilidad o auditoría" />;
   const puedeArmar = perfil?.rol === "admin" || perfil?.rol === "contabilidad";
   const d = await consultar(async (tx) => {
     const p = await tx.selectFrom("planillas as p").leftJoin("perfiles as u", "u.id", "p.aprobada_por").select(["p.id", "p.periodo_inicio", "p.periodo_fin", "p.tipo", "p.estado", "p.aprobada_en", "u.nombre as aprobo"]).where("p.id", "=", id).executeTakeFirst();

@@ -12,8 +12,6 @@ import { hoyCR } from "@/lib/portal/formato";
 type R = Resultado | null;
 
 function datos(f: FormData) {
-  const salario = numero(f, "salario_mensual");
-  if (salario === null || salario < 0) throw new ErrorUsuario("Falta el salario mensual (o es negativo).");
   const horas = numero(f, "horas_jornada_diaria") ?? 8;
   if (horas <= 0 || horas > 24) throw new ErrorUsuario("Las horas de la jornada deben estar entre 1 y 24.");
   return {
@@ -24,18 +22,21 @@ function datos(f: FormData) {
     fuente_id: entero(f, "fuente_id"),
     fecha_ingreso: textoObligatorio(f, "fecha_ingreso", "la fecha de ingreso"),
     fecha_salida: texto(f, "fecha_salida"),
-    salario_mensual: salario,
     horas_jornada_diaria: horas,
   };
 }
 
 export async function crearEmpleado(_: R, f: FormData): Promise<R> {
-  const { consultar } = await obtenerSesion();
+  const { consultar, editaSalarios } = await obtenerSesion();
   const r = await ejecutar(async () => {
     const d = datos(f);
+    const salario = editaSalarios ? numero(f, "salario_mensual") : null;
+    if (salario !== null && salario < 0) throw new ErrorUsuario("El salario no puede ser negativo.");
     const id = await consultar(async (tx) => {
       const foto = await guardarArchivo(tx, f.get("foto"));
-      return (await tx.insertInto("empleados").values({ ...d, foto_url: foto }).returning("id").executeTakeFirstOrThrow()).id;
+      const { id } = await tx.insertInto("empleados").values({ ...d, foto_url: foto }).returning("id").executeTakeFirstOrThrow();
+      if (salario !== null) await tx.insertInto("salarios").values({ empleado_id: id, salario_mensual: salario, vigente_desde: d.fecha_ingreso, motivo: "Salario de ingreso" }).execute();
+      return id;
     });
     return { id };
   });
@@ -111,5 +112,23 @@ export async function asignarPin(_: R, f: FormData): Promise<R> {
     return {};
   });
   if (r.ok) revalidatePath("/portal/personal");
+  return r;
+}
+
+/** Salario nuevo desde una fecha (aumento, cambio de jornada…). El anterior queda en el historial. Solo admin y contabilidad (RLS). */
+export async function cambiarSalario(_: R, f: FormData): Promise<R> {
+  const { consultar } = await obtenerSesion();
+  const id = String(f.get("id"));
+  const r = await ejecutar(async () => {
+    const salario = numero(f, "salario_mensual");
+    if (salario === null || salario < 0) throw new ErrorUsuario("Falta el salario mensual (o es negativo).");
+    const desde = textoObligatorio(f, "vigente_desde", "desde cuándo rige");
+    await consultar((tx) =>
+      tx.insertInto("salarios").values({ empleado_id: id, salario_mensual: salario, vigente_desde: desde, motivo: texto(f, "motivo") })
+        .onConflict((oc) => oc.columns(["empleado_id", "vigente_desde"]).doUpdateSet({ salario_mensual: salario, motivo: texto(f, "motivo") })).execute(),
+    );
+    return {};
+  });
+  if (r.ok) revalidatePath(`/portal/personal/${id}`);
   return r;
 }

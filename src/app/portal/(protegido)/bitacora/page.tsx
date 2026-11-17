@@ -49,7 +49,7 @@ function Cambios({ antes, despues }: { antes: Json; despues: Json }) {
 export default async function BitacoraPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const sp = await searchParams;
   const { consultar, perfil } = await obtenerSesion();
-  if (!perfil || !["admin", "auditor", "contabilidad"].includes(perfil.rol)) return <SinPermiso que="la bitácora (solo dirección, contabilidad y auditoría)" />;
+  if (!perfil || !["admin", "auditor", "contabilidad"].includes(perfil.rol)) return <SinPermiso que="la bitácora" quien="dirección, contabilidad o auditoría" />;
   const pagina = Math.max(1, Number(sp.pagina) || 1);
   const { filas, usuarios } = await consultar(async (tx) => {
     let q = tx.selectFrom("bitacora as b").leftJoin("perfiles as p", "p.id", "b.usuario")

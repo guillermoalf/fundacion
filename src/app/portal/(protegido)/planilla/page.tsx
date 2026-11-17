@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { sql } from "kysely";
+import Link from "next/link";
 import { obtenerSesion } from "@/lib/portal/sesion";
+import { tramosVigentes } from "@/lib/portal/planilla";
 import { colones, fecha, hoyCR, mesLargo } from "@/lib/portal/formato";
+import SinPermiso from "../../_ui/SinPermiso";
 import Encabezado from "../../_ui/Encabezado";
 import Tabla from "../../_ui/Tabla";
 import Vacio from "../../_ui/Vacio";
@@ -12,9 +15,11 @@ import { ESTADOS } from "./estados";
 export const metadata: Metadata = { title: "Planilla" };
 
 export default async function PlanillaPage() {
-  const { consultar, perfil } = await obtenerSesion();
+  const { consultar, perfil, veSalarios } = await obtenerSesion();
+  if (!veSalarios) return <SinPermiso que="la planilla" quien="dirección, contabilidad o auditoría" />;
   const puedeArmar = perfil?.rol === "admin" || perfil?.rol === "contabilidad";
   const hoy = hoyCR();
+  const { tramos } = await consultar(async (tx) => ({ tramos: await tramosVigentes(tx, hoy) }));
   const planillas = await consultar((tx) =>
     tx.selectFrom("planillas as p").select(["p.id", "p.periodo_inicio", "p.periodo_fin", "p.tipo", "p.estado",
       sql<string | null>`(select sum(salario_neto) from planilla_lineas l where l.planilla_id = p.id)`.as("neto"),
@@ -25,6 +30,11 @@ export default async function PlanillaPage() {
   return (
     <>
       <Encabezado migas={[{ etiqueta: "Planilla" }]} titulo="Planilla" descripcion="Se calcula con el salario, las ausencias, las incapacidades y los parámetros vigentes (CCSS, aguinaldo, vacaciones). Se revisa en borrador y luego se aprueba." />
+      {!tramos && (
+        <p role="alert" className="mb-6 rounded-xl bg-red-50 px-4 py-3 text-red-800">
+          Falta cargar los tramos del impuesto de renta: la planilla deja la renta en ₡0. <Link href="/portal/parametros" className="font-semibold underline">Cargarlos en Parámetros</Link>.
+        </p>
+      )}
       <div className="space-y-8">
         {puedeArmar && (
           <div className="grid gap-6 lg:grid-cols-2">

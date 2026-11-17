@@ -91,7 +91,8 @@ scripts/                         db.mts (migrar/reset/test), crear-admin.mts, ge
 - Names in the portal and `lib`: Spanish. Landing components: in English (that's how they are).
 - UI copy: Spanish, addressing the user as "usted", plain language. The directora isn't technical: errors say what happened and what to do ("Falta la fecha de compra. Puede guardarlo así y completarla después."), never technical messages.
 - Server Actions return `{ ok: true, ... } | { ok: false, error: string }` via `ejecutar()`; don't throw exceptions to the UI. Client forms use `<FormularioAccion>` (not `<form action>`: React 19 empties the form even when saving fails).
-- Files (photos, PDFs) go in the `archivos` table through `guardarArchivo()`; `*_url` columns store `/portal/archivos/<id>`.
+- Files (photos, PDFs) go in the `archivos` table: `<CampoArchivo>` compresses photos (1600 px, JPEG 80 %) and uploads in 3 MB parts to `/portal/archivos/subir` (5 MB max, Vercel caps requests at 4.5 MB); the action receives the id and calls `guardarArchivo()`. `*_url` columns store `/portal/archivos/<id>`.
+- Salaries live in `salarios` (history by `vigente_desde`) and payroll tables are readable only by admin, contabilidad and auditor (`ve_salarios()` in RLS); coordinación sees staff without salaries.
 - Constants shared by server and client components live in files without "use client".
 - Forms must work on a phone (physical counts are done walking around the classrooms).
 
@@ -103,7 +104,7 @@ scripts/                         db.mts (migrar/reset/test), crear-admin.mts, ge
 4. **Calculations live only in `src/lib/calculos`** (and their SQL mirror in the migration, kept in parity with `scripts/generar-paridad-depreciacion.ts`). Never compute depreciation, aguinaldo or payroll charges inside components.
 5. **Missing data = `null`, never 0, never invented.** If an asset has no cost or date, depreciation and book value stay empty and show up as a pending item. The system calculates everything from the item's cost; no accountant is involved.
 6. **Every amount has a funding source** (`fuente_id`: PANI, IMAS, JPS, PROPIOS, DONACION). Reports filter by funder.
-7. **Rates and legal values live in `parametros` / `categorias_activo`** with an effective date, never in code.
+7. **Rates and legal values live in `parametros` / `tramos_renta` / `categorias_activo`** with an effective date, never in code (screen: `/portal/parametros`).
 8. **Reports for funders use their official columns exactly** (e.g. the PANI Auxiliar de activos). Don't rename or reorder columns.
 9. Money: `numeric(14,2)` in the DB, colones formatted with `es-CR`. Dates: Costa Rica time zone.
 
@@ -118,7 +119,6 @@ scripts/                         db.mts (migrar/reset/test), crear-admin.mts, ge
 - The middleware matcher excludes routes with a dot: downloads are served without an extension (`…/descargar`) and their route handlers also check the session. Keep it that way.
 - No password recovery by email (no SMTP): the admin generates a temporary password in Usuarios.
 - Report templates in `data/plantillas/` were not available when building the food/cleaning reports: compare and adjust columns (see docs/PROGRESO.md).
-- Salary (`empleados.salario_mensual`) and payroll are readable by every role with read access, including coordinación.
 - `npm audit`: 23 vulnerabilities to review (3 critical).
 - CRA leftovers: `public/index.html`, `src/components/Button.js`, `src/assets/not-used/`.
 - Duplicate docs: `CONFIGURACION_EMAILJS.md`, `EMAILJS_SETUP.md`, `QUICK_SETUP.md` (merge into the README); `DEBUG_DONACIONES.md` is obsolete.
