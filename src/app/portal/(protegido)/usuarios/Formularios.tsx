@@ -6,6 +6,7 @@ import { useAvisoResultado } from "../../_ui/Avisos";
 import { estiloBoton } from "../../_ui/estilos";
 import { actualizarAcceso, cambiarActivo, crearUsuario, restablecerContrasena, type ResultadoContrasena } from "./acciones";
 
+const OPCION_SUPER = { valor: "superadmin", texto: "Superadministrador (corrige todo; solo lo da otro superadministrador)" };
 export const OPCIONES_ROL = [
   { valor: "admin", texto: "Dirección (todo, incluido crear usuarios)" },
   { valor: "contabilidad", texto: "Contabilidad (todo menos usuarios)" },
@@ -27,7 +28,7 @@ function ContrasenaUnaVez({ estado }: { estado: ResultadoContrasena }) {
   );
 }
 
-export function FormularioNuevoUsuario() {
+export function FormularioNuevoUsuario({ conSuper = false }: { conSuper?: boolean }) {
   const [estado, accion, accionPendiente] = useActionState(crearUsuario, null);
   const [rol, setRol] = useState("coordinacion");
   useAvisoResultado(estado, "Usuario creado.");
@@ -38,7 +39,7 @@ export function FormularioNuevoUsuario() {
       <FormularioAccion accion={accion} estado={estado} pendiente={accionPendiente} className="grid gap-4 sm:grid-cols-2">
         <Campo etiqueta="Nombre completo" name="nombre" required autoComplete="off" />
         <Campo etiqueta="Correo" name="correo" type="email" required autoComplete="off" ayuda="Es el usuario para entrar al portal." />
-        <Seleccion etiqueta="Rol" name="rol" opciones={OPCIONES_ROL} defaultValue="coordinacion" onChange={(e) => setRol(e.target.value)} required />
+        <Seleccion etiqueta="Rol" name="rol" opciones={conSuper ? [...OPCIONES_ROL, OPCION_SUPER] : OPCIONES_ROL} defaultValue="coordinacion" onChange={(e) => setRol(e.target.value)} required />
         {rol === "auditor" && (
           <Campo etiqueta="Acceso hasta" name="acceso_hasta" type="date" required ayuda="Después de esta fecha ya no puede entrar." />
         )}
@@ -54,7 +55,7 @@ export function FormularioNuevoUsuario() {
   );
 }
 
-export function FormularioAcceso({ id, nombre, rol: rolInicial, accesoHasta, propio }: { id: string; nombre: string; rol: string; accesoHasta: string | null; propio: boolean }) {
+export function FormularioAcceso({ id, nombre, rol: rolInicial, accesoHasta, propio, conSuper = false }: { id: string; nombre: string; rol: string; accesoHasta: string | null; propio: boolean; conSuper?: boolean }) {
   const [estado, accion, accionPendiente] = useActionState(actualizarAcceso, null);
   const [rol, setRol] = useState(rolInicial);
   useEffect(() => setRol(rolInicial), [rolInicial]);
@@ -64,7 +65,7 @@ export function FormularioAcceso({ id, nombre, rol: rolInicial, accesoHasta, pro
     <FormularioAccion key={`${nombre}|${rolInicial}|${accesoHasta}`} accion={accion} estado={estado} pendiente={accionPendiente} className="grid gap-4 sm:grid-cols-2">
       <input type="hidden" name="id" value={id} />
       <Campo etiqueta="Nombre" name="nombre" defaultValue={nombre} required />
-      <Seleccion etiqueta="Rol" name="rol" opciones={OPCIONES_ROL} defaultValue={rolInicial} onChange={(e) => setRol(e.target.value)} disabled={propio} required />
+      <Seleccion etiqueta="Rol" name="rol" opciones={conSuper || rolInicial === "superadmin" ? [...OPCIONES_ROL, OPCION_SUPER] : OPCIONES_ROL} defaultValue={rolInicial} onChange={(e) => setRol(e.target.value)} disabled={propio} required />
       {propio && <input type="hidden" name="rol" value={rol} />}
       {rol === "auditor" && <Campo etiqueta="Acceso hasta" name="acceso_hasta" type="date" defaultValue={accesoHasta ?? ""} required />}
       {propio && <p className="text-sm text-slate-500 sm:col-span-2">Su propio rol no lo puede cambiar usted: pídaselo a otra persona con rol de dirección.</p>}

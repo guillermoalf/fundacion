@@ -17,7 +17,7 @@ export const metadata: Metadata = { title: "Planilla" };
 export default async function PlanillaPage() {
   const { consultar, perfil, veSalarios } = await obtenerSesion();
   if (!veSalarios) return <SinPermiso que="la planilla" quien="dirección, contabilidad o auditoría" />;
-  const puedeArmar = perfil?.rol === "admin" || perfil?.rol === "contabilidad";
+  const puedeArmar = perfil?.rol === "admin" || perfil?.rol === "contabilidad" || perfil?.rol === "superadmin";
   const hoy = hoyCR();
   const { tramos } = await consultar(async (tx) => ({ tramos: await tramosVigentes(tx, hoy) }));
   const planillas = await consultar((tx) =>

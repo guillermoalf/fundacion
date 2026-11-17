@@ -8,7 +8,7 @@ import { ejecutar, ErrorUsuario, texto, textoObligatorio, type Resultado } from 
 import { contrasenaTemporal } from "@/lib/portal/contrasenas";
 import type { RolPortal } from "@/lib/db/tipos";
 
-const ROLES: RolPortal[] = ["admin", "contabilidad", "coordinacion", "auditor"];
+const ROLES: RolPortal[] = ["admin", "contabilidad", "coordinacion", "auditor", "superadmin"];
 const rolDe = (f: FormData): RolPortal => {
   const r = textoObligatorio(f, "rol", "el rol") as RolPortal;
   if (!ROLES.includes(r)) throw new ErrorUsuario("Elija un rol de la lista.");

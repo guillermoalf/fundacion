@@ -24,7 +24,7 @@ export default async function ParametrosPage() {
   const juegos = [...new Set(tramos.map((t) => t.vigente_desde))];
   const vigente = juegos.find((j) => j <= hoy);
   const anioSiguiente = Number(hoy.slice(0, 4)) + 1;
-  const editaParametros = perfil?.rol === "admin" || perfil?.rol === "contabilidad";
+  const editaParametros = perfil?.rol === "admin" || perfil?.rol === "contabilidad" || perfil?.rol === "superadmin";
 
   return (
     <>

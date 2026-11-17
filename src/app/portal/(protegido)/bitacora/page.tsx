@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { sql } from "kysely";
 import { obtenerSesion } from "@/lib/portal/sesion";
 import { fechaHora } from "@/lib/portal/formato";
 import Encabezado from "../../_ui/Encabezado";
@@ -48,12 +49,12 @@ function Cambios({ antes, despues }: { antes: Json; despues: Json }) {
 
 export default async function BitacoraPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const sp = await searchParams;
-  const { consultar, perfil } = await obtenerSesion();
-  if (!perfil || !["admin", "auditor", "contabilidad"].includes(perfil.rol)) return <SinPermiso que="la bitácora" quien="dirección, contabilidad o auditoría" />;
+  const { consultar, perfil, esSuperadmin } = await obtenerSesion();
+  if (!perfil || !["admin", "auditor", "contabilidad", "superadmin"].includes(perfil.rol)) return <SinPermiso que="la bitácora" quien="dirección, contabilidad o auditoría" />;
   const pagina = Math.max(1, Number(sp.pagina) || 1);
-  const { filas, usuarios } = await consultar(async (tx) => {
+  const { filas, usuarios, llaves } = await consultar(async (tx) => {
     let q = tx.selectFrom("bitacora as b").leftJoin("perfiles as p", "p.id", "b.usuario")
-      .select(["b.id", "b.tabla", "b.registro_id", "b.accion", "b.antes", "b.despues", "b.en", "p.nombre as quien"]);
+      .select(["b.id", "b.tabla", "b.registro_id", "b.accion", "b.antes", "b.despues", "b.en", "b.motivo", "p.nombre as quien"]);
     if (sp.tabla) q = q.where("b.tabla", "=", sp.tabla);
     if (sp.usuario === "sistema") q = q.where("b.usuario", "is", null);
     else if (sp.usuario) q = q.where("b.usuario", "=", sp.usuario);
@@ -63,6 +64,7 @@ export default async function BitacoraPage({ searchParams }: { searchParams: Pro
     return {
       filas: await q.orderBy("b.id", "desc").limit(POR_PAGINA + 1).offset((pagina - 1) * POR_PAGINA).execute(),
       usuarios: await tx.selectFrom("perfiles").select(["id", "nombre"]).orderBy("nombre").execute(),
+      llaves: esSuperadmin ? new Map((await sql<{ tabla: string; llave: string[] }>`select * from tablas_corregibles()`.execute(tx)).rows.map((r) => [r.tabla, r.llave])) : new Map<string, string[]>(),
     };
   });
   const hayMas = filas.length > POR_PAGINA;
@@ -99,6 +101,14 @@ export default async function BitacoraPage({ searchParams }: { searchParams: Pro
                   <span className="ml-auto text-sm text-slate-500">{fechaHora(b.en)}</span>
                 </div>
                 <Cambios antes={b.antes as Json} despues={b.despues as Json} />
+                {b.motivo && <p className="mt-2 rounded-lg bg-amber-50 px-3 py-1.5 text-sm text-amber-900">Motivo: {b.motivo}</p>}
+                {(() => {
+                  const llave = llaves.get(b.tabla);
+                  const fila = (b.despues ?? b.antes) as Json;
+                  if (!llave || !fila) return null;
+                  const clave = JSON.stringify(Object.fromEntries(llave.map((k) => [k, fila[k]])));
+                  return <Link href={`/portal/corregir?tabla=${b.tabla}&clave=${encodeURIComponent(clave)}`} className={`${estiloBoton.enlace} mt-2 inline-block text-sm`}>Corregir este registro</Link>;
+                })()}
               </li>
             );
           })}

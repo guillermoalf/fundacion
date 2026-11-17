@@ -35,7 +35,7 @@ export type Numeric = ColumnType<string, number | string, number | string>;
 
 export type OrigenMarca = "hoja_firmada" | "kiosko" | "manual";
 
-export type RolPortal = "admin" | "auditor" | "contabilidad" | "coordinacion";
+export type RolPortal = "admin" | "auditor" | "contabilidad" | "coordinacion" | "superadmin";
 
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
@@ -127,6 +127,7 @@ export interface Bitacora {
   despues: Json | null;
   en: Generated<Timestamp>;
   id: Generated<Int8>;
+  motivo: Generated<string | null>;
   registro_id: string;
   tabla: string;
   usuario: Generated<string | null>;

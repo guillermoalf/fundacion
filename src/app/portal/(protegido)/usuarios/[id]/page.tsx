@@ -13,7 +13,7 @@ export const metadata: Metadata = { title: "Usuario" };
 
 export default async function UsuarioPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { esAdmin, consultar, usuario: yo } = await obtenerSesion();
+  const { esAdmin, esSuperadmin, consultar, usuario: yo } = await obtenerSesion();
   if (!esAdmin) return <SinPermiso que="la gestión de usuarios" />;
   const u = (await listarUsuarios(consultar)).find((x) => x.id === id);
   if (!u) notFound();
@@ -30,7 +30,7 @@ export default async function UsuarioPage({ params }: { params: Promise<{ id: st
       <div className="grid gap-6 lg:grid-cols-2">
         <section className={estiloTarjeta}>
           <h2 className="mb-4 text-xl font-semibold">Rol y acceso</h2>
-          <FormularioAcceso id={u.id} nombre={u.nombre} rol={u.rol} accesoHasta={u.acceso_hasta} propio={propio} />
+          <FormularioAcceso id={u.id} nombre={u.nombre} rol={u.rol} accesoHasta={u.acceso_hasta} propio={propio} conSuper={esSuperadmin} />
         </section>
         <div className="space-y-6">
           <section className={estiloTarjeta}>
