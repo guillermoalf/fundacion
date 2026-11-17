@@ -1,0 +1,24 @@
+import type { Tx } from "@/lib/db";
+
+/** Listas que usan los formularios (solo lo activo, ordenado para mostrar). */
+export async function catalogosActivos(tx: Tx) {
+  const [ubicaciones, fuentes, categorias] = await Promise.all([
+    tx.selectFrom("ubicaciones").select(["id", "nombre", "activo"]).orderBy("nombre").execute(),
+    tx.selectFrom("fuentes_financiamiento").select(["id", "codigo", "nombre", "activo"]).orderBy("id").execute(),
+    tx.selectFrom("categorias_activo").select(["id", "nombre", "tasa_anual", "anios_vida", "palabras_clave", "activa"]).orderBy("nombre").execute(),
+  ]);
+  return { ubicaciones, fuentes, categorias };
+}
+
+export type Catalogos = Awaited<ReturnType<typeof catalogosActivos>>;
+
+export const opciones = <T extends { id: number; nombre: string }>(xs: T[], activo: (x: T) => boolean = () => true) =>
+  xs.filter(activo).map((x) => ({ valor: x.id, texto: x.nombre }));
+
+export const ESTADOS_ACTIVO = {
+  en_uso: "En uso",
+  en_reparacion: "En reparación",
+  en_bodega: "En bodega",
+  extraviado: "Extraviado",
+  dado_de_baja: "Dado de baja",
+} as const;

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { NOMBRE_ROL, obtenerSesion } from "@/lib/portal/sesion";
+import Encabezado from "../../_ui/Encabezado";
 import FormularioContrasena from "./FormularioContrasena";
 
 export const metadata: Metadata = { title: "Mi cuenta" };
@@ -9,9 +10,9 @@ export default async function CuentaPage({ searchParams }: { searchParams: Promi
   const cambiada = (await searchParams).contrasena === "cambiada";
 
   return (
-    <section className="max-w-md">
-      <h1 className="text-2xl font-semibold">Mi cuenta</h1>
-      <dl className="mt-4 space-y-1 text-sm">
+    <section className="max-w-lg">
+      <Encabezado migas={[{ etiqueta: "Mi cuenta" }]} titulo="Mi cuenta" />
+      <dl className="space-y-1 text-base">
         <div>
           <dt className="inline text-slate-500">Correo: </dt>
           <dd className="inline">{usuario.correo}</dd>

@@ -48,5 +48,8 @@ export const obtenerSesion = cache(async () => {
     return { perfil: perfil ?? null, puedeEscribir: rows[0]?.puede_escribir === true, esAdmin: rows[0]?.es_admin === true };
   });
 
-  return { usuario, perfil, puedeEscribir, esAdmin, consultar };
+  // Solo para mostrar u ocultar: el RLS (ve_salarios / edita_salarios) es el que decide.
+  const veSalarios = !!perfil && ["admin", "contabilidad", "auditor"].includes(perfil.rol);
+  const editaSalarios = !!perfil && ["admin", "contabilidad"].includes(perfil.rol);
+  return { usuario, perfil, puedeEscribir, esAdmin, veSalarios, editaSalarios, consultar };
 });

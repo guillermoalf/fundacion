@@ -23,7 +23,7 @@ const eslintConfig = [
   {
     // La conexión del dueño se salta el RLS y la bitácora: el portal entra a la base solo por conUsuario().
     files: ["src/**"],
-    ignores: ["src/lib/db/conexion.ts", "src/lib/db/index.ts", "src/lib/auth.ts"],
+    ignores: ["src/lib/db/conexion.ts", "src/lib/db/index.ts", "src/lib/auth.ts", "src/lib/kiosko.ts"],
     rules: {
       "no-restricted-imports": [
         "error",

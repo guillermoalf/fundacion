@@ -141,3 +141,111 @@ export function horasTrabajadas(marcasDelDia: Marca[]) {
   if (abierta) inconsistente = true;
   return { horas: r2(ms / 3_600_000), inconsistente };
 }
+
+// ---------------------------------------------------------------- Días hábiles
+/**
+ * Días hábiles entre dos fechas (ambas incluidas): lunes a viernes, o lunes a sábado si la jornada incluye
+ * sábado. Los feriados se restan aparte (se pasan en `feriados`, "YYYY-MM-DD").
+ */
+export function diasHabiles(desde: Date | string, hasta: Date | string, opts: { incluyeSabado?: boolean; feriados?: string[] } = {}): number {
+  const ini = aFecha(desde);
+  const fin = aFecha(hasta);
+  if (fin < ini) return 0;
+  const feriados = new Set(opts.feriados ?? []);
+  let n = 0;
+  for (const d = new Date(ini); d <= fin; d.setDate(d.getDate() + 1)) {
+    const dia = diaSemanaISO(d);
+    if (dia === 7 || (dia === 6 && !opts.incluyeSabado)) continue;
+    if (feriados.has(ymd(d))) continue;
+    n++;
+  }
+  return n;
+}
+
+// ---------------------------------------------------------------- Impuesto sobre la renta al salario
+export interface TramoRenta {
+  desde: number;
+  /** null = en adelante */
+  hasta: number | null;
+  /** % sobre el exceso de `desde` dentro del tramo */
+  tasa: number;
+}
+
+/** Impuesto mensual al salario: cada tramo grava solo la parte de la base que cae dentro de él. */
+export function calcularImpuestoRenta(baseMensual: number, tramos: TramoRenta[]): number {
+  let total = 0;
+  for (const t of tramos) {
+    if (baseMensual <= t.desde) continue;
+    const tope = t.hasta === null ? baseMensual : Math.min(baseMensual, t.hasta);
+    total += ((tope - t.desde) * t.tasa) / 100;
+  }
+  return r2(total);
+}
+
+// ---------------------------------------------------------------- Línea de planilla mensual
+export interface EntradaLineaPlanilla {
+  salarioMensual: number;
+  /** días sin goce: permisos sin goce y ausencias injustificadas */
+  diasSinGoce: number;
+  /** días de incapacidad CCSS en el mes y, aparte, los días 1–3 de cada incapacidad que paga el patrono */
+  diasIncapacidadCCSS: number;
+  diasIncapacidadCCSSPatrono: number;
+  /** días de incapacidad INS (los paga el INS) */
+  diasIncapacidadINS: number;
+  diasLicenciaMaternidad: number;
+  montoHorasExtra?: number;
+  rebajoTardias?: number;
+  /** si se pasa, reemplaza al cálculo automático con los tramos (ajuste manual en el borrador) */
+  impuestoRenta?: number;
+  /** tramos vigentes; null = faltan cargar (el impuesto queda en 0 y la planilla avisa) */
+  tramosRenta?: TramoRenta[] | null;
+  otrasDeducciones?: number;
+  parametros: {
+    ccssObreroPct: number;
+    ccssPatronalPct: number;
+    incapacidadPatronoPctDias1a3: number;
+    licenciaMaternidadPatronoPct: number;
+    aguinaldoDivisor: number;
+    vacacionesDiasAnuales: number;
+  };
+}
+
+/**
+ * Línea de una planilla mensual (salario diario = mensual ÷ 30).
+ * - Los días de ausencia sin goce, incapacidad y licencia se rebajan del salario.
+ * - El patrono paga un % de los días 1–3 de cada incapacidad CCSS (subsidio: no lleva cargas sociales)
+ *   y un % de la licencia de maternidad (sí es salario).
+ * - Provisión de aguinaldo = bruto ÷ divisor; de vacaciones = salario diario del bruto × días anuales ÷ 12.
+ */
+export function calcularLineaPlanilla(e: EntradaLineaPlanilla) {
+  const p = e.parametros;
+  const diario = salarioDiario(e.salarioMensual);
+  const diasRebajados = e.diasSinGoce + e.diasIncapacidadCCSS + e.diasIncapacidadINS + e.diasLicenciaMaternidad;
+  const rebajoAusencias = r2(Math.min(e.salarioMensual, diario * diasRebajados));
+  const pagoIncapacidad = pagoPatronoIncapacidadCCSS(e.salarioMensual, e.diasIncapacidadCCSSPatrono, p.incapacidadPatronoPctDias1a3);
+  const pagoLicencia = r2(diario * e.diasLicenciaMaternidad * (p.licenciaMaternidadPatronoPct / 100));
+  const horasExtra = r2(e.montoHorasExtra ?? 0);
+  const rebajoTardias = r2(e.rebajoTardias ?? 0);
+  const bruto = r2(e.salarioMensual - rebajoAusencias - rebajoTardias + horasExtra + pagoIncapacidad + pagoLicencia);
+  const cargas = calcularCargas(r2(bruto - pagoIncapacidad), { obreroPct: p.ccssObreroPct, patronalPct: p.ccssPatronalPct });
+  // Base de la renta: el salario devengado; el subsidio de incapacidad que paga el patrono no es salario.
+  const rentaAutomatica = e.tramosRenta ? calcularImpuestoRenta(r2(bruto - pagoIncapacidad), e.tramosRenta) : 0;
+  const renta = r2(e.impuestoRenta ?? rentaAutomatica);
+  const otras = r2(e.otrasDeducciones ?? 0);
+  return {
+    diasLaborados: Math.max(0, 30 - diasRebajados),
+    montoHorasExtra: horasExtra,
+    rebajoAusencias,
+    rebajoTardias,
+    pagoIncapacidadPatrono: r2(pagoIncapacidad + pagoLicencia),
+    salarioBruto: bruto,
+    ccssObrero: cargas.ccssObrero,
+    impuestoRenta: renta,
+    impuestoRentaAutomatico: rentaAutomatica,
+    otrasDeducciones: otras,
+    salarioNeto: r2(bruto - cargas.ccssObrero - renta - otras),
+    cargasPatronales: cargas.cargasPatronales,
+    provisionAguinaldo: r2(bruto / p.aguinaldoDivisor),
+    provisionVacaciones: r2((bruto / 30) * (p.vacacionesDiasAnuales / 12)),
+  };
+}

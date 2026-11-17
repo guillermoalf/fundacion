@@ -89,6 +89,24 @@ export interface Activos {
   valor_residual: Generated<Numeric>;
 }
 
+export interface Archivos {
+  contenido: Buffer;
+  creado_en: Generated<Timestamp>;
+  id: Generated<string>;
+  nombre: string;
+  subido_por: Generated<string | null>;
+  tamano: number;
+  tipo: string;
+}
+
+export interface ArchivosPartes {
+  contenido: Buffer;
+  creado_en: Generated<Timestamp>;
+  parte: number;
+  subida_id: string;
+  subido_por: Generated<string>;
+}
+
 export interface Ausencias {
   aprobado_por: Generated<string | null>;
   creado_en: Generated<Timestamp>;
@@ -170,20 +188,29 @@ export interface ConteosFisicos {
   ubicacion_id: number;
 }
 
+export interface DispositivosKiosko {
+  activo: Generated<boolean>;
+  creado_en: Generated<Timestamp>;
+  creado_por: Generated<string | null>;
+  id: Generated<string>;
+  nombre: string;
+  token_hash: string;
+  ultimo_uso: Timestamp | null;
+}
+
 export interface Empleados {
   activo: Generated<boolean>;
   cedula: string;
   creado_en: Generated<Timestamp>;
   fecha_ingreso: string;
   fecha_salida: string | null;
+  foto_url: string | null;
   fuente_id: number | null;
   horas_jornada_diaria: Generated<Numeric>;
   id: Generated<string>;
   nombre: string;
   perfil_id: string | null;
-  pin_hash: string | null;
   puesto: string;
-  salario_mensual: Numeric;
   ubicacion_id: number | null;
 }
 
@@ -220,12 +247,14 @@ export interface InventarioMovimientos {
 }
 
 export interface Marcas {
+  dispositivo_id: string | null;
+  documento_url: string | null;
   empleado_id: string;
   id: Generated<string>;
   marcado_en: Generated<Timestamp>;
   motivo_manual: string | null;
   origen: OrigenMarca;
-  registrado_por: string | null;
+  registrado_por: Generated<string | null>;
   tipo: TipoMarca;
 }
 
@@ -301,6 +330,23 @@ export interface Proveedores {
   tipo: string | null;
 }
 
+export interface Salarios {
+  creado_en: Generated<Timestamp>;
+  empleado_id: string;
+  motivo: string | null;
+  registrado_por: Generated<string | null>;
+  salario_mensual: Numeric;
+  vigente_desde: string;
+}
+
+export interface TramosRenta {
+  desde: Numeric;
+  fuente_legal: string;
+  hasta: Numeric | null;
+  tasa: Numeric;
+  vigente_desde: string;
+}
+
 export interface Ubicaciones {
   activo: Generated<boolean>;
   id: Generated<number>;
@@ -329,6 +375,8 @@ export interface VSaldoInventario {
 export interface DB {
   activo_movimientos: ActivoMovimientos;
   activos: Activos;
+  archivos: Archivos;
+  archivos_partes: ArchivosPartes;
   ausencias: Ausencias;
   bitacora: Bitacora;
   categorias_activo: CategoriasActivo;
@@ -336,6 +384,7 @@ export interface DB {
   compras: Compras;
   conteo_detalle: ConteoDetalle;
   conteos_fisicos: ConteosFisicos;
+  dispositivos_kiosko: DispositivosKiosko;
   empleados: Empleados;
   fuentes_financiamiento: FuentesFinanciamiento;
   horarios: Horarios;
@@ -347,6 +396,8 @@ export interface DB {
   planillas: Planillas;
   productos: Productos;
   proveedores: Proveedores;
+  salarios: Salarios;
+  tramos_renta: TramosRenta;
   ubicaciones: Ubicaciones;
   v_activos_alertas: VActivosAlertas;
   v_saldo_inventario: VSaldoInventario;
