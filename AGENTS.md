@@ -74,7 +74,7 @@ src/views, src/components        landing in JS (from CRA), each component with i
 src/lib/calculos/                depreciation, payroll (+ tests). SOURCE OF TRUTH for calculations
 src/lib/catalogos/anexo2.ts      Anexo 2 rows + sugerirCategoria
 src/lib/importacion/             Excel importer + guardar.ts (__fixtures__ is ignored by git)
-src/lib/export/auxiliarPani.ts   PANI report (official columns)
+src/lib/export/                  auxiliarPani.ts (PANI, official columns) · controlInventario.ts (Formulario N.º 1, alimentos/aseo) · controlLimpieza.ts (Word) · planillaPorFuente.ts
 src/lib/db/                      index.ts (conUsuario) · conexion.ts (owner connection, don't import) · tipos.ts (GENERATED, don't edit by hand)
 src/lib/auth.ts                  Better Auth (email + password, no public sign-up)
 src/lib/portal/                  sesion.ts (obtenerSesion → { usuario, perfil, consultar }) · acciones.ts (ejecutar, friendly errors) · formato.ts (es-CR, Costa Rica time) · archivos.ts · activos/asistencia/planilla helpers
@@ -118,7 +118,6 @@ scripts/                         db.mts (migrar/reset/test), crear-admin.mts, ge
 
 - The middleware matcher excludes routes with a dot: downloads are served without an extension (`…/descargar`) and their route handlers also check the session. Keep it that way.
 - No password recovery by email (no SMTP): the admin generates a temporary password in Usuarios.
-- Report templates in `data/plantillas/` were not available when building the food/cleaning reports: compare and adjust columns (see docs/PROGRESO.md).
 - `npm audit`: 23 vulnerabilities to review (3 critical).
 - CRA leftovers: `public/index.html`, `src/components/Button.js`, `src/assets/not-used/`.
 - Duplicate docs: `CONFIGURACION_EMAILJS.md`, `EMAILJS_SETUP.md`, `QUICK_SETUP.md` (merge into the README); `DEBUG_DONACIONES.md` is obsolete.

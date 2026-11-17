@@ -1,8 +1,11 @@
 /**
- * Control mensual de inventario (alimentos — Formulario 1 — y limpieza).
- * NOTA: las plantillas originales (data/plantillas/) no estaban disponibles al construir esto; el formato
- * sigue un control de inventario estándar (saldo inicial, entradas, salidas, mermas, saldo final + entregas).
- * Ajustar encabezados cuando se comparen con las plantillas reales (ver docs/PROGRESO.md).
+ * Control de inventarios mensual — "FORMULARIO NO.1", con la misma disposición de las plantillas que usa la
+ * fundación (1. Control de Inventarios Alimentos.xlsx y 2. Control de Inventarios Aseo.xlsx):
+ *   B5 FORMULARIO NO.1 · B6 NOMBRE DE LA ORGANIZACIÓN · B8 CONTROL DE INVENTARIOS MENSUAL · H8 CONSECUTIVO · J8 #nnn-aaaa
+ *   Fila 10, columnas B:J: Fecha ingreso | Producto | Número de factura | Cantidad de ingreso… | Cantidad de salida |
+ *     Fecha salida | Saldo inventario | (alimentos) Nombre encargado de bodega · Fecha de recibido
+ *                                       (aseo) Firma de encargado de bodega · Firma de recibido
+ *   Una fila por movimiento (desde la 11; la plantilla trae 22 renglones) y al pie Responsable / Revisado por + fecha.
  */
 import ExcelJS from "exceljs";
 
@@ -13,88 +16,133 @@ export type MovimientoInv = {
   fecha: string; // YYYY-MM-DD
   entregado_a?: string | null;
   motivo?: string | null;
+  factura?: string | null;
+  registrado_por?: string | null;
 };
-export type ProductoInv = { id: number; nombre: string; unidad: string; categoria: string };
+export type ProductoInv = { id: number; nombre: string; unidad: string };
 
-export type FilaControl = {
+export type FilaFormulario1 = {
+  fechaIngreso: string | null;
   producto: string;
-  unidad: string;
-  inicial: number;
-  entradas: number;
-  salidas: number;
-  mermas: number;
-  final: number;
+  factura: string | null;
+  ingreso: number | null;
+  salida: number | null;
+  fechaSalida: string | null;
+  saldo: number;
+  encargado: string | null;
+  recibido: string | null;
 };
 
 const signo = (t: MovimientoInv["tipo"]) => (t === "entrada" || t === "ajuste" ? 1 : -1);
 const r3 = (n: number) => Math.round(n * 1000) / 1000;
+const fechaCR = (f: string) => `${f.slice(8, 10)}/${f.slice(5, 7)}/${f.slice(0, 4)}`;
 
-/** Saldos del mes "YYYY-MM" por producto a partir de todos los movimientos (los anteriores dan el saldo inicial). */
-export function resumenMensual(productos: ProductoInv[], movs: MovimientoInv[], mes: string): FilaControl[] {
-  return productos
-    .map((p) => {
-      const suyos = movs.filter((m) => m.producto_id === p.id);
-      const antes = suyos.filter((m) => m.fecha < `${mes}-01`);
-      const delMes = suyos.filter((m) => m.fecha.startsWith(mes));
-      const inicial = r3(antes.reduce((s, m) => s + signo(m.tipo) * m.cantidad, 0));
-      const entradas = r3(delMes.filter((m) => m.tipo === "entrada" || m.tipo === "ajuste").reduce((s, m) => s + m.cantidad, 0));
-      const salidas = r3(delMes.filter((m) => m.tipo === "salida").reduce((s, m) => s + m.cantidad, 0));
-      const mermas = r3(delMes.filter((m) => m.tipo === "merma").reduce((s, m) => s + m.cantidad, 0));
-      return { producto: p.nombre, unidad: p.unidad, inicial, entradas, salidas, mermas, final: r3(inicial + entradas - salidas - mermas) };
-    })
-    .filter((f) => f.inicial !== 0 || f.entradas !== 0 || f.salidas !== 0 || f.mermas !== 0);
+/**
+ * Filas del mes "YYYY-MM" en orden de fecha. Primero el saldo que traía cada producto del mes anterior;
+ * después cada entrada, salida o merma con el saldo del producto después de ese movimiento.
+ */
+export function filasFormulario1(productos: ProductoInv[], movs: MovimientoInv[], mes: string): FilaFormulario1[] {
+  const inicio = `${mes}-01`;
+  const saldo = new Map<number, number>();
+  for (const m of movs.filter((x) => x.fecha < inicio)) saldo.set(m.producto_id, r3((saldo.get(m.producto_id) ?? 0) + signo(m.tipo) * m.cantidad));
+  const nombre = new Map(productos.map((p) => [p.id, `${p.nombre} (${p.unidad})`]));
+
+  const filas: FilaFormulario1[] = productos
+    .filter((p) => (saldo.get(p.id) ?? 0) !== 0)
+    .map((p) => ({ fechaIngreso: inicio, producto: nombre.get(p.id)!, factura: "Saldo anterior", ingreso: null, salida: null, fechaSalida: null, saldo: saldo.get(p.id)!, encargado: null, recibido: null }));
+
+  const delMes = movs.filter((m) => m.fecha.startsWith(mes) && nombre.has(m.producto_id)).sort((a, b) => a.fecha.localeCompare(b.fecha));
+  for (const m of delMes) {
+    const s = r3((saldo.get(m.producto_id) ?? 0) + signo(m.tipo) * m.cantidad);
+    saldo.set(m.producto_id, s);
+    const entra = signo(m.tipo) > 0;
+    filas.push({
+      fechaIngreso: entra ? m.fecha : null,
+      producto: m.tipo === "merma" ? `${nombre.get(m.producto_id)} — merma${m.motivo ? `: ${m.motivo}` : ""}` : nombre.get(m.producto_id)!,
+      factura: entra ? (m.factura ?? m.motivo ?? null) : null,
+      ingreso: entra ? m.cantidad : null,
+      salida: entra ? null : m.cantidad,
+      fechaSalida: entra ? null : m.fecha,
+      saldo: s,
+      encargado: m.registrado_por ?? null,
+      recibido: entra ? null : (m.entregado_a ?? null),
+    });
+  }
+  return filas;
 }
 
-const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+const VARIANTES = {
+  alimentos: { col9: "NOMBRE ENCARGADO DE BODEGA", col10: "FECHA DE RECIBIDO" },
+  aseo: { col9: "FIRMA DE ENCARGADO DE BODEGA", col10: "FIRMA DE RECIBIDO" },
+} as const;
+export type VarianteFormulario1 = keyof typeof VARIANTES;
 
-export async function generarControlInventario(opts: {
-  titulo: string;
+const RENGLONES_PLANTILLA = 22;
+const borde: Partial<ExcelJS.Borders> = { top: { style: "medium" }, left: { style: "medium" }, bottom: { style: "medium" }, right: { style: "medium" } };
+const bordeFino: Partial<ExcelJS.Borders> = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } };
+const AZUL_ENCABEZADO = "FF95B3D7";
+
+export async function generarFormulario1(opts: {
+  variante: VarianteFormulario1;
   mes: string;
-  filas: FilaControl[];
-  entregas: { fecha: string; producto: string; cantidad: number; unidad: string; entregado_a: string | null; motivo: string | null }[];
+  filas: FilaFormulario1[];
   organizacion?: string;
 }): Promise<Buffer> {
+  const v = VARIANTES[opts.variante];
   const wb = new ExcelJS.Workbook();
   wb.creator = "Portal Fundación Creciendo Feliz";
-  const ws = wb.addWorksheet("Control mensual");
-  const [y, m] = opts.mes.split("-").map(Number);
-  ws.mergeCells("A1:H1");
-  ws.getCell("A1").value = opts.organizacion ?? "Fundación Creciendo Feliz";
-  ws.mergeCells("A2:H2");
-  ws.getCell("A2").value = opts.titulo;
-  ws.mergeCells("A3:H3");
-  ws.getCell("A3").value = `Mes: ${MESES[m - 1]} ${y}`;
-  for (const c of ["A1", "A2", "A3"]) {
-    ws.getCell(c).font = { bold: true, size: c === "A2" ? 14 : 12 };
-    ws.getCell(c).alignment = { horizontal: "center" };
-  }
-  const enc = ["N.º", "Producto", "Unidad", "Saldo inicial", "Entradas", "Salidas", "Mermas / vencidos", "Saldo final"];
-  ws.getRow(5).values = enc;
-  ws.getRow(5).font = { bold: true };
-  ws.getRow(5).eachCell((c) => {
-    c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFDDEBF7" } };
-    c.border = { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } };
-    c.alignment = { wrapText: true, vertical: "middle", horizontal: "center" };
-  });
-  opts.filas.forEach((f, i) => {
-    const row = ws.getRow(6 + i);
-    row.values = [i + 1, f.producto, f.unidad, f.inicial, f.entradas, f.salidas, f.mermas, f.final];
-    row.eachCell((c) => (c.border = { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } }));
-  });
-  [6, 36, 12, 14, 12, 12, 16, 14].forEach((w, i) => (ws.getColumn(i + 1).width = w));
-  for (let c = 4; c <= 8; c++) ws.getColumn(c).numFmt = "#,##0.###";
-  const pie = 6 + opts.filas.length + 2;
-  ws.getCell(`B${pie}`).value = "Elaborado por: ______________________";
-  ws.getCell(`F${pie}`).value = "Revisado por: ______________________";
+  const ws = wb.addWorksheet("Hoja1", { pageSetup: { orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
+  [3, 13.66, 15.16, 16.33, 22.5, 14.33, 14.16, 15.5, 16.33, 14.83].forEach((w, i) => (ws.getColumn(i + 1).width = w));
+  const negrita = { name: "Arial", bold: true, size: 12 };
 
-  const we = wb.addWorksheet("Entregas del mes");
-  we.getRow(1).values = ["Fecha", "Producto", "Cantidad", "Unidad", "Entregado a", "Motivo", "Firma de quien recibe"];
-  we.getRow(1).font = { bold: true };
-  opts.entregas.forEach((e, i) => {
-    const [ey, em, ed] = e.fecha.split("-");
-    we.getRow(2 + i).values = [`${ed}/${em}/${ey}`, e.producto, e.cantidad, e.unidad, e.entregado_a ?? "", e.motivo ?? "", ""];
-  });
-  [12, 36, 10, 10, 24, 30, 24].forEach((w, i) => (we.getColumn(i + 1).width = w));
+  ws.mergeCells("B5:D5");
+  ws.getCell("B5").value = "FORMULARIO NO.1";
+  ws.mergeCells("B6:J6");
+  ws.getCell("B6").value = `NOMBRE DE LA ORGANIZACIÓN: ${opts.organizacion ?? "Fundación Creciendo Feliz"}`;
+  ws.mergeCells("B8:G8");
+  ws.getCell("B8").value = "CONTROL DE INVENTARIOS MENSUAL";
+  ws.mergeCells("H8:I8");
+  ws.getCell("H8").value = "CONSECUTIVO ";
+  ws.getCell("J8").value = `#${opts.mes.slice(5, 7).padStart(3, "0")}-${opts.mes.slice(0, 4)}`;
+  for (const c of ["B5", "B6", "B8", "H8", "J8"]) ws.getCell(c).font = negrita;
+
+  const enc = ws.getRow(10);
+  enc.values = [null, "FECHA INGRESO", "PRODUCTO", "NUMERO DE FACTURA", "CANTIDAD DE INGRESO EN PAQUETES,KILOS,LITROS", "CANTIDAD DE SALIDA", "FECHA SALIDA", "SALDO INVENTARIO", v.col9, v.col10];
+  enc.height = 61.5;
+  for (let c = 2; c <= 10; c++) {
+    const celda = enc.getCell(c);
+    celda.font = negrita;
+    celda.alignment = { wrapText: true, vertical: "middle", horizontal: "center" };
+    celda.border = borde;
+    celda.fill = { type: "pattern", pattern: "solid", fgColor: { argb: AZUL_ENCABEZADO } };
+  }
+
+  const renglones = Math.max(RENGLONES_PLANTILLA, opts.filas.length);
+  for (let i = 0; i < renglones; i++) {
+    const f = opts.filas[i];
+    const fila = ws.getRow(11 + i);
+    if (f) {
+      fila.values = [
+        null, f.fechaIngreso ? fechaCR(f.fechaIngreso) : null, f.producto, f.factura, f.ingreso, f.salida, f.fechaSalida ? fechaCR(f.fechaSalida) : null, f.saldo,
+        opts.variante === "alimentos" ? f.encargado : null,
+        opts.variante === "alimentos" ? (f.fechaSalida ? fechaCR(f.fechaSalida) : null) : null,
+      ];
+    }
+    for (let c = 2; c <= 10; c++) {
+      fila.getCell(c).border = bordeFino;
+      fila.getCell(c).alignment = { wrapText: true, vertical: "middle" };
+      fila.getCell(c).font = { name: "Arial", size: 10 };
+    }
+    for (const c of [5, 6, 8]) fila.getCell(c).numFmt = "#,##0.###";
+  }
+
+  const pie = 11 + renglones + 1;
+  ws.getCell(`B${pie}`).value = "RESPONSABLE:";
+  ws.getCell(`I${pie}`).value = "REVISADO POR:";
+  ws.getCell(`B${pie + 1}`).value = "FECHA:";
+  ws.getCell(`I${pie + 1}`).value = "FECHA:";
+  for (const c of [`B${pie}`, `I${pie}`, `B${pie + 1}`, `I${pie + 1}`]) ws.getCell(c).font = { name: "Arial", bold: true, size: 10 };
+  ws.pageSetup.printArea = `B5:J${pie + 2}`;
 
   return Buffer.from(await wb.xlsx.writeBuffer());
 }
