@@ -6,21 +6,21 @@ import { useAvisoResultado } from "../../../_ui/Avisos";
 import { estiloBoton } from "../../../_ui/estilos";
 import { darDeBaja, trasladarActivo } from "../acciones";
 
-export function Traslado({ id, ubicaciones, hoy }: { id: string; ubicaciones: { valor: number; texto: string }[]; hoy: string }) {
+export function Traslado({ id, ubicaciones, hoy, primera = false }: { id: string; ubicaciones: { valor: number; texto: string }[]; hoy: string; primera?: boolean }) {
   const [abierto, setAbierto] = useState(false);
   const [estado, accion, accionPendiente] = useActionState(trasladarActivo, null);
   useAvisoResultado(estado, "Traslado registrado.");
-  if (!abierto) return <button type="button" className={estiloBoton.secundario} onClick={() => setAbierto(true)}>Trasladar a otra ubicación</button>;
+  if (!abierto) return <button type="button" className={primera ? estiloBoton.primario : estiloBoton.secundario} onClick={() => setAbierto(true)}>{primera ? "Asignar ubicación" : "Trasladar a otra ubicación"}</button>;
   return (
     <FormularioAccion accion={accion} estado={estado} pendiente={accionPendiente} className="space-y-4" key={estado?.ok ? "ok" : "f"}>
       <input type="hidden" name="id" value={id} />
       <Seleccion etiqueta="¿A dónde va?" name="destino" opciones={ubicaciones} vacio="Elija…" required />
       <Campo etiqueta="Fecha" name="fecha" type="date" defaultValue={hoy} required />
-      <AreaTexto etiqueta="Motivo" name="motivo" required placeholder="Ej.: se cambió de aula por remodelación" />
+      <AreaTexto etiqueta="Motivo" name="motivo" required defaultValue={primera ? "Primera ubicación del activo" : undefined} placeholder="Ej.: se cambió de aula por remodelación" />
       <CampoArchivo etiqueta="Documento (opcional)" name="documento" />
       <MensajeError estado={estado} />
       <div className="flex gap-2">
-        <BotonEnviar>Registrar traslado</BotonEnviar>
+        <BotonEnviar>{primera ? "Guardar ubicación" : "Registrar traslado"}</BotonEnviar>
         <button type="button" className={estiloBoton.secundario} onClick={() => setAbierto(false)}>Cancelar</button>
       </div>
     </FormularioAccion>

@@ -58,7 +58,10 @@ export async function crearProducto(_: R, f: FormData): Promise<R> {
     await consultar((tx) => tx.insertInto("productos").values(datosProducto(f)).execute());
     return {};
   });
-  if (r.ok) revalidatePath("/portal/inventario/productos");
+  if (r.ok) {
+    revalidatePath("/portal/inventario/productos");
+    revalidatePath("/portal/proveedores", "layout");
+  }
   return r;
 }
 

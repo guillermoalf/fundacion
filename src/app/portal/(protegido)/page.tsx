@@ -21,7 +21,7 @@ function Tarjeta({ titulo, valor, detalle, href, tono = "normal" }: { titulo: st
 }
 
 export default async function PortalInicio() {
-  const { perfil, consultar, puedeEscribir, esAdmin } = await obtenerSesion();
+  const { perfil, consultar, puedeEscribir, esSuperadmin } = await obtenerSesion();
   const hoy = hoyCR();
   const d = await consultar(async (tx) => {
     const activos = (await consultaActivos(tx).where("a.estado", "<>", "dado_de_baja").execute()).map((a) => conDepreciacion(a, hoy));
@@ -33,9 +33,10 @@ export default async function PortalInicio() {
         .where(sql<boolean>`(marcado_en at time zone 'America/Costa_Rica')::date = ${hoy}::date`).executeTakeFirstOrThrow(),
       tx.selectFrom("planillas").select("id").where("estado", "=", "borrador").execute(),
     ]);
-    const espacio = esAdmin ? (await sql<{ base_bytes: string; archivos_bytes: string; archivos: number }>`select * from espacio_usado()`.execute(tx)).rows[0] : null;
+    const espacio = esSuperadmin ? (await sql<{ base_bytes: string; archivos_bytes: string; archivos: number }>`select * from espacio_usado()`.execute(tx)).rows[0] : null;
     return { activos, pendientes: Number(pendientes.n), saldos, ausentes, marcasHoy: Number(marcasHoy.n), borradores: borradores.length, espacio };
   });
+  const sinUbicacion = d.activos.filter((a) => a.ubicacion_id === null).length;
   const libros = d.activos.reduce((s, a) => s + (a.valorLibros ?? 0), 0);
   const sinValor = d.activos.filter((a) => a.valorLibros === null).length;
   const bajos = d.saldos.filter((s) => Number(s.stock_minimo) > 0 && Number(s.saldo) < Number(s.stock_minimo));
@@ -46,6 +47,9 @@ export default async function PortalInicio() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Tarjeta titulo="Activos en uso" valor={String(d.activos.length)} href="/portal/activos" />
         <Tarjeta titulo="Valor en libros hoy" valor={colones(libros)!} detalle={sinValor ? `Sin contar ${sinValor} activos a los que les faltan datos` : undefined} href="/portal/reportes" />
+        {puedeEscribir && sinUbicacion > 0 && (
+          <Tarjeta titulo="Activos sin ubicación" valor={String(sinUbicacion)} detalle="Asígneles dónde están para que el conteo y el reporte del PANI queden completos" href="/portal/pendientes?tipo=Sin%20ubicaci%C3%B3n" tono="aviso" />
+        )}
         <Tarjeta titulo="Activos con pendientes" valor={String(d.pendientes)} detalle="Placa, fecha, costo, categoría o factura" href="/portal/pendientes" tono={d.pendientes ? "aviso" : "normal"} />
         <Tarjeta titulo="Productos bajo el mínimo" valor={String(bajos.length)} detalle={bajos.slice(0, 3).map((b) => b.nombre).join(", ") || undefined} href="/portal/inventario" tono={bajos.length ? "aviso" : "normal"} />
         <Tarjeta titulo="Personas que marcaron hoy" valor={String(d.marcasHoy)} href="/portal/asistencia" />

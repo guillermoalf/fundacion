@@ -22,7 +22,7 @@ export default async function EtiquetasPage({ searchParams }: { searchParams: Pr
   const { ubicaciones, activos } = await consultar(async (tx) => {
     const ubicaciones = await tx.selectFrom("ubicaciones").select(["id", "nombre"]).orderBy("nombre").execute();
     if (!ids && !ubicacion) return { ubicaciones, activos: [] };
-    let q = tx.selectFrom("activos as a").innerJoin("ubicaciones as u", "u.id", "a.ubicacion_id")
+    let q = tx.selectFrom("activos as a").leftJoin("ubicaciones as u", "u.id", "a.ubicacion_id")
       .select(["a.id", "a.placa", "a.tipo_bien", "u.nombre as ubicacion"]).where("a.estado", "<>", "dado_de_baja");
     if (ids) q = q.where("a.id", "in", ids.split(",").filter((x) => /^[0-9a-f-]{36}$/.test(x)));
     if (ubicacion && ubicacion !== "todas") q = q.where("a.ubicacion_id", "=", Number(ubicacion));

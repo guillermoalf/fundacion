@@ -2,7 +2,7 @@
 export const TIPOS_PROVEEDOR = [
   { valor: "supermercado", texto: "Supermercado" },
   { valor: "carnes", texto: "Carnes" },
-  { valor: "frutas_verduras", texto: "Frutas y verduras" },
+  { valor: "frutas_verduras", texto: "Frutas, verduras, semillas y huevos" },
   { valor: "limpieza", texto: "Limpieza" },
   { valor: "tecnologia", texto: "Tecnología" },
   { valor: "mobiliario", texto: "Mobiliario" },

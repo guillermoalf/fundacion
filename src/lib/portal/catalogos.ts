@@ -1,3 +1,4 @@
+import { sql } from "kysely";
 import type { Tx } from "@/lib/db";
 
 /** Listas que usan los formularios (solo lo activo, ordenado para mostrar). */
@@ -22,3 +23,9 @@ export const ESTADOS_ACTIVO = {
   extraviado: "Extraviado",
   dado_de_baja: "Dado de baja",
 } as const;
+
+/** Costo por unidad a partir del cual un artículo es activo (25 % de un salario base, parámetros). Null si faltan. */
+export async function umbralActivo(tx: Tx, fecha?: string | null): Promise<number | null> {
+  const { rows } = await sql<{ u: string | null }>`select umbral_activo(coalesce(${fecha ?? null}::date, current_date)) as u`.execute(tx);
+  return rows[0].u === null ? null : Number(rows[0].u);
+}

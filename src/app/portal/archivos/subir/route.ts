@@ -20,7 +20,7 @@ export async function POST(req: Request) {
   try {
     if (p.get("completar")) {
       const { nombre, tipo } = (await req.json()) as { nombre?: string; tipo?: string };
-      if (!tipo || !TIPOS_ARCHIVO.includes(tipo)) return Response.json({ ok: false, error: "El archivo debe ser una foto (JPG o PNG) o un PDF." }, { status: 400 });
+      if (!tipo || !TIPOS_ARCHIVO.includes(tipo)) return Response.json({ ok: false, error: "El archivo debe ser una foto (JPG o PNG), un PDF o un XML de factura electrónica." }, { status: 400 });
       const id = await conUsuario(usuario.id, async (tx) =>
         (await sql<{ id: string }>`select completar_archivo(${subida}::uuid, ${nombre ?? "archivo"}, ${tipo}) as id`.execute(tx)).rows[0].id,
       );

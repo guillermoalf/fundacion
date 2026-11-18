@@ -58,3 +58,12 @@ Cada módulo vive en su rama `portal/<modulo>`, que sale de la rama del módulo 
 - Rol `superadmin` por encima de la dirección: todos los permisos de los demás roles y, con motivo obligatorio, corrige lo cerrado (planillas aprobadas/pagadas, conteos cerrados, marcas, parámetros, tasas en uso, archivos, usuarios). Borrar sigue bloqueado para todos. El motivo queda en `bitacora.motivo`.
 - Editor genérico `/portal/corregir` (enlace «Corregir este registro» en cada entrada de la bitácora): lee la tabla y sus columnas del catálogo de la base (`tablas_corregibles()`), solo manda los campos cambiados.
 - Solo un superadministrador da o cambia ese rol (trigger). En producción lo asigna `db:migrar` al usuario de `SUPERADMIN_CORREO` (variable de Vercel, no en el repo).
+
+## Compras y activos (rama `portal/compras-activos`, 18/11)
+
+- Espacio usado: solo el superadministrador (`espacio_usado()`).
+- Baja cuantía (PANI): parámetros `salario_base` (₡462 200, 2026) y `baja_cuantia_pct_salario_base` (25 %, Resolución DGT-R-009-2015) → `umbral_activo()` = ₡115 550. Se compara **por unidad**; una línea «activo» por debajo pide pasarla a Inventario o confirmar la excepción. Pendiente de confirmar con el PANI qué pasa con varias unidades de una misma compra.
+- Activos sin ubicación: se pueden registrar así; quedan en Pendientes («Sin ubicación»), aviso en Inicio y botón «Asignar ubicación» en la ficha (queda en el historial).
+- Compras: varios archivos por factura (`compra_archivos`; PDF, foto y XML). Al subir el XML de la factura electrónica (Hacienda 4.3/4.4, `src/lib/importacion/facturaElectronica.ts`) se llenan proveedor (o se crea), número, fecha, IVA y líneas, y se sugiere activo/inventario según el umbral. Productos nuevos se crean desde la línea (con categoría obligatoria). Cada activo muestra los archivos de su factura.
+- «Nuevo activo» suelto (sin factura): cantidad, placas y precio por unidad; una ficha por unidad.
+- Proveedores: ficha con sus productos (agregar con mínimo) y «Hacer pedido»: sugiere lo que falta para el mínimo, se corrige y se copia para WhatsApp o se imprime. Cocina no usa el sistema.

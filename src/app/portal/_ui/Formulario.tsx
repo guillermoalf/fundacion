@@ -135,6 +135,13 @@ async function comprimirImagen(archivo: File): Promise<File> {
   return new File([blob], archivo.name.replace(/\.\w+$/, "") + ".jpg", { type: "image/jpeg" });
 }
 
+/** Fotos, PDF o XML (algunos navegadores no dicen el tipo del XML: se deduce de la extensión). */
+function normalizarTipo(archivo: File): File | null {
+  if (archivo.type.startsWith("image/") || archivo.type === "application/pdf") return archivo;
+  if (archivo.type.includes("xml") || /\.xml$/i.test(archivo.name)) return new File([archivo], archivo.name, { type: "application/xml" });
+  return null;
+}
+
 /** Sube el archivo en partes de 3 MB (Vercel no acepta más de 4,5 MB por petición) y devuelve su id. */
 async function subirPorPartes(archivo: File, progreso: (pct: number) => void): Promise<string> {
   const subida = crypto.randomUUID();
@@ -185,12 +192,13 @@ export function CampoArchivo({ etiqueta, name, ayuda, required, aceptar = "image
           const original = input.files?.[0];
           input.setCustomValidity("");
           if (!original) { setEstado({ t: "nada" }); return; }
-          if (!original.type.startsWith("image/") && original.type !== "application/pdf") {
+          const normal = normalizarTipo(original);
+          if (!normal) {
             input.value = "";
-            setEstado({ t: "error", msg: "Solo fotos o PDF." });
+            setEstado({ t: "error", msg: "Solo fotos, PDF o XML de factura electrónica." });
             return;
           }
-          const final = await comprimirImagen(original);
+          const final = await comprimirImagen(normal);
           if (final.size > TOPE_BYTES) {
             input.value = "";
             setEstado({ t: "error", msg: "El archivo pesa más de 5 MB. Tome la foto otra vez o use un PDF más liviano." });
@@ -214,6 +222,78 @@ export function CampoArchivo({ etiqueta, name, ayuda, required, aceptar = "image
       {estado.t === "listo" && <p className="text-sm text-emerald-700">Listo ({estado.kb} KB).</p>}
       {estado.t === "error" && <p className="text-sm text-red-700">{estado.msg}</p>}
       {estado.t === "nada" && ayuda && <p className="text-sm text-slate-500">{ayuda}</p>}
+    </div>
+  );
+}
+
+export type ArchivoSubido = { id: string; nombre: string; tipo: string; kb: number };
+
+/**
+ * Varios archivos a la vez (por ejemplo la factura electrónica: PDF + 2 XML). Cada uno se sube apenas se elige;
+ * el formulario envía los ids separados por coma. `alSubir` avisa cada archivo listo (para leer el XML).
+ */
+export function CampoArchivos({ etiqueta, name, ayuda, aceptar = "image/*,application/pdf,.xml,application/xml,text/xml", alSubir }: {
+  etiqueta: string; name: string; ayuda?: ReactNode; aceptar?: string; alSubir?: (a: ArchivoSubido) => void;
+}) {
+  const [listos, setListos] = useState<ArchivoSubido[]>([]);
+  const [subiendo, setSubiendo] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const form = ref.current?.form;
+    const limpiar = () => { setListos([]); setError(null); };
+    form?.addEventListener("reset", limpiar);
+    return () => form?.removeEventListener("reset", limpiar);
+  }, []);
+  return (
+    <div className="space-y-1.5">
+      <label htmlFor={name} className={estiloEtiqueta}>{etiqueta}</label>
+      <input
+        ref={ref}
+        id={name}
+        type="file"
+        multiple
+        accept={aceptar}
+        className="block w-full text-base file:mr-3 file:rounded-xl file:border-0 file:bg-sky-50 file:px-4 file:py-2.5 file:font-semibold file:text-sky-700 hover:file:bg-sky-100"
+        onChange={async (e) => {
+          const input = e.currentTarget;
+          const elegidos = [...(input.files ?? [])];
+          setError(null);
+          input.setCustomValidity("Espere a que terminen de subir los archivos.");
+          for (const original of elegidos) {
+            const normal = normalizarTipo(original);
+            if (!normal) { setError(`«${original.name}»: solo fotos, PDF o XML.`); continue; }
+            const final = await comprimirImagen(normal);
+            if (final.size > TOPE_BYTES) { setError(`«${original.name}» pesa más de 5 MB.`); continue; }
+            setSubiendo(`${original.name}…`);
+            try {
+              const id = await subirPorPartes(final, (pct) => setSubiendo(`${original.name}: ${pct} %`));
+              const a = { id, nombre: original.name, tipo: final.type, kb: Math.max(1, Math.round(final.size / 1024)) };
+              setListos((l) => [...l, a]);
+              alSubir?.(a);
+            } catch (err) {
+              setError(`«${original.name}»: ${(err as Error).message}`);
+            }
+          }
+          setSubiendo(null);
+          input.setCustomValidity("");
+          input.value = "";
+        }}
+      />
+      <input type="hidden" name={name} value={listos.map((a) => a.id).join(",")} />
+      {listos.length > 0 && (
+        <ul className="space-y-1 text-sm">
+          {listos.map((a) => (
+            <li key={a.id} className="flex items-center gap-2 text-emerald-800">
+              ✓ {a.nombre} ({a.kb} KB)
+              <button type="button" className="text-slate-500 underline" onClick={() => setListos((l) => l.filter((x) => x.id !== a.id))}>quitar</button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {subiendo && <p className="text-sm text-sky-700">Subiendo {subiendo}</p>}
+      {error && <p className="text-sm text-red-700">{error}</p>}
+      {!listos.length && !subiendo && !error && ayuda && <p className="text-sm text-slate-500">{ayuda}</p>}
     </div>
   );
 }

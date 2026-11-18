@@ -3,9 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { obtenerSesion } from "@/lib/portal/sesion";
-import { ejecutar, ErrorUsuario, entero, numero, texto, textoObligatorio, type Resultado } from "@/lib/portal/acciones";
+import { casilla, ejecutar, ErrorUsuario, entero, numero, texto, textoObligatorio, type Resultado } from "@/lib/portal/acciones";
+import { umbralActivo } from "@/lib/portal/catalogos";
 import { guardarArchivo } from "@/lib/portal/archivos";
-import { hoyCR } from "@/lib/portal/formato";
+import { colones, hoyCR } from "@/lib/portal/formato";
 import type { EstadoActivo, MetodoDepreciacion } from "@/lib/db/tipos";
 
 type R = Resultado | null;
@@ -39,18 +40,30 @@ export async function crearActivo(_: R, f: FormData): Promise<R> {
   const r = await ejecutar(async () => {
     const datos = datosActivo(f);
     const ubicacion = entero(f, "ubicacion_id");
-    if (!ubicacion) throw new ErrorUsuario("Falta la ubicación.");
-    const id = await consultar(async (tx) => {
+    const cantidad = entero(f, "cantidad") ?? 1;
+    if (cantidad < 1 || cantidad > 200) throw new ErrorUsuario("La cantidad debe estar entre 1 y 200.");
+    const placas = (texto(f, "placas") ?? datos.placa ?? "").split(/[,;\s]+/).map((p) => p.trim()).filter(Boolean);
+    if (placas.length > cantidad) throw new ErrorUsuario(`Hay más placas (${placas.length}) que unidades (${cantidad}).`);
+    const ids = await consultar(async (tx) => {
+      const umbral = await umbralActivo(tx, datos.fecha_adquisicion);
+      if (datos.costo !== null && umbral !== null && datos.costo <= umbral && !casilla(f, "es_activo_igual")) {
+        throw new ErrorUsuario(`Cada unidad cuesta ${colones(datos.costo)}: no supera ${colones(umbral)} (25 % de un salario base), así que es de baja cuantía y va al inventario, no a activos. Si de verdad es un activo, marque la casilla de confirmación.`);
+      }
       const foto = await guardarArchivo(tx, f.get("foto"));
-      const { id } = await tx.insertInto("activos").values({ ...datos, ubicacion_id: ubicacion, foto_url: foto, origen: "formulario" }).returning("id").executeTakeFirstOrThrow();
-      await tx.insertInto("activo_movimientos").values({ activo_id: id, tipo: "alta", ubicacion_destino_id: ubicacion, motivo: texto(f, "motivo_alta") ?? "Registro en el portal" }).execute();
-      return id;
+      const creados: string[] = [];
+      // Un activo por unidad, cada uno con su placa (las que falten quedan en Pendientes).
+      for (let u = 0; u < cantidad; u++) {
+        const { id } = await tx.insertInto("activos").values({ ...datos, placa: placas[u] ?? null, ubicacion_id: ubicacion, foto_url: foto, origen: "formulario" }).returning("id").executeTakeFirstOrThrow();
+        await tx.insertInto("activo_movimientos").values({ activo_id: id, tipo: "alta", ubicacion_destino_id: ubicacion, motivo: texto(f, "motivo_alta") ?? "Registro en el portal" }).execute();
+        creados.push(id);
+      }
+      return creados;
     });
-    return { id };
+    return { id: ids[0], cantidad: ids.length };
   });
   if (r.ok) {
     revalidatePath("/portal/activos");
-    redirect(`/portal/activos/${r.id}?guardado=1`);
+    redirect(r.cantidad > 1 ? "/portal/activos" : `/portal/activos/${r.id}?guardado=1`);
   }
   return r;
 }

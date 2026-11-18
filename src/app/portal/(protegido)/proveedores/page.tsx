@@ -38,7 +38,7 @@ export default async function ProveedoresPage({ searchParams }: { searchParams: 
           filtros={[{ clave: "tipo", titulo: "Tipo" }, { clave: "estado", titulo: "Estado" }]}
           filas={filas.map((p) => ({
             id: p.id,
-            href: puedeEscribir ? `/portal/proveedores/${p.id}` : undefined,
+            href: `/portal/proveedores/${p.id}`,
             celdas: {
               nombre: p.nombre, tipo: nombreTipo(p.tipo), telefono: p.telefono ?? { vacio: true }, compras: String(p.compras),
               total: colones(p.total) ?? { vacio: true }, estado: p.activo ? { texto: "Activo", tono: "verde" } : { texto: "Inactivo", tono: "gris" },

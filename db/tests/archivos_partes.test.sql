@@ -8,7 +8,7 @@ insert into usuarios (id, correo, nombre) select id::uuid, correo, correo from (
   ('00000000-0000-0000-0000-0000000000d1', 'coord@pgtap.test'),
   ('00000000-0000-0000-0000-0000000000e1', 'auditor@pgtap.test')) v(id, correo);
 insert into perfiles (id, nombre, rol, acceso_hasta) values
-  ('00000000-0000-0000-0000-0000000000a1', 'Admin', 'admin', null),
+  ('00000000-0000-0000-0000-0000000000a1', 'Super', 'superadmin', null),
   ('00000000-0000-0000-0000-0000000000d1', 'Coordinación', 'coordinacion', null),
   ('00000000-0000-0000-0000-0000000000e1', 'Auditor', 'auditor', current_date + 5);
 
@@ -24,7 +24,7 @@ select throws_ok($$insert into archivos (nombre, tipo, tamano, contenido) values
 select throws_ok($$select * from espacio_usado()$$, '42501', null, 'coordinación no ve el espacio usado');
 
 set local app.usuario_id = '00000000-0000-0000-0000-0000000000a1';
-select ok((select base_bytes > 0 and archivos >= 1 from espacio_usado()), 'la dirección ve el espacio usado');
+select ok((select base_bytes > 0 and archivos >= 1 from espacio_usado()), 'el superadministrador ve el espacio usado');
 
 select * from finish();
 rollback;

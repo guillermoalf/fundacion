@@ -33,7 +33,7 @@ export async function marcarActivo(conteoId: string, activoId: string, encontrad
     await consultar(async (tx) => {
       const c = await tx.selectFrom("conteos_fisicos").select(["ubicacion_id", "cerrado"]).where("id", "=", conteoId).executeTakeFirstOrThrow();
       if (c.cerrado) throw new ErrorUsuario("El conteo ya está cerrado.");
-      const a = await tx.selectFrom("activos as a").innerJoin("ubicaciones as u", "u.id", "a.ubicacion_id").select(["a.ubicacion_id", "a.estado", "u.nombre"]).where("a.id", "=", activoId).executeTakeFirst();
+      const a = await tx.selectFrom("activos as a").leftJoin("ubicaciones as u", "u.id", "a.ubicacion_id").select(["a.ubicacion_id", "a.estado", "u.nombre"]).where("a.id", "=", activoId).executeTakeFirst();
       if (!a) throw new ErrorUsuario("Ese código no corresponde a ningún activo.");
       if (a.estado === "dado_de_baja") throw new ErrorUsuario("Ese activo está dado de baja.");
       if (a.ubicacion_id !== c.ubicacion_id) nota = `Está registrado en ${a.nombre}: si se quedará aquí, haga un traslado.`;
