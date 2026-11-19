@@ -172,6 +172,7 @@ export interface CompraLineas {
   compra_id: string;
   descripcion: string;
   id: Generated<string>;
+  iva_linea: Numeric | null;
   precio_unitario: Numeric;
   producto_id: number | null;
   tipo: TipoLineaCompra;
@@ -365,6 +366,13 @@ export interface Planillas {
   tipo: Generated<string>;
 }
 
+export interface PreferenciasTabla {
+  actualizado_en: Generated<Timestamp>;
+  config: Json;
+  tabla: string;
+  usuario_id: Generated<string>;
+}
+
 export interface Productos {
   activo: Generated<boolean>;
   categoria: string;
@@ -438,6 +446,22 @@ export interface VActivosAlertas {
   ubicacion: string | null;
 }
 
+export interface VPreciosProducto {
+  cantidad: Numeric | null;
+  compra_id: string | null;
+  creado_en: Timestamp | null;
+  fecha: string | null;
+  iva_unitario: Numeric | null;
+  linea_id: string | null;
+  numero_factura: string | null;
+  precio_con_iva: Numeric | null;
+  precio_unitario: Numeric | null;
+  producto_id: number | null;
+  proveedor: string | null;
+  proveedor_id: number | null;
+  unidad: string | null;
+}
+
 export interface VSaldoInventario {
   categoria: string | null;
   nombre: string | null;
@@ -474,6 +498,7 @@ export interface DB {
   perfiles: Perfiles;
   planilla_lineas: PlanillaLineas;
   planillas: Planillas;
+  preferencias_tabla: PreferenciasTabla;
   productos: Productos;
   proveedores: Proveedores;
   responsables_nino: ResponsablesNino;
@@ -481,5 +506,6 @@ export interface DB {
   tramos_renta: TramosRenta;
   ubicaciones: Ubicaciones;
   v_activos_alertas: VActivosAlertas;
+  v_precios_producto: VPreciosProducto;
   v_saldo_inventario: VSaldoInventario;
 }
