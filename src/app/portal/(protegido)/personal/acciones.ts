@@ -8,6 +8,7 @@ import { obtenerSesion } from "@/lib/portal/sesion";
 import { casilla, ejecutar, ErrorUsuario, entero, numero, texto, textoObligatorio, type Resultado } from "@/lib/portal/acciones";
 import { guardarArchivo } from "@/lib/portal/archivos";
 import { hoyCR } from "@/lib/portal/formato";
+import { repartoSalario } from "@/lib/calculos/planilla";
 
 type R = Resultado | null;
 
@@ -127,6 +128,61 @@ export async function cambiarSalario(_: R, f: FormData): Promise<R> {
       tx.insertInto("salarios").values({ empleado_id: id, salario_mensual: salario, vigente_desde: desde, motivo: texto(f, "motivo") })
         .onConflict((oc) => oc.columns(["empleado_id", "vigente_desde"]).doUpdateSet({ salario_mensual: salario, motivo: texto(f, "motivo") })).execute(),
     );
+    return {};
+  });
+  if (r.ok) revalidatePath(`/portal/personal/${id}`);
+  return r;
+}
+
+/**
+ * Fondos que pagan el salario desde una fecha: cada uno con un monto fijo y, si hace falta, uno que paga «el resto».
+ * El reparto anterior queda en el historial. Solo admin y contabilidad (RLS).
+ */
+export async function guardarAportes(_: R, f: FormData): Promise<R> {
+  const { consultar } = await obtenerSesion();
+  const id = String(f.get("id"));
+  const r = await ejecutar(async () => {
+    const desde = textoObligatorio(f, "vigente_desde", "desde cuándo rige");
+    const filas = JSON.parse(String(f.get("aportes") ?? "[]")) as { fuente_id: string; monto: string; resto: boolean }[];
+    const aportes = filas.filter((a) => a.fuente_id).map((a, i) => {
+      const t = String(a.monto ?? "").replace(/[₡\s]/g, "");
+      const monto = a.resto ? null : t === "" ? NaN : Number(/,\d{1,2}$/.test(t) ? t.replace(/\./g, "").replace(",", ".") : t.replace(/,/g, ""));
+      if (monto !== null && (!Number.isFinite(monto) || monto < 0)) throw new ErrorUsuario(`Revise el monto del fondo ${i + 1}.`);
+      return { fuenteId: Number(a.fuente_id), monto };
+    });
+    if (new Set(aportes.map((a) => a.fuenteId)).size !== aportes.length) throw new ErrorUsuario("Hay un fondo repetido.");
+    await consultar(async (tx) => {
+      const salario = (await sql<{ s: string | null }>`select salario_vigente(${id}::uuid, ${desde}::date) as s`.execute(tx)).rows[0].s;
+      if (salario === null) throw new ErrorUsuario("Primero registre el salario vigente a esa fecha.");
+      const rep = repartoSalario(Number(salario), aportes);
+      if (!rep.ok) throw new ErrorUsuario(rep.error);
+      const ya = await tx.selectFrom("salario_aportes").select("fuente_id").where("empleado_id", "=", id).where("vigente_desde", "=", desde).execute();
+      if (ya.length) throw new ErrorUsuario("Ya hay un reparto que rige desde esa fecha. Use otra fecha (o pida una corrección al superadministrador).");
+      await tx.insertInto("salario_aportes").values(aportes.map((a) => ({ empleado_id: id, vigente_desde: desde, fuente_id: a.fuenteId, monto: a.monto }))).execute();
+      // La fuente principal (la que paga más) queda en la ficha para los reportes que piden una sola.
+      const principal = [...rep.reparto].sort((a, b) => b.monto - a.monto)[0];
+      await tx.updateTable("empleados").set({ fuente_id: principal.fuenteId }).where("id", "=", id).execute();
+    });
+    return {};
+  });
+  if (r.ok) revalidatePath(`/portal/personal/${id}`);
+  return r;
+}
+
+/** Vacaciones de una persona: el saldo que traía al empezar a usar el portal y su usuario (para «Mis vacaciones»). */
+export async function guardarDatosVacaciones(_: R, f: FormData): Promise<R> {
+  const { consultar } = await obtenerSesion();
+  const id = String(f.get("id"));
+  const r = await ejecutar(async () => {
+    const inicial = numero(f, "vacaciones_saldo_inicial");
+    const al = texto(f, "vacaciones_saldo_al");
+    if ((inicial === null) !== (al === null)) throw new ErrorUsuario("Para el saldo que traía, anote los días y a qué fecha.");
+    const perfil = texto(f, "perfil_id");
+    await consultar(async (tx) => {
+      const n = await tx.updateTable("empleados").set({ vacaciones_saldo_inicial: inicial, vacaciones_saldo_al: al, perfil_id: perfil }).where("id", "=", id).returning("id").executeTakeFirst()
+        .catch((e) => { if (e?.code === "23505") throw new ErrorUsuario("Ese usuario ya está ligado a otra persona del personal."); throw e; });
+      if (!n) throw new ErrorUsuario("No tiene permiso para cambiar estos datos.");
+    });
     return {};
   });
   if (r.ok) revalidatePath(`/portal/personal/${id}`);

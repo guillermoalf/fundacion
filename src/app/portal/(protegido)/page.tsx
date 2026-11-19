@@ -22,7 +22,7 @@ function Tarjeta({ titulo, valor, detalle, href, tono = "normal" }: { titulo: st
 }
 
 export default async function PortalInicio() {
-  const { perfil, consultar, puedeEscribir, esSuperadmin, esPersonal, veNinos } = await obtenerSesion();
+  const { perfil, consultar, puedeEscribir, esSuperadmin, esPersonal, veNinos, esAdmin } = await obtenerSesion();
   // El personal (maestras, cuidadoras) solo pasa lista: entra directo a esa pantalla.
   if (esPersonal) redirect("/portal/ninos/lista");
   const hoy = hoyCR();
@@ -41,7 +41,8 @@ export default async function PortalInicio() {
       ? await tx.selectFrom("ninos as n").leftJoin("asistencia_ninos as a", (j) => j.onRef("a.nino_id", "=", "n.id").on("a.fecha", "=", hoy))
         .select(["a.estado"]).where("n.estado", "=", "activo").where("n.fecha_ingreso", "<=", hoy).execute()
       : null;
-    return { ninos, activos, pendientes: Number(pendientes.n), saldos, ausentes, marcasHoy: Number(marcasHoy.n), borradores: borradores.length, espacio };
+    const vacacionesPendientes = esAdmin ? Number((await tx.selectFrom("solicitudes_vacaciones").select(({ fn }) => fn.countAll<number>().as("n")).where("estado", "=", "pendiente").executeTakeFirstOrThrow()).n) : 0;
+    return { vacacionesPendientes, ninos, activos, pendientes: Number(pendientes.n), saldos, ausentes, marcasHoy: Number(marcasHoy.n), borradores: borradores.length, espacio };
   });
   const sinUbicacion = d.activos.filter((a) => a.ubicacion_id === null).length;
   const libros = d.activos.reduce((s, a) => s + (a.valorLibros ?? 0), 0);
@@ -52,6 +53,9 @@ export default async function PortalInicio() {
     <>
       <Encabezado titulo={`Hola, ${perfil?.nombre.split(" ")[0] ?? ""}`} descripcion="Resumen de hoy en la Fundación Creciendo Feliz." />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {d.vacacionesPendientes > 0 && (
+          <Tarjeta titulo="Solicitudes de vacaciones por aprobar" valor={String(d.vacacionesPendientes)} href="/portal/vacaciones" tono="aviso" />
+        )}
         {d.ninos && d.ninos.length > 0 && (() => {
           const llegaron = d.ninos.filter((n) => n.estado === "presente").length;
           const sinMarcar = d.ninos.filter((n) => !n.estado).length;

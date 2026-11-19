@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { obtenerSesion } from "@/lib/portal/sesion";
-import { colones, fecha, fechaHora, mesLargo } from "@/lib/portal/formato";
+import { cantidad, colones, fecha, fechaHora, mesLargo } from "@/lib/portal/formato";
+import { lineaPorFondo } from "@/lib/portal/planilla";
+import { saldosVacaciones } from "@/lib/portal/vacaciones";
 import SinPermiso from "../../../_ui/SinPermiso";
 import Encabezado from "../../../_ui/Encabezado";
 import { Insignia } from "../../../_ui/Insignias";
@@ -23,14 +25,18 @@ export default async function PlanillaDetallePage({ params }: { params: Promise<
     if (!p) return null;
     const lineas = await tx.selectFrom("planilla_lineas as l").innerJoin("empleados as e", "e.id", "l.empleado_id").leftJoin("fuentes_financiamiento as f", "f.id", "l.fuente_id")
       .selectAll("l").select(["e.nombre", "e.puesto", "f.codigo as fuente"]).where("l.planilla_id", "=", id).orderBy("f.codigo").orderBy("e.nombre").execute();
-    return { p, lineas };
+    const fuentes = await tx.selectFrom("fuentes_financiamiento").select(["id", "codigo"]).execute();
+    const vacaciones = (await saldosVacaciones(tx, p.periodo_fin, lineas.map((l) => l.empleado_id))).saldos;
+    return { p, lineas, fuentes, vacaciones };
   });
   if (!d) notFound();
   const { p, lineas } = d;
   const titulo = p.tipo === "aguinaldo" ? `Aguinaldo ${p.periodo_fin.slice(0, 4)}` : `Planilla de ${mesLargo(p.periodo_inicio.slice(0, 7))}`;
+  const codigo = new Map(d.fuentes.map((f) => [f.id, f.codigo]));
   const porFuente = new Map<string, { neto: number; bruto: number; cargas: number; prov: number }>();
-  for (const l of lineas) {
-    const k = l.fuente ?? "Sin fuente";
+  // Una persona pagada por varios fondos suma a cada fondo su parte.
+  for (const l of lineas.flatMap((x) => lineaPorFondo(x))) {
+    const k = (l.fuente_reparto ? codigo.get(l.fuente_reparto) : undefined) ?? "Sin fuente";
     const x = porFuente.get(k) ?? { neto: 0, bruto: 0, cargas: 0, prov: 0 };
     x.neto += n(l.salario_neto); x.bruto += n(l.salario_bruto); x.cargas += n(l.cargas_patronales); x.prov += n(l.provision_aguinaldo) + n(l.provision_vacaciones);
     porFuente.set(k, x);
@@ -73,7 +79,15 @@ export default async function PlanillaDetallePage({ params }: { params: Promise<
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
                   <h3 className="text-lg font-semibold">{l.nombre}</h3>
-                  <p className="text-slate-600">{l.puesto} · {l.fuente ?? <Insignia tono="ambar">Falta fuente</Insignia>}{p.tipo === "mensual" && ` · ${n(l.dias_laborados)} días`}</p>
+                  <p className="text-slate-600">
+                    {l.puesto} · {(() => {
+                      const partes = lineaPorFondo(l);
+                      if (partes.length > 1) return partes.map((x) => `${codigo.get(x.fuente_reparto!) ?? "?"} ${colones(x.salario_neto)}`).join(" + ");
+                      return l.fuente ?? <Insignia tono="ambar">Falta fuente</Insignia>;
+                    })()}
+                    {p.tipo === "mensual" && ` · ${n(l.dias_laborados)} días`}
+                    {d.vacaciones.get(l.empleado_id) && ` · ${cantidad(d.vacaciones.get(l.empleado_id)!.saldo)} días de vacaciones disponibles al ${fecha(p.periodo_fin)}`}
+                  </p>
                 </div>
                 <p className="text-right"><span className="text-sm text-slate-500">Neto</span><br /><strong className="text-2xl tabular-nums">{colones(l.salario_neto)}</strong></p>
               </div>

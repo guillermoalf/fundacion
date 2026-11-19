@@ -238,6 +238,8 @@ export interface Empleados {
   perfil_id: string | null;
   puesto: string;
   ubicacion_id: number | null;
+  vacaciones_saldo_al: string | null;
+  vacaciones_saldo_inicial: Numeric | null;
 }
 
 export interface FuentesFinanciamiento {
@@ -350,6 +352,7 @@ export interface PlanillaLineas {
   provision_vacaciones: Numeric;
   rebajo_ausencias: Generated<Numeric>;
   rebajo_tardias: Generated<Numeric>;
+  reparto_fuentes: Json | null;
   salario_base: Numeric;
   salario_bruto: Numeric;
   salario_neto: Numeric;
@@ -413,6 +416,15 @@ export interface ResponsablesNino {
   telefono: string | null;
 }
 
+export interface SalarioAportes {
+  creado_en: Generated<Timestamp>;
+  empleado_id: string;
+  fuente_id: number;
+  monto: Numeric | null;
+  registrado_por: Generated<string | null>;
+  vigente_desde: string;
+}
+
 export interface Salarios {
   creado_en: Generated<Timestamp>;
   empleado_id: string;
@@ -420,6 +432,22 @@ export interface Salarios {
   registrado_por: Generated<string | null>;
   salario_mensual: Numeric;
   vigente_desde: string;
+}
+
+export interface SolicitudesVacaciones {
+  ausencia_id: string | null;
+  creada_en: Generated<Timestamp>;
+  desde: string;
+  dias_habiles: Numeric;
+  empleado_id: string;
+  estado: Generated<string>;
+  hasta: string;
+  id: Generated<string>;
+  nota: string | null;
+  respuesta: string | null;
+  resuelta_en: Timestamp | null;
+  resuelta_por: string | null;
+  solicitada_por: Generated<string | null>;
 }
 
 export interface TramosRenta {
@@ -502,7 +530,9 @@ export interface DB {
   productos: Productos;
   proveedores: Proveedores;
   responsables_nino: ResponsablesNino;
+  salario_aportes: SalarioAportes;
   salarios: Salarios;
+  solicitudes_vacaciones: SolicitudesVacaciones;
   tramos_renta: TramosRenta;
   ubicaciones: Ubicaciones;
   v_activos_alertas: VActivosAlertas;

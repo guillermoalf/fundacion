@@ -37,6 +37,8 @@ export function calcularAguinaldo(salarios: SalarioMensual[], anio: number, divi
 
 // ---------------------------------------------------------------- Vacaciones
 export interface SaldoVacaciones {
+  /** saldo con el que se empezó a llevar en el portal (0 si se cuenta desde el ingreso) */
+  saldoInicial: number;
   diasGanados: number;
   diasTomados: number;
   saldo: number;
@@ -47,6 +49,8 @@ export interface SaldoVacaciones {
  * Acumulación proporcional: díasAnuales / 12 por cada mes completo laborado
  * (equivale a 1 día por mes cuando son 12 días/año; 0,83 cuando son 10).
  * Los meses en licencia sin goce no generan vacaciones: pasarlos en `mesesSinGoce`.
+ * Si la persona ya traía un saldo (antes de usar el portal), `saldoInicial` es ese saldo a la fecha `fechaIngreso`
+ * que se pase (la fecha del saldo inicial), y desde ahí se acumula.
  */
 export function calcularVacaciones(params: {
   fechaIngreso: Date | string;
@@ -54,6 +58,7 @@ export function calcularVacaciones(params: {
   diasHabilesAnuales: number;
   diasTomados: number;
   mesesSinGoce?: number;
+  saldoInicial?: number;
 }): SaldoVacaciones {
   const i = aFecha(params.fechaIngreso);
   const c = aFecha(params.corte);
@@ -61,7 +66,8 @@ export function calcularVacaciones(params: {
   if (c.getDate() < i.getDate()) meses -= 1; // mes en curso aún no completo
   meses = Math.max(0, meses - (params.mesesSinGoce ?? 0));
   const ganados = r2((params.diasHabilesAnuales / 12) * meses);
-  return { diasGanados: ganados, diasTomados: params.diasTomados, saldo: r2(ganados - params.diasTomados) };
+  const inicial = params.saldoInicial ?? 0;
+  return { saldoInicial: inicial, diasGanados: ganados, diasTomados: params.diasTomados, saldo: r2(inicial + ganados - params.diasTomados) };
 }
 
 // ---------------------------------------------------------------- Cargas sociales
@@ -248,4 +254,47 @@ export function calcularLineaPlanilla(e: EntradaLineaPlanilla) {
     provisionAguinaldo: r2(bruto / p.aguinaldoDivisor),
     provisionVacaciones: r2((bruto / 30) * (p.vacacionesDiasAnuales / 12)),
   };
+}
+
+// ---------------------------------------------------------------- Salario por fondos
+export type AporteSalario = { fuenteId: number; monto: number | null };
+export type RepartoFondo = { fuenteId: number; monto: number; proporcion: number };
+
+/**
+ * Reparte un salario entre fondos: cada uno con su monto fijo y, como mucho, uno que paga «el resto».
+ * Devuelve el reparto o un mensaje si no cuadra (los montos fijos pasan el salario, o falta asignar parte).
+ */
+export function repartoSalario(salario: number, aportes: AporteSalario[]): { ok: true; reparto: RepartoFondo[] } | { ok: false; error: string } {
+  if (!aportes.length) return { ok: false, error: "Falta indicar qué fondo paga el salario." };
+  const restos = aportes.filter((a) => a.monto === null);
+  if (restos.length > 1) return { ok: false, error: "Solo un fondo puede pagar «el resto»." };
+  const fijo = r2(aportes.reduce((s, a) => s + (a.monto ?? 0), 0));
+  if (fijo > salario + 0.005) return { ok: false, error: `Los montos fijos (${fijo}) pasan el salario (${salario}).` };
+  const resto = r2(salario - fijo);
+  if (!restos.length && resto > 0.005) return { ok: false, error: `Faltan ${resto} colones por asignar a algún fondo (o marque uno como «el resto»).` };
+  const reparto = aportes.map((a) => ({ fuenteId: a.fuenteId, monto: a.monto === null ? resto : r2(a.monto) })).filter((a) => a.monto > 0 || aportes.length === 1);
+  return { ok: true, reparto: reparto.map((a) => ({ ...a, proporcion: salario > 0 ? a.monto / salario : 1 / reparto.length })) };
+}
+
+/** Divide un monto según proporciones (que suman 1); lo que sobra por redondeo va al fondo más grande. */
+export function repartirMonto(total: number, proporciones: number[]): number[] {
+  if (!proporciones.length) return [];
+  const partes = proporciones.map((p) => r2(total * p));
+  let mayor = 0;
+  proporciones.forEach((p, i) => { if (p > proporciones[mayor]) mayor = i; });
+  partes[mayor] = r2(partes[mayor] + r2(total - partes.reduce((s, x) => s + x, 0)));
+  return partes;
+}
+
+/**
+ * Parte una línea de planilla (montos en colones) entre fondos según sus proporciones: cada monto se divide igual
+ * y sin perder céntimos. Los campos que no son dinero (días) se copian tal cual.
+ */
+export function repartirLinea<T extends Record<string, number>>(montos: T, proporciones: number[], noDinero: (keyof T)[] = []): T[] {
+  const partes = proporciones.map(() => ({}) as Record<string, number>);
+  for (const [k, v] of Object.entries(montos)) {
+    const divididos = noDinero.includes(k as keyof T) ? proporciones.map(() => v) : repartirMonto(v, proporciones);
+    divididos.forEach((x, i) => (partes[i][k] = x));
+  }
+  return partes as T[];
 }

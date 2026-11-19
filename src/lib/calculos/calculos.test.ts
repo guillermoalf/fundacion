@@ -64,7 +64,8 @@ describe("planilla", () => {
   });
 
   it("vacaciones proporcionales", () => {
-    expect(calcularVacaciones({ fechaIngreso: "2025-03-10", corte: "2026-03-10", diasHabilesAnuales: 10, diasTomados: 3 })).toEqual({ diasGanados: 10, diasTomados: 3, saldo: 7 });
+    expect(calcularVacaciones({ fechaIngreso: "2025-03-10", corte: "2026-03-10", diasHabilesAnuales: 10, diasTomados: 3 })).toEqual({ saldoInicial: 0, diasGanados: 10, diasTomados: 3, saldo: 7 });
+    expect(calcularVacaciones({ fechaIngreso: "2026-01-01", corte: "2026-07-01", diasHabilesAnuales: 12, diasTomados: 2, saldoInicial: 8.5 }).saldo).toBe(12.5);
     expect(calcularVacaciones({ fechaIngreso: "2026-01-15", corte: "2026-07-14", diasHabilesAnuales: 12, diasTomados: 0 }).diasGanados).toBe(5);
   });
 
@@ -114,5 +115,32 @@ describe("export Auxiliar PANI", () => {
     expect(ws.getCell("D11").value).toBe("NO INDICA");
     expect((ws.getCell("I13").value as any).result).toBe(713_547);
     expect((ws.getCell("K13").value as any).result).toBe(220_970.3);
+  });
+});
+
+import { repartoSalario, repartirMonto } from "./planilla";
+describe("salario pagado por varios fondos", () => {
+  it("PANI paga un monto fijo e IMAS el resto", () => {
+    const r = repartoSalario(800000, [{ fuenteId: 1, monto: 500000 }, { fuenteId: 2, monto: null }]);
+    expect(r.ok && r.reparto).toEqual([{ fuenteId: 1, monto: 500000, proporcion: 0.625 }, { fuenteId: 2, monto: 300000, proporcion: 0.375 }]);
+  });
+  it("avisa si no cuadra", () => {
+    expect(repartoSalario(800000, [{ fuenteId: 1, monto: 900000 }]).ok).toBe(false);
+    expect(repartoSalario(800000, [{ fuenteId: 1, monto: 500000 }]).ok).toBe(false);
+    expect(repartoSalario(800000, [{ fuenteId: 1, monto: null }, { fuenteId: 2, monto: null }]).ok).toBe(false);
+  });
+  it("divide cualquier monto con las mismas proporciones sin perder céntimos", () => {
+    const p = repartirMonto(100, [1 / 3, 2 / 3]);
+    expect(p).toEqual([33.33, 66.67]);
+    expect(p[0] + p[1]).toBeCloseTo(100, 2);
+  });
+});
+
+import { repartirLinea } from "./planilla";
+describe("planilla por fondos", () => {
+  it("parte cada monto de la línea con las mismas proporciones", () => {
+    const [a, b] = repartirLinea({ bruto: 800000, neto: 712000.01, dias: 30 }, [0.625, 0.375], ["dias"]);
+    expect(a).toEqual({ bruto: 500000, neto: 445000.01, dias: 30 });
+    expect(b).toEqual({ bruto: 300000, neto: 267000, dias: 30 });
   });
 });
