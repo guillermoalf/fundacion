@@ -4,7 +4,6 @@ import { useActionState, useState } from "react";
 import { AreaTexto, BotonEnviar, Campo, Casilla, MensajeError, Seleccion, FormularioAccion } from "../../_ui/Formulario";
 import { useAvisoResultado } from "../../_ui/Avisos";
 import { crearProducto, editarProducto, registrarMovimiento } from "./acciones";
-import { opcionesCategoria } from "./datos";
 
 type Opcion = { valor: number | string; texto: string };
 const TIPOS = [
@@ -34,7 +33,7 @@ export function FormularioMovimiento({ productos, hoy, tipoInicial = "salida", p
 
 type VP = { id?: number; nombre?: string; categoria?: string; unidad?: string; proveedor_habitual_id?: number | null; stock_minimo?: string; activo?: boolean };
 
-export function FormularioProducto({ v = {}, proveedores, nuevoConProveedor = false }: { v?: VP; proveedores: Opcion[]; nuevoConProveedor?: boolean }) {
+export function FormularioProducto({ v = {}, proveedores, categorias, nuevoConProveedor = false }: { v?: VP; proveedores: Opcion[]; categorias: Opcion[]; nuevoConProveedor?: boolean }) {
   const editando = v.id !== undefined && !nuevoConProveedor;
   const [estado, accion, accionPendiente] = useActionState(editando ? editarProducto : crearProducto, null);
   useAvisoResultado(estado, "Producto agregado.");
@@ -42,7 +41,7 @@ export function FormularioProducto({ v = {}, proveedores, nuevoConProveedor = fa
     <FormularioAccion accion={accion} estado={estado} pendiente={accionPendiente} className="grid gap-4 sm:grid-cols-2">
       {editando && <input type="hidden" name="id" value={v.id} />}
       <Campo etiqueta="Nombre" name="nombre" id="prod-nombre" defaultValue={v.nombre} required />
-      <Seleccion etiqueta="Categoría" name="categoria" id="prod-categoria" opciones={opcionesCategoria} defaultValue={v.categoria ?? "no_perecedero"} required />
+      <Seleccion etiqueta="Categoría" name="categoria" id="prod-categoria" opciones={categorias} vacio="Elija una…" defaultValue={v.categoria ?? ""} ayuda={<>¿Falta una? Agréguela en <a href="/portal/inventario/categorias" className="text-sky-700 underline">Categorías</a>.</>} required />
       <Campo etiqueta="Unidad" name="unidad" id="prod-unidad" defaultValue={v.unidad ?? ""} required placeholder="kg, litro, paquete, unidad…" />
       <Campo etiqueta="Mínimo en bodega" name="stock_minimo" id="prod-stock_minimo" inputMode="decimal" defaultValue={v.stock_minimo ?? "0"} ayuda="Lo que debe haber al empezar la semana. Se avisa si queda menos y se sugiere en el pedido." />
       <Seleccion etiqueta="Proveedor habitual" name="proveedor_habitual_id" id="prod-proveedor_habitual_id" opciones={proveedores} vacio="—" defaultValue={v.proveedor_habitual_id ?? ""} />

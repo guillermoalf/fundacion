@@ -11,14 +11,6 @@ type Opcion = { valor: number | string; texto: string };
 type Producto = { id: number; nombre: string; unidad: string };
 type Linea = LineaCompra & { nuevo_nombre?: string; nuevo_unidad?: string };
 
-const CATEGORIAS = [
-  { valor: "perecedero", texto: "Alimento perecedero (frutas, verduras, huevos…)" },
-  { valor: "no_perecedero", texto: "Alimento no perecedero" },
-  { valor: "limpieza", texto: "Limpieza" },
-  { valor: "didactico", texto: "Material didáctico" },
-  { valor: "oficina", texto: "Oficina (lápices, útiles…)" },
-  { valor: "otro", texto: "Otro (artículos de baja cuantía, etc.)" },
-];
 
 const nueva = (): Linea => ({ tipo: "consumible", descripcion: "", cantidad: "1", unidad: "unidad", precio: "" });
 const aNumero = (s: string) => {
@@ -27,9 +19,9 @@ const aNumero = (s: string) => {
   return Number.isFinite(n) ? n : 0;
 };
 
-function LineaFormulario({ l, i, cambiar, quitar, productos, ubicaciones, categorias, umbral }: {
+function LineaFormulario({ l, i, cambiar, quitar, productos, ubicaciones, categorias, categoriasProducto, umbral }: {
   l: Linea; i: number; cambiar: (c: Partial<Linea>) => void; quitar?: () => void;
-  productos: Producto[]; ubicaciones: Opcion[]; categorias: Opcion[]; umbral: number | null;
+  productos: Producto[]; ubicaciones: Opcion[]; categorias: Opcion[]; categoriasProducto: Opcion[]; umbral: number | null;
 }) {
   const id = (k: string) => `l${i}-${k}`;
   const campo = (k: keyof Linea, etiqueta: string, extra: React.InputHTMLAttributes<HTMLInputElement> = {}) => (
@@ -81,7 +73,7 @@ function LineaFormulario({ l, i, cambiar, quitar, productos, ubicaciones, catego
                   const p = productos.find((x) => String(x.id) === e.target.value);
                   cambiar({ producto_id: e.target.value, ...(p ? { unidad: p.unidad } : {}), ...(e.target.value === "nuevo" ? {
                     nuevo_nombre: l.nuevo_nombre ?? l.descripcion, nuevo_unidad: l.nuevo_unidad ?? l.unidad,
-                    nuevo_categoria: l.nuevo_categoria || sugerirCategoriaProducto(`${l.nuevo_nombre ?? ""} ${l.descripcion}`) || "",
+                    nuevo_categoria: l.nuevo_categoria || sugerirCategoriaProducto(`${l.nuevo_nombre ?? ""} ${l.descripcion}`, categoriasProducto.map((c) => String(c.valor))) || "",
                   } : {}) });
                 }}>
                 <option value="">Elija…</option>
@@ -95,7 +87,7 @@ function LineaFormulario({ l, i, cambiar, quitar, productos, ubicaciones, catego
                 {campo("nuevo_nombre", "Nombre del producto nuevo")}
                 {campo("nuevo_unidad", "Unidad (kg, litro, paquete…)")}
                 <div className={l.nuevo_categoria ? "" : "rounded-xl ring-2 ring-amber-400 ring-offset-2"}>
-                  {sel("nuevo_categoria", "Categoría en el inventario", CATEGORIAS, "Elija una…")}
+                  {sel("nuevo_categoria", "Categoría en el inventario", categoriasProducto, "Elija una…")}
                 </div>
                 {!l.nuevo_categoria && (
                   <p className="text-sm font-medium text-amber-800 sm:col-span-3">
@@ -129,8 +121,8 @@ function LineaFormulario({ l, i, cambiar, quitar, productos, ubicaciones, catego
   );
 }
 
-export default function FormularioCompra({ proveedores, fuentes, productos, ubicaciones, categorias, hoy, umbral }: {
-  proveedores: Opcion[]; fuentes: Opcion[]; productos: Producto[]; ubicaciones: Opcion[]; categorias: Opcion[]; hoy: string; umbral: number | null;
+export default function FormularioCompra({ proveedores, fuentes, productos, ubicaciones, categorias, categoriasProducto, hoy, umbral }: {
+  proveedores: Opcion[]; fuentes: Opcion[]; productos: Producto[]; ubicaciones: Opcion[]; categorias: Opcion[]; categoriasProducto: Opcion[]; hoy: string; umbral: number | null;
 }) {
   const [estado, accion, pendiente] = useActionState(registrarCompra, null);
   const [lineas, setLineas] = useState<Linea[]>([nueva()]);
@@ -161,7 +153,7 @@ export default function FormularioCompra({ proveedores, fuentes, productos, ubic
       const esActivo = u !== null && l.precioUnitario > u;
       return {
         tipo: esActivo ? "activo" : "consumible", descripcion: l.detalle, cantidad: String(l.cantidad), unidad: l.unidad, precio: String(l.precioUnitario),
-        ...(esActivo ? {} : prod ? { producto_id: String(prod) } : { producto_id: "nuevo", nuevo_nombre: l.detalle, nuevo_unidad: l.unidad, nuevo_categoria: sugerirCategoriaProducto(l.detalle) ?? "" }),
+        ...(esActivo ? {} : prod ? { producto_id: String(prod) } : { producto_id: "nuevo", nuevo_nombre: l.detalle, nuevo_unidad: l.unidad, nuevo_categoria: sugerirCategoriaProducto(l.detalle, categoriasProducto.map((c) => String(c.valor))) ?? "" }),
       };
     }));
     setAvisoXml(`Se leyó la factura ${f.consecutivo ?? ""} de ${f.emisor.nombre}${f.moneda !== "CRC" ? ` (en ${f.moneda}, convertida a colones con el tipo de cambio ${f.tipoCambio})` : ""}: revise cada línea y márquela como inventario, activo o servicio.`);
@@ -209,7 +201,7 @@ export default function FormularioCompra({ proveedores, fuentes, productos, ubic
         <legend className="mb-2 text-lg font-semibold">Qué se compró</legend>
         <p className="text-slate-600">Una factura puede mezclar cosas (comida y una computadora, por ejemplo): marque cada línea como lo que es. Todo queda ligado a esta misma factura.</p>
         {lineas.map((l, i) => (
-          <LineaFormulario key={i} l={l} i={i} productos={productos} ubicaciones={ubicaciones} categorias={categorias} umbral={umbral}
+          <LineaFormulario key={i} l={l} i={i} productos={productos} ubicaciones={ubicaciones} categorias={categorias} categoriasProducto={categoriasProducto} umbral={umbral}
             cambiar={(c) => setLineas((ls) => ls.map((x, j) => (j === i ? { ...x, ...c } : x)))}
             quitar={lineas.length > 1 ? () => setLineas((ls) => ls.filter((_, j) => j !== i)) : undefined} />
         ))}

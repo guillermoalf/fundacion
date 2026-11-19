@@ -6,7 +6,7 @@ import { cantidad, fecha, hoyCR } from "@/lib/portal/formato";
 import Encabezado from "../../_ui/Encabezado";
 import Tabla from "../../_ui/Tabla";
 import { estiloBoton, estiloTarjeta } from "../../_ui/estilos";
-import { CATEGORIAS_PRODUCTO, DIAS_AVISO_VENCIMIENTO } from "./datos";
+import { DIAS_AVISO_VENCIMIENTO } from "./datos";
 
 export const metadata: Metadata = { title: "Inventario" };
 
@@ -14,8 +14,8 @@ export default async function InventarioPage() {
   const { consultar, puedeEscribir } = await obtenerSesion();
   const hoy = hoyCR();
   const { saldos, porVencer } = await consultar(async (tx) => ({
-    saldos: await tx.selectFrom("v_saldo_inventario as v").innerJoin("productos as p", "p.id", "v.producto_id")
-      .select(["v.producto_id", "v.nombre", "v.categoria", "v.unidad", "v.stock_minimo", "v.saldo"]).where("p.activo", "=", true).orderBy("v.nombre").execute(),
+    saldos: await tx.selectFrom("v_saldo_inventario as v").innerJoin("productos as p", "p.id", "v.producto_id").innerJoin("categorias_producto as cp", "cp.codigo", "p.categoria")
+      .select(["v.producto_id", "v.nombre", "cp.nombre as categoria", "v.unidad", "v.stock_minimo", "v.saldo"]).where("p.activo", "=", true).orderBy("v.nombre").execute(),
     porVencer: await tx.selectFrom("inventario_movimientos as m").innerJoin("v_saldo_inventario as v", "v.producto_id", "m.producto_id")
       .select(["m.id", "m.fecha_vencimiento", "m.cantidad", "v.nombre", "v.unidad", "v.saldo"])
       .where("m.tipo", "=", "entrada").where("m.fecha_vencimiento", "is not", null)
@@ -37,6 +37,7 @@ export default async function InventarioPage() {
             {puedeEscribir && <Link href="/portal/compras/nueva" className={estiloBoton.secundario}>Registrar compra (factura)</Link>}
             <Link href="/portal/proveedores" className={estiloBoton.secundario}>Hacer pedido a un proveedor</Link>
             <Link href="/portal/inventario/productos" className={estiloBoton.secundario}>Productos</Link>
+            <Link href="/portal/inventario/categorias" className={estiloBoton.secundario}>Categorías</Link>
             <Link href="/portal/inventario/consumo" className={estiloBoton.secundario}>Consumo mensual</Link>
           </>
         }
@@ -81,12 +82,12 @@ export default async function InventarioPage() {
             id: s.producto_id!,
             href: `/portal/inventario/productos/${s.producto_id}`,
             celdas: {
-              producto: s.nombre!, categoria: CATEGORIAS_PRODUCTO[s.categoria!],
+              producto: s.nombre!, categoria: s.categoria,
               saldo: `${cantidad(s.saldo)} ${s.unidad}`, minimo: Number(s.stock_minimo) ? `${cantidad(s.stock_minimo)} ${s.unidad}` : { vacio: true },
               estado: bajo ? { texto: "Bajo", tono: "ambar" } : Number(s.saldo) === 0 ? { texto: "Agotado", tono: "gris" } : { vacio: true },
             },
             orden: { saldo: Number(s.saldo) },
-            filtros: { categoria: CATEGORIAS_PRODUCTO[s.categoria!] },
+            filtros: { categoria: s.categoria },
           };
         })}
       />

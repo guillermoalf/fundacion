@@ -95,6 +95,7 @@ scripts/                         db.mts (migrar/reset/test), crear-admin.mts, ge
 - Files (photos, PDFs) go in the `archivos` table: `<CampoArchivo>` compresses photos (1600 px, JPEG 80 %) and uploads in 3 MB parts to `/portal/archivos/subir` (5 MB max, Vercel caps requests at 4.5 MB); the action receives the id and calls `guardarArchivo()`. `*_url` columns store `/portal/archivos/<id>`.
 - Roles: superadmin (Guillermo; can also be given to the owner) · admin = Dirección · coordinacion · contabilidad (no children data) · auditor (read-only, expires) · personal (teachers/caregivers: only pass attendance and see children + contacts, no notes, nothing administrative; `puede_leer()` excludes it). Children permissions: `ve_ninos()`, `ve_notas_ninos()`, `edita_ninos()`, `pasa_lista()` (personal only for today).
 - Salaries live in `salarios` (history by `vigente_desde`) and payroll tables are readable only by admin, contabilidad and auditor (`ve_salarios()` in RLS); coordinación sees staff without salaries.
+- Product categories live in `categorias_producto` (editable by Dirección in Inventario → Categorías; `reporte` = alimentos/aseo/ninguno decides which monthly Formulario N.º 1 includes them; deactivate, never delete). Don't hardcode category lists.
 - Constants shared by server and client components live in files without "use client".
 - Forms must work on a phone (physical counts are done walking around the classrooms).
 

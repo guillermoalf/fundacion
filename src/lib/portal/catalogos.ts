@@ -29,3 +29,7 @@ export async function umbralActivo(tx: Tx, fecha?: string | null): Promise<numbe
   const { rows } = await sql<{ u: string | null }>`select umbral_activo(coalesce(${fecha ?? null}::date, current_date)) as u`.execute(tx);
   return rows[0].u === null ? null : Number(rows[0].u);
 }
+
+/** Categorías de productos del inventario, en su orden (activas e inactivas). */
+export const categoriasProducto = (tx: Tx) =>
+  tx.selectFrom("categorias_producto").select(["codigo", "nombre", "reporte", "activo"]).orderBy("orden").orderBy("nombre").execute();

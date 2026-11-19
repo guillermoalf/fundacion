@@ -9,7 +9,7 @@ import { umbralActivo } from "@/lib/portal/catalogos";
 import { colones } from "@/lib/portal/formato";
 import { leerFacturaElectronica, type FacturaElectronica } from "@/lib/importacion/facturaElectronica";
 import { sql } from "kysely";
-import type { CategoriaProducto, TipoLineaCompra } from "@/lib/db/tipos";
+import type { TipoLineaCompra } from "@/lib/db/tipos";
 
 type R = Resultado | null;
 
@@ -129,7 +129,7 @@ export async function registrarCompra(_: R, f: FormData): Promise<R> {
           const unidad = (l.nuevo_unidad ?? l.unidad ?? "unidad").trim() || "unidad";
           const ya = await tx.selectFrom("productos").select("id").where("nombre", "=", nombre).where("unidad", "=", unidad).executeTakeFirst();
           productoId = ya?.id ?? (await tx.insertInto("productos").values({
-            nombre, unidad, categoria: (l.nuevo_categoria ?? "otro") as CategoriaProducto, proveedor_habitual_id: proveedor,
+            nombre, unidad, categoria: (l.nuevo_categoria ?? "otro"), proveedor_habitual_id: proveedor,
           }).returning("id").executeTakeFirstOrThrow()).id;
         }
         const { id: lineaId } = await tx.insertInto("compra_lineas").values({
