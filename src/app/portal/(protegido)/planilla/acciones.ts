@@ -50,6 +50,7 @@ export async function generarAguinaldo(_: R, f: FormData): Promise<R> {
         planilla_id: p.id, empleado_id: l.empleado_id, fuente_id: l.fuente_id, salario_base: l.aguinaldo, dias_laborados: 0,
         salario_bruto: l.aguinaldo, ccss_obrero: 0, salario_neto: l.aguinaldo, cargas_patronales: 0, provision_aguinaldo: 0, provision_vacaciones: 0,
         detalle: JSON.stringify({ notas: [`Calculado con ${l.meses} meses de planilla aprobada. El aguinaldo no lleva cargas sociales (Ley 2412).`] }),
+        reparto_fuentes: l.reparto ? JSON.stringify(l.reparto) : null,
       }))).execute();
       return p.id;
     });
