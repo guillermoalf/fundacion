@@ -3,7 +3,6 @@ import { obtenerSesion } from "@/lib/portal/sesion";
 import { cantidad, hoyCR, mesLargo } from "@/lib/portal/formato";
 import Encabezado from "../../../_ui/Encabezado";
 import Vacio from "../../../_ui/Vacio";
-import { CATEGORIAS_PRODUCTO } from "../datos";
 
 export const metadata: Metadata = { title: "Consumo mensual" };
 
@@ -16,17 +15,17 @@ export default async function ConsumoPage() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
   });
   const movs = await consultar((tx) =>
-    tx.selectFrom("inventario_movimientos as m").innerJoin("productos as p", "p.id", "m.producto_id")
-      .select(["p.id", "p.nombre", "p.unidad", "p.categoria", "m.tipo", "m.cantidad", "m.fecha"])
+    tx.selectFrom("inventario_movimientos as m").innerJoin("productos as p", "p.id", "m.producto_id").innerJoin("categorias_producto as cp", "cp.codigo", "p.categoria")
+      .select(["p.id", "p.nombre", "p.unidad", "cp.nombre as categoria", "cp.orden", "m.tipo", "m.cantidad", "m.fecha"])
       .where("m.tipo", "in", ["salida", "merma"]).where("m.fecha", ">=", `${meses[0]}-01`).execute(),
   );
-  const productos = new Map<number, { nombre: string; unidad: string; categoria: keyof typeof CATEGORIAS_PRODUCTO; porMes: Record<string, number> }>();
+  const productos = new Map<number, { nombre: string; unidad: string; categoria: string; orden: number; porMes: Record<string, number> }>();
   for (const m of movs) {
-    const p = productos.get(m.id) ?? { nombre: m.nombre, unidad: m.unidad, categoria: m.categoria, porMes: {} };
+    const p = productos.get(m.id) ?? { nombre: m.nombre, unidad: m.unidad, categoria: m.categoria, orden: m.orden, porMes: {} };
     p.porMes[m.fecha.slice(0, 7)] = (p.porMes[m.fecha.slice(0, 7)] ?? 0) + Number(m.cantidad);
     productos.set(m.id, p);
   }
-  const filas = [...productos.values()].sort((a, b) => a.categoria.localeCompare(b.categoria) || a.nombre.localeCompare(b.nombre, "es"));
+  const filas = [...productos.values()].sort((a, b) => a.orden - b.orden || a.nombre.localeCompare(b.nombre, "es"));
 
   return (
     <>
@@ -40,7 +39,7 @@ export default async function ConsumoPage() {
             <tbody className="divide-y divide-slate-100">
               {filas.map((f) => (
                 <tr key={f.nombre}>
-                  <td className="px-4 py-2"><div className="font-medium">{f.nombre}</div><div className="text-sm text-slate-500">{CATEGORIAS_PRODUCTO[f.categoria]} · {f.unidad}</div></td>
+                  <td className="px-4 py-2"><div className="font-medium">{f.nombre}</div><div className="text-sm text-slate-500">{f.categoria} · {f.unidad}</div></td>
                   {meses.map((m) => <td key={m} className="px-3 py-2 text-right tabular-nums">{f.porMes[m] ? cantidad(f.porMes[m]) : <span className="text-slate-300">—</span>}</td>)}
                 </tr>
               ))}

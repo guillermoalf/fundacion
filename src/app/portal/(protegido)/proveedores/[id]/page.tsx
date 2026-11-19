@@ -6,7 +6,8 @@ import { cantidad } from "@/lib/portal/formato";
 import Encabezado from "../../../_ui/Encabezado";
 import Tabla from "../../../_ui/Tabla";
 import { estiloBoton, estiloTarjeta } from "../../../_ui/estilos";
-import { CATEGORIAS_PRODUCTO } from "../../inventario/datos";
+import { categoriasProducto } from "@/lib/portal/catalogos";
+import { opcionesCategoria } from "../../inventario/datos";
 import { FormularioProducto } from "../../inventario/Formularios";
 import FormularioProveedor from "../Formulario";
 
@@ -21,10 +22,11 @@ export default async function ProveedorPage({ params }: { params: Promise<{ id: 
     const productos = await tx.selectFrom("productos as pr").innerJoin("v_saldo_inventario as v", "v.producto_id", "pr.id")
       .select(["pr.id", "pr.nombre", "pr.unidad", "pr.categoria", "pr.stock_minimo", "pr.activo", "v.saldo"]).where("pr.proveedor_habitual_id", "=", id).orderBy("pr.nombre").execute();
     const proveedores = await tx.selectFrom("proveedores").select(["id", "nombre"]).orderBy("nombre").execute();
-    return { p, productos, proveedores };
+    return { p, productos, proveedores, cats: await categoriasProducto(tx) };
   });
   if (!d) notFound();
   const { p, productos } = d;
+  const nombreCat = new Map(d.cats.map((c) => [c.codigo, c.nombre]));
   return (
     <>
       <Encabezado
@@ -39,7 +41,7 @@ export default async function ProveedorPage({ params }: { params: Promise<{ id: 
             columnas={[{ clave: "nombre", titulo: "Producto" }, { clave: "categoria", titulo: "Categoría" }, { clave: "hay", titulo: "En bodega", alinear: "derecha" }, { clave: "minimo", titulo: "Mínimo", alinear: "derecha" }]}
             filas={productos.map((x) => ({
               id: x.id, href: `/portal/inventario/productos/${x.id}`,
-              celdas: { nombre: x.activo ? x.nombre : `${x.nombre} (inactivo)`, categoria: CATEGORIAS_PRODUCTO[x.categoria], hay: `${cantidad(x.saldo)} ${x.unidad}`, minimo: Number(x.stock_minimo) ? `${cantidad(x.stock_minimo)} ${x.unidad}` : { vacio: true } },
+              celdas: { nombre: x.activo ? x.nombre : `${x.nombre} (inactivo)`, categoria: (nombreCat.get(x.categoria) ?? x.categoria), hay: `${cantidad(x.saldo)} ${x.unidad}`, minimo: Number(x.stock_minimo) ? `${cantidad(x.stock_minimo)} ${x.unidad}` : { vacio: true } },
             }))}
             buscador={productos.length > 10}
           />
@@ -47,7 +49,7 @@ export default async function ProveedorPage({ params }: { params: Promise<{ id: 
             <details className={estiloTarjeta}>
               <summary className="cursor-pointer text-lg font-semibold text-sky-700">+ Agregar un producto de {p.nombre}</summary>
               <div className="mt-4">
-                <FormularioProducto v={{ proveedor_habitual_id: id, categoria: p.tipo === "frutas_verduras" ? "perecedero" : undefined }} nuevoConProveedor proveedores={d.proveedores.map((x) => ({ valor: x.id, texto: x.nombre }))} />
+                <FormularioProducto v={{ proveedor_habitual_id: id, categoria: p.tipo === "frutas_verduras" ? "perecedero" : undefined }} nuevoConProveedor categorias={opcionesCategoria(d.cats)} proveedores={d.proveedores.map((x) => ({ valor: x.id, texto: x.nombre }))} />
               </div>
             </details>
           )}

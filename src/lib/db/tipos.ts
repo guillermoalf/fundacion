@@ -5,8 +5,6 @@
 
 import type { ColumnType } from "kysely";
 
-export type CategoriaProducto = "didactico" | "limpieza" | "no_perecedero" | "oficina" | "otro" | "perecedero";
-
 export type EstadoActivo = "dado_de_baja" | "en_bodega" | "en_reparacion" | "en_uso" | "extraviado";
 
 export type EstadoPlanilla = "anulada" | "aprobada" | "borrador" | "pagada";
@@ -152,6 +150,15 @@ export interface CategoriasActivo {
   palabras_clave: Generated<string[]>;
   referencia: Generated<string>;
   tasa_anual: Numeric;
+}
+
+export interface CategoriasProducto {
+  activo: Generated<boolean>;
+  codigo: string;
+  creado_en: Generated<Timestamp>;
+  nombre: string;
+  orden: Generated<number>;
+  reporte: Generated<string>;
 }
 
 export interface CompraArchivos {
@@ -360,7 +367,7 @@ export interface Planillas {
 
 export interface Productos {
   activo: Generated<boolean>;
-  categoria: CategoriaProducto;
+  categoria: string;
   codigo_proveedor: string | null;
   id: Generated<number>;
   nombre: string;
@@ -432,7 +439,7 @@ export interface VActivosAlertas {
 }
 
 export interface VSaldoInventario {
-  categoria: CategoriaProducto | null;
+  categoria: string | null;
   nombre: string | null;
   producto_id: number | null;
   saldo: Numeric | null;
@@ -449,6 +456,7 @@ export interface DB {
   ausencias: Ausencias;
   bitacora: Bitacora;
   categorias_activo: CategoriasActivo;
+  categorias_producto: CategoriasProducto;
   compra_archivos: CompraArchivos;
   compra_lineas: CompraLineas;
   compras: Compras;

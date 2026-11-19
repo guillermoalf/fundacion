@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { obtenerSesion } from "@/lib/portal/sesion";
 import { hoyCR } from "@/lib/portal/formato";
-import { umbralActivo } from "@/lib/portal/catalogos";
+import { categoriasProducto, umbralActivo } from "@/lib/portal/catalogos";
 import Encabezado from "../../../_ui/Encabezado";
 import SinPermiso from "../../../_ui/SinPermiso";
 import { estiloBoton, estiloTarjeta } from "../../../_ui/estilos";
@@ -19,6 +19,7 @@ export default async function NuevaCompraPage() {
     productos: await tx.selectFrom("productos").select(["id", "nombre", "unidad"]).where("activo", "=", true).orderBy("nombre").execute(),
     ubicaciones: await tx.selectFrom("ubicaciones").select(["id", "nombre"]).where("activo", "=", true).orderBy("nombre").execute(),
     umbral: await umbralActivo(tx),
+    categoriasProducto: (await categoriasProducto(tx)).filter((x) => x.activo),
     categorias: await tx.selectFrom("categorias_activo").select(["id", "nombre", "tasa_anual"]).where("activa", "=", true).orderBy("nombre").execute(),
   }));
   return (
@@ -36,6 +37,7 @@ export default async function NuevaCompraPage() {
           fuentes={c.fuentes.map((f) => ({ valor: f.id, texto: `${f.codigo} · ${f.nombre}` }))}
           productos={c.productos}
           ubicaciones={c.ubicaciones.map((u) => ({ valor: u.id, texto: u.nombre }))}
+          categoriasProducto={c.categoriasProducto.map((x) => ({ valor: x.codigo, texto: x.nombre }))}
           categorias={c.categorias.map((x) => ({ valor: x.id, texto: `${x.nombre} (${Number(x.tasa_anual)} %)` }))}
         />
       </div>

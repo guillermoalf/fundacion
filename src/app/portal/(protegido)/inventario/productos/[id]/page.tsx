@@ -7,6 +7,8 @@ import Encabezado from "../../../../_ui/Encabezado";
 import { Insignia } from "../../../../_ui/Insignias";
 import { estiloBoton, estiloTarjeta } from "../../../../_ui/estilos";
 import { FormularioProducto } from "../../Formularios";
+import { categoriasProducto } from "@/lib/portal/catalogos";
+import { opcionesCategoria } from "../../datos";
 
 export const metadata: Metadata = { title: "Producto" };
 const TIPO = { entrada: ["Entrada", "verde"], salida: ["Salida", "azul"], merma: ["Merma", "rojo"], ajuste: ["Ajuste", "gris"] } as const;
@@ -22,7 +24,7 @@ export default async function ProductoPage({ params, searchParams }: { params: P
       .select(["m.id", "m.tipo", "m.cantidad", "m.fecha", "m.entregado_a", "m.motivo", "m.fecha_vencimiento", "c.id as compra_id", "c.numero_factura"])
       .where("m.producto_id", "=", id).orderBy("m.fecha").orderBy("m.creado_en").execute();
     const proveedores = await tx.selectFrom("proveedores").select(["id", "nombre"]).orderBy("nombre").execute();
-    return { p, movs, proveedores };
+    return { p, movs, proveedores, cats: await categoriasProducto(tx) };
   });
   if (!d) notFound();
   const { p, movs, proveedores } = d;
@@ -68,7 +70,7 @@ export default async function ProductoPage({ params, searchParams }: { params: P
         {puedeEscribir && (
           <section className={estiloTarjeta}>
             <h2 className="mb-4 text-xl font-semibold">Datos del producto</h2>
-            <FormularioProducto v={p} proveedores={proveedores.map((x) => ({ valor: x.id, texto: x.nombre }))} />
+            <FormularioProducto v={p} categorias={opcionesCategoria(d.cats, p.categoria)} proveedores={proveedores.map((x) => ({ valor: x.id, texto: x.nombre }))} />
           </section>
         )}
       </div>
