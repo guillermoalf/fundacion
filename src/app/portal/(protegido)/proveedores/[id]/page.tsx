@@ -49,7 +49,7 @@ export default async function ProveedorPage({ params }: { params: Promise<{ id: 
             <details className={estiloTarjeta}>
               <summary className="cursor-pointer text-lg font-semibold text-sky-700">+ Agregar un producto de {p.nombre}</summary>
               <div className="mt-4">
-                <FormularioProducto v={{ proveedor_habitual_id: id, categoria: p.tipo === "frutas_verduras" ? "perecedero" : undefined }} nuevoConProveedor categorias={opcionesCategoria(d.cats)} proveedores={d.proveedores.map((x) => ({ valor: x.id, texto: x.nombre }))} />
+                <FormularioProducto v={{ proveedor_habitual_id: id, categoria: p.tipo === "frutas_verduras" ? "frutas_verduras" : undefined }} nuevoConProveedor categorias={opcionesCategoria(d.cats)} proveedores={d.proveedores.map((x) => ({ valor: x.id, texto: x.nombre }))} />
               </div>
             </details>
           )}

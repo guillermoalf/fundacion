@@ -1,5 +1,6 @@
 "use server";
 
+import { ivaPorLinea } from "@/lib/calculos/precios";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { obtenerSesion } from "@/lib/portal/sesion";
@@ -26,6 +27,8 @@ export type LineaCompra = {
   categoria_id?: string;
   placas?: string;
   es_activo_igual?: boolean;
+  /** IVA de la línea según la factura electrónica (si se subió el XML). */
+  iva?: string;
 };
 
 const num = (s: string | undefined, que: string) => {
@@ -99,6 +102,7 @@ export async function registrarCompra(_: R, f: FormData): Promise<R> {
       return { ...l, n, descripcion, cantidad, precio, placas };
     });
     const subtotal = limpias.reduce((s, l) => s + Math.round(l.cantidad * l.precio * 100) / 100, 0);
+    const ivas = ivaPorLinea(limpias.map((l) => ({ monto: Math.round(l.cantidad * l.precio * 100) / 100, iva: l.iva !== undefined && l.iva !== "" ? Number(l.iva) : null })), iva);
     const adjuntos = idsArchivos(f.get("archivos"));
 
     const id = await consultar(async (tx) => {
@@ -122,7 +126,7 @@ export async function registrarCompra(_: R, f: FormData): Promise<R> {
       }).returning("id").executeTakeFirstOrThrow();
       if (archivos.length) await tx.insertInto("compra_archivos").values(archivos.map((a) => ({ compra_id: id, archivo_id: a.id }))).execute();
 
-      for (const l of limpias) {
+      for (const [i, l] of limpias.entries()) {
         let productoId = l.tipo === "consumible" && l.producto_id !== "nuevo" ? Number(l.producto_id) : null;
         if (l.tipo === "consumible" && l.producto_id === "nuevo") {
           const nombre = (l.nuevo_nombre ?? l.descripcion).trim();
@@ -134,7 +138,7 @@ export async function registrarCompra(_: R, f: FormData): Promise<R> {
         }
         const { id: lineaId } = await tx.insertInto("compra_lineas").values({
           compra_id: id, tipo: l.tipo, descripcion: l.descripcion, cantidad: l.cantidad, unidad: l.unidad || "unidad",
-          precio_unitario: l.precio, producto_id: productoId,
+          precio_unitario: l.precio, producto_id: productoId, iva_linea: ivas[i],
         }).returning("id").executeTakeFirstOrThrow();
 
         if (l.tipo === "consumible") {

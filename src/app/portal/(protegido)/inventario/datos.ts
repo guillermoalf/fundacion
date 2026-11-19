@@ -19,7 +19,14 @@ const PISTAS: [string, RegExp][] = [
   ["didactico", /did[aá]ctic|plastilina|crayol|tempera|pintura|libro|cuento|t[ií]tere|goma|silicón|papel construcci/],
   ["oficina", /l[aá]piz|lapic|lapicer|bol[ií]grafo|cuaderno|folder|grapa|clip|tinta|toner|t[oó]ner|resma|papel bond|marcador|borrador|tijera|cinta adhesiva|sobre|calculadora|[uú]tiles/],
   ["limpieza", /jab[oó]n|detergente|cloro|desinfect|limpi|escoba|trapeador|lampazo|papel higi[eé]nico|toalla|servilleta|bolsa.*basura|esponja|guante|alcohol|lavaplatos|suavizante|desodorante ambiental/],
-  ["perecedero", /fruta|verdura|banano|manzana|papaya|pi[nñ]a|mel[oó]n|sand[ií]a|naranja|mango|tomate|lechuga|cebolla|papa\b|zanahoria|chayote|ayote|br[oó]coli|culantro|chile|huevo|leche|queso|yogur|natilla|pollo|carne|res\b|cerdo|pescado|pan\b|tortilla/],
+  ["embutidos", /salchich|jam[oó]n|mortadela|chorizo|salami|tocineta|tocino/],
+  ["huevos", /huevo/],
+  ["lacteos", /leche(?! en polvo)|queso|yogur|natilla|crema dulce|mantequilla|reques[oó]n|l[aá]cteo/],
+  ["pollo", /pollo|pechuga|muslo|alita/],
+  ["pescado", /pescado|tilapia|corvina|camar[oó]n|marisco/],
+  ["carnes", /carne|\bres\b|cerdo|chuleta|costilla|molida|bistec|lomo|posta/],
+  ["frutas_verduras", /fruta|verdura|banano|manzana|papaya|pi[nñ]a|mel[oó]n|sand[ií]a|naranja|mango|lim[oó]n|fresa|\buvas?\b|\bperas?\b|tomate|lechuga|cebolla|\bpapas?\b|zanahoria|chayote|ayote|br[oó]coli|coliflor|repollo|pepino|culantro|chile|apio|vainica|elote|pl[aá]tano|yuca|camote|aguacate|\bajos?\b/],
+  ["perecedero", /\bpan\b|tortilla|masa/],
   ["no_perecedero", /arroz|frijol|az[uú]car|sal\b|aceite|harina|pasta|espagueti|at[uú]n|sardina|avena|cereal|caf[eé]|enlatad|lenteja|garbanzo|maicena|galleta|salsa|consom[eé]|leche en polvo/],
 ];
 

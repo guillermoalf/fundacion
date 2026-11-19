@@ -64,6 +64,7 @@ function LineaFormulario({ l, i, cambiar, quitar, productos, ubicaciones, catego
         {campo("precio", "Precio por unidad sin IVA (₡)", { inputMode: "decimal" })}
         <div className="flex items-end pb-3 text-base text-slate-600 sm:col-span-3">
           Total de la línea: <strong className="ml-1">{colones(aNumero(l.cantidad) * precio)}</strong>
+          {l.iva ? <span className="ml-2 text-sm text-slate-500">+ IVA {colones(aNumero(l.iva))} (según la factura)</span> : null}
         </div>
 
         {l.tipo === "consumible" && (
@@ -176,7 +177,7 @@ export default function FormularioCompra({ proveedores, fuentes, productos, ubic
       const prod = r.productos?.find((p) => p.linea === i)?.productoId;
       const esActivo = u !== null && l.precioUnitario > u;
       return {
-        tipo: esActivo ? "activo" : "consumible", descripcion: l.detalle, cantidad: String(l.cantidad), unidad: l.unidad, precio: String(l.precioUnitario),
+        tipo: esActivo ? "activo" : "consumible", descripcion: l.detalle, cantidad: String(l.cantidad), unidad: l.unidad, precio: String(l.precioUnitario), iva: String(l.impuesto),
         ...(esActivo ? {} : prod ? { producto_id: String(prod) } : { producto_id: "nuevo", nuevo_nombre: l.detalle, nuevo_unidad: l.unidad, nuevo_categoria: sugerirCategoriaProducto(l.detalle, categoriasProducto.map((c) => String(c.valor))) ?? "" }),
       };
     }));
