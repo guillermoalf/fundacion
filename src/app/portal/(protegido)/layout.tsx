@@ -47,7 +47,7 @@ export default async function PortalProtegidoLayout({ children }: { children: Re
     <ProveedorAvisos>
       <Menu
         secciones={secciones}
-        inicial={perfil.nombre.trim().charAt(0).toUpperCase()}
+        inicial={(perfil.nombre.match(/\p{L}/u)?.[0] ?? "?").toUpperCase()}
         cabecera={
           <Link href="/portal" className="block shrink-0">
             <img src={logo.src} alt="Fundación Creciendo Feliz" className="h-10 w-auto max-w-none" />

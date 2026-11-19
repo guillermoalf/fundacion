@@ -149,7 +149,11 @@ export default function Menu({ secciones, cabecera, pie, inicial }: { secciones:
         style={{ background: FONDO }}
       >
         <div className="px-3 py-4">
-          <div className="h-12 w-14 overflow-hidden rounded-2xl bg-white px-1.5 py-1 transition-[width] duration-300 group-hover/menu:w-[15.5rem] group-focus-within/menu:w-[15.5rem]">{cabecera}</div>
+          <div className="h-12 w-14 overflow-hidden rounded-2xl bg-white px-1.5 py-1 transition-[width] duration-300 group-hover/menu:w-[15.5rem] group-focus-within/menu:w-[15.5rem]">
+            {/* Cerrada: solo el arcoíris (el ícono del navegador). Abierta: el logo completo. */}
+            <img src="/logo192.png" alt="" aria-hidden className="h-10 w-10 object-contain group-hover/menu:hidden group-focus-within/menu:hidden" />
+            <div className="hidden group-hover/menu:block group-focus-within/menu:block">{cabecera}</div>
+          </div>
         </div>
         <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-2">
           <Enlaces secciones={secciones} pathname={pathname} compacto />
