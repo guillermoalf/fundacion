@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { sql } from "kysely";
 import { obtenerSesion } from "@/lib/portal/sesion";
 import { conDepreciacion, consultaActivos } from "@/lib/portal/activos";
@@ -21,7 +22,9 @@ function Tarjeta({ titulo, valor, detalle, href, tono = "normal" }: { titulo: st
 }
 
 export default async function PortalInicio() {
-  const { perfil, consultar, puedeEscribir, esSuperadmin } = await obtenerSesion();
+  const { perfil, consultar, puedeEscribir, esSuperadmin, esPersonal, veNinos } = await obtenerSesion();
+  // El personal (maestras, cuidadoras) solo pasa lista: entra directo a esa pantalla.
+  if (esPersonal) redirect("/portal/ninos/lista");
   const hoy = hoyCR();
   const d = await consultar(async (tx) => {
     const activos = (await consultaActivos(tx).where("a.estado", "<>", "dado_de_baja").execute()).map((a) => conDepreciacion(a, hoy));
@@ -34,7 +37,11 @@ export default async function PortalInicio() {
       tx.selectFrom("planillas").select("id").where("estado", "=", "borrador").execute(),
     ]);
     const espacio = esSuperadmin ? (await sql<{ base_bytes: string; archivos_bytes: string; archivos: number }>`select * from espacio_usado()`.execute(tx)).rows[0] : null;
-    return { activos, pendientes: Number(pendientes.n), saldos, ausentes, marcasHoy: Number(marcasHoy.n), borradores: borradores.length, espacio };
+    const ninos = veNinos
+      ? await tx.selectFrom("ninos as n").leftJoin("asistencia_ninos as a", (j) => j.onRef("a.nino_id", "=", "n.id").on("a.fecha", "=", hoy))
+        .select(["a.estado"]).where("n.estado", "=", "activo").where("n.fecha_ingreso", "<=", hoy).execute()
+      : null;
+    return { ninos, activos, pendientes: Number(pendientes.n), saldos, ausentes, marcasHoy: Number(marcasHoy.n), borradores: borradores.length, espacio };
   });
   const sinUbicacion = d.activos.filter((a) => a.ubicacion_id === null).length;
   const libros = d.activos.reduce((s, a) => s + (a.valorLibros ?? 0), 0);
@@ -45,6 +52,14 @@ export default async function PortalInicio() {
     <>
       <Encabezado titulo={`Hola, ${perfil?.nombre.split(" ")[0] ?? ""}`} descripcion="Resumen de hoy en la Fundación Creciendo Feliz." />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {d.ninos && d.ninos.length > 0 && (() => {
+          const llegaron = d.ninos.filter((n) => n.estado === "presente").length;
+          const sinMarcar = d.ninos.filter((n) => !n.estado).length;
+          return (
+            <Tarjeta titulo="Niños que llegaron hoy" valor={`${llegaron} de ${d.ninos.length}`} detalle={sinMarcar ? `${sinMarcar} sin marcar en la lista` : "Lista completa"}
+              href="/portal/ninos/lista" tono={sinMarcar === d.ninos.length ? "aviso" : "normal"} />
+          );
+        })()}
         <Tarjeta titulo="Activos en uso" valor={String(d.activos.length)} href="/portal/activos" />
         <Tarjeta titulo="Valor en libros hoy" valor={colones(libros)!} detalle={sinValor ? `Sin contar ${sinValor} activos a los que les faltan datos` : undefined} href="/portal/reportes" />
         {puedeEscribir && sinUbicacion > 0 && (

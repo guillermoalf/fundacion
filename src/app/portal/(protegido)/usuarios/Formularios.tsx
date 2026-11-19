@@ -9,9 +9,10 @@ import { actualizarAcceso, cambiarActivo, crearUsuario, restablecerContrasena, t
 const OPCION_SUPER = { valor: "superadmin", texto: "Superadministrador (corrige todo; solo lo da otro superadministrador)" };
 export const OPCIONES_ROL = [
   { valor: "admin", texto: "Dirección (todo, incluido crear usuarios)" },
-  { valor: "contabilidad", texto: "Contabilidad (todo menos usuarios)" },
+  { valor: "contabilidad", texto: "Contabilidad (todo menos usuarios y los datos de los niños)" },
   { valor: "coordinacion", texto: "Coordinación (compras, inventario, asistencia)" },
   { valor: "auditor", texto: "Auditor externo (solo lectura, con vencimiento)" },
+  { valor: "personal", texto: "Personal: maestras y cuidadoras (solo pasan lista y ven los contactos de los niños)" },
 ];
 
 /** Se muestra una sola vez: la contraseña no se guarda en ningún lado en texto. */

@@ -10,6 +10,8 @@ function activo(pathname: string, href: string) {
 }
 
 function Enlaces({ secciones, pathname, alElegir }: { secciones: SeccionMenu[]; pathname: string; alElegir?: () => void }) {
+  // Solo se marca el enlace más específico (p. ej. «Asistencia de niños» y no también «Niños y niñas»).
+  const elegido = secciones.flatMap((s) => s.items).filter((it) => activo(pathname, it.href)).sort((x, y) => y.href.length - x.href.length)[0]?.href;
   return (
     <nav aria-label="Menú del portal" className="space-y-5">
       {secciones.map((s, i) => (
@@ -17,7 +19,7 @@ function Enlaces({ secciones, pathname, alElegir }: { secciones: SeccionMenu[]; 
           {s.titulo && <p className="mb-1 px-3 text-xs font-semibold uppercase tracking-wide text-slate-500">{s.titulo}</p>}
           <ul className="space-y-0.5">
             {s.items.map((it) => {
-              const sel = activo(pathname, it.href);
+              const sel = it.href === elegido;
               return (
                 <li key={it.href}>
                   <Link

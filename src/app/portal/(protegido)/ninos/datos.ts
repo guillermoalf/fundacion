@@ -1,0 +1,11 @@
+/** Constantes de niños compartidas por servidor y cliente (sin "use client"). */
+export const PROVINCIAS = ["San José", "Alajuela", "Cartago", "Heredia", "Guanacaste", "Puntarenas", "Limón"];
+
+export const ESTADOS_ASISTENCIA = {
+  presente: "Presente",
+  ausente: "Ausente",
+  justificada: "Ausencia justificada",
+} as const;
+
+/** Ausencias seguidas sin justificar a partir de las cuales se avisa. */
+export const AVISO_AUSENCIAS = 3;
