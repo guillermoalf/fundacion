@@ -13,7 +13,7 @@ export default async function ProductosPage() {
   const { consultar, puedeEscribir } = await obtenerSesion();
   const { productos, proveedores } = await consultar(async (tx) => ({
     productos: await tx.selectFrom("productos as p").leftJoin("proveedores as pr", "pr.id", "p.proveedor_habitual_id")
-      .select(["p.id", "p.nombre", "p.categoria", "p.unidad", "p.stock_minimo", "p.activo", "p.codigo_proveedor", "pr.nombre as proveedor"]).orderBy("p.nombre").execute(),
+      .select(["p.id", "p.nombre", "p.categoria", "p.unidad", "p.stock_minimo", "p.activo", "pr.nombre as proveedor"]).orderBy("p.nombre").execute(),
     proveedores: await tx.selectFrom("proveedores").select(["id", "nombre"]).where("activo", "=", true).orderBy("nombre").execute(),
   }));
   return (

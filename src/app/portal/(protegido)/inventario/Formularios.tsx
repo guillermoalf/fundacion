@@ -32,7 +32,7 @@ export function FormularioMovimiento({ productos, hoy, tipoInicial = "salida", p
   );
 }
 
-type VP = { id?: number; nombre?: string; categoria?: string; unidad?: string; proveedor_habitual_id?: number | null; codigo_proveedor?: string | null; stock_minimo?: string; activo?: boolean };
+type VP = { id?: number; nombre?: string; categoria?: string; unidad?: string; proveedor_habitual_id?: number | null; stock_minimo?: string; activo?: boolean };
 
 export function FormularioProducto({ v = {}, proveedores, nuevoConProveedor = false }: { v?: VP; proveedores: Opcion[]; nuevoConProveedor?: boolean }) {
   const editando = v.id !== undefined && !nuevoConProveedor;
@@ -46,7 +46,6 @@ export function FormularioProducto({ v = {}, proveedores, nuevoConProveedor = fa
       <Campo etiqueta="Unidad" name="unidad" id="prod-unidad" defaultValue={v.unidad ?? ""} required placeholder="kg, litro, paquete, unidad…" />
       <Campo etiqueta="Mínimo en bodega" name="stock_minimo" id="prod-stock_minimo" inputMode="decimal" defaultValue={v.stock_minimo ?? "0"} ayuda="Lo que debe haber al empezar la semana. Se avisa si queda menos y se sugiere en el pedido." />
       <Seleccion etiqueta="Proveedor habitual" name="proveedor_habitual_id" id="prod-proveedor_habitual_id" opciones={proveedores} vacio="—" defaultValue={v.proveedor_habitual_id ?? ""} />
-      <Campo etiqueta="Código del proveedor" name="codigo_proveedor" id="prod-codigo_proveedor" defaultValue={v.codigo_proveedor ?? ""} ayuda="Ej.: el código de PriceSmart." />
       {editando && <Casilla etiqueta="Activo (aparece en compras y salidas)" name="activo" defaultChecked={v.activo ?? true} />}
       <div className="sm:col-span-2"><MensajeError estado={estado} /></div>
       <div className="sm:col-span-2"><BotonEnviar>{editando ? "Guardar cambios" : "Agregar producto"}</BotonEnviar></div>
