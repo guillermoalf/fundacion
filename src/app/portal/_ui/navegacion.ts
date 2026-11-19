@@ -1,11 +1,17 @@
 import type { Rol } from "@/lib/portal/sesion";
 
-export type ItemMenu = { href: string; etiqueta: string; roles?: Rol[] };
+/** `personal`: el rol Personal solo ve los enlaces marcados así. */
+export type ItemMenu = { href: string; etiqueta: string; roles?: Rol[]; personal?: boolean };
 export type SeccionMenu = { titulo?: string; items: ItemMenu[] };
 
 /** Menú lateral. `roles` solo oculta el enlace (comodidad): el permiso real lo decide el RLS. */
 export const MENU: SeccionMenu[] = [
   { items: [{ href: "/portal", etiqueta: "Inicio" }] },
+  { titulo: "Niños", items: [
+      { href: "/portal/ninos", etiqueta: "Niños y niñas", roles: ["admin", "coordinacion", "auditor", "personal"], personal: true },
+      { href: "/portal/ninos/lista", etiqueta: "Pasar lista", roles: ["admin", "coordinacion", "personal"], personal: true },
+      { href: "/portal/ninos/asistencia", etiqueta: "Asistencia de niños", roles: ["admin", "coordinacion", "auditor"] },
+    ] },
   { titulo: "Activos", items: [
       { href: "/portal/activos", etiqueta: "Activos" },
       { href: "/portal/pendientes", etiqueta: "Pendientes" },
@@ -29,5 +35,5 @@ export const MENU: SeccionMenu[] = [
       { href: "/portal/kiosko", etiqueta: "Kiosko de asistencia", roles: ["admin"] },
       { href: "/portal/bitacora", etiqueta: "Bitácora", roles: ["admin", "contabilidad", "auditor"] },
     ] },
-  { titulo: "Cuenta", items: [{ href: "/portal/cuenta", etiqueta: "Mi cuenta" }] },
+  { titulo: "Cuenta", items: [{ href: "/portal/cuenta", etiqueta: "Mi cuenta", personal: true }] },
 ];

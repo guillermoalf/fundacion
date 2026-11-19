@@ -16,6 +16,7 @@ export const NOMBRE_ROL: Record<Rol, string> = {
   coordinacion: "Coordinación",
   auditor: "Auditoría",
   superadmin: "Superadministrador",
+  personal: "Personal",
 };
 
 /** Usuario con sesión válida, o null. No redirige: sirve para el login y las Server Actions. */
@@ -53,5 +54,10 @@ export const obtenerSesion = cache(async () => {
   const veSalarios = !!perfil && ["admin", "contabilidad", "auditor", "superadmin"].includes(perfil.rol);
   const editaSalarios = !!perfil && ["admin", "contabilidad", "superadmin"].includes(perfil.rol);
   const esSuperadmin = perfil?.rol === "superadmin";
-  return { usuario, perfil, puedeEscribir, esAdmin, esSuperadmin, veSalarios, editaSalarios, consultar };
+  // Niños (mismo criterio que ve_ninos / edita_ninos / ve_notas_ninos en la base).
+  const esPersonal = perfil?.rol === "personal";
+  const veNinos = !!perfil && perfil.rol !== "contabilidad";
+  const editaNinos = !!perfil && ["admin", "coordinacion", "superadmin"].includes(perfil.rol);
+  const veNotasNinos = editaNinos || perfil?.rol === "auditor";
+  return { usuario, perfil, puedeEscribir, esAdmin, esSuperadmin, veSalarios, editaSalarios, esPersonal, veNinos, editaNinos, veNotasNinos, consultar };
 });

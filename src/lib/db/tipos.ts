@@ -35,7 +35,7 @@ export type Numeric = ColumnType<string, number | string, number | string>;
 
 export type OrigenMarca = "hoja_firmada" | "kiosko" | "manual";
 
-export type RolPortal = "admin" | "auditor" | "contabilidad" | "coordinacion" | "superadmin";
+export type RolPortal = "admin" | "auditor" | "contabilidad" | "coordinacion" | "personal" | "superadmin";
 
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
@@ -105,6 +105,17 @@ export interface ArchivosPartes {
   parte: number;
   subida_id: string;
   subido_por: Generated<string>;
+}
+
+export interface AsistenciaNinos {
+  estado: string;
+  fecha: string;
+  hora_llegada: string | null;
+  id: Generated<Int8>;
+  motivo: string | null;
+  nino_id: string;
+  registrado_en: Generated<Timestamp>;
+  registrado_por: Generated<string | null>;
 }
 
 export interface Ausencias {
@@ -265,6 +276,39 @@ export interface Marcas {
   tipo: TipoMarca;
 }
 
+export interface Ninos {
+  alergias: string | null;
+  apellidos: string;
+  aula_id: number | null;
+  canton: string | null;
+  condicion_medica: string | null;
+  creado_en: Generated<Timestamp>;
+  creado_por: Generated<string | null>;
+  direccion: string | null;
+  distrito: string | null;
+  estado: Generated<string>;
+  fecha_ingreso: Generated<string>;
+  fecha_nacimiento: string | null;
+  fecha_retiro: string | null;
+  fuente_id: number | null;
+  id: Generated<string>;
+  identificacion: string | null;
+  medicamentos: string | null;
+  motivo_retiro: string | null;
+  nombre: string;
+  provincia: string | null;
+  sexo: string | null;
+}
+
+export interface NotasNino {
+  autor: Generated<string | null>;
+  creado_en: Generated<Timestamp>;
+  fecha: Generated<string>;
+  id: Generated<number>;
+  nino_id: string;
+  texto: string;
+}
+
 export interface Parametros {
   clave: string;
   fuente_legal: string | null;
@@ -337,6 +381,23 @@ export interface Proveedores {
   tipo: string | null;
 }
 
+export interface ResponsablesNino {
+  activo: Generated<boolean>;
+  correo: string | null;
+  es_legal: Generated<boolean>;
+  id: Generated<number>;
+  identificacion: string | null;
+  nino_id: string;
+  nombre: string;
+  notas: string | null;
+  orden: Generated<number>;
+  otro_contacto: string | null;
+  otro_telefono: string | null;
+  parentesco: string;
+  puede_recoger: Generated<boolean>;
+  telefono: string | null;
+}
+
 export interface Salarios {
   creado_en: Generated<Timestamp>;
   empleado_id: string;
@@ -384,6 +445,7 @@ export interface DB {
   activos: Activos;
   archivos: Archivos;
   archivos_partes: ArchivosPartes;
+  asistencia_ninos: AsistenciaNinos;
   ausencias: Ausencias;
   bitacora: Bitacora;
   categorias_activo: CategoriasActivo;
@@ -398,12 +460,15 @@ export interface DB {
   horarios: Horarios;
   inventario_movimientos: InventarioMovimientos;
   marcas: Marcas;
+  ninos: Ninos;
+  notas_nino: NotasNino;
   parametros: Parametros;
   perfiles: Perfiles;
   planilla_lineas: PlanillaLineas;
   planillas: Planillas;
   productos: Productos;
   proveedores: Proveedores;
+  responsables_nino: ResponsablesNino;
   salarios: Salarios;
   tramos_renta: TramosRenta;
   ubicaciones: Ubicaciones;

@@ -69,6 +69,7 @@ src/app/(sitio)/                 landing: each page.tsx only imports its view fr
 src/app/portal/login/            login
 src/app/portal/(protegido)/      protected portal: <route>/page.tsx + acciones.ts (Server Actions) + PascalCase client components; downloads as route.ts under …/descargar (no dot)
 src/app/portal/_ui/              shared portal UI: menu (navegacion.ts), Encabezado, Tabla, Formulario (FormularioAccion, BotonEnviar, CampoArchivo), Avisos, Insignias (Falta)
+src/app/portal/(protegido)/ninos/ children: registry, responsables, notas, pasar lista (mobile, one tap = saved), monthly attendance + Excel (src/lib/export/asistenciaNinos.ts)
 src/app/marcar/                  attendance kiosk (tablet + PIN); server side in src/lib/kiosko.ts (owner connection)
 src/views, src/components        landing in JS (from CRA), each component with its own .scss. Don't migrate to TS unless asked
 src/lib/calculos/                depreciation, payroll (+ tests). SOURCE OF TRUTH for calculations
@@ -92,6 +93,7 @@ scripts/                         db.mts (migrar/reset/test), crear-admin.mts, ge
 - UI copy: Spanish, addressing the user as "usted", plain language. The directora isn't technical: errors say what happened and what to do ("Falta la fecha de compra. Puede guardarlo así y completarla después."), never technical messages.
 - Server Actions return `{ ok: true, ... } | { ok: false, error: string }` via `ejecutar()`; don't throw exceptions to the UI. Client forms use `<FormularioAccion>` (not `<form action>`: React 19 empties the form even when saving fails).
 - Files (photos, PDFs) go in the `archivos` table: `<CampoArchivo>` compresses photos (1600 px, JPEG 80 %) and uploads in 3 MB parts to `/portal/archivos/subir` (5 MB max, Vercel caps requests at 4.5 MB); the action receives the id and calls `guardarArchivo()`. `*_url` columns store `/portal/archivos/<id>`.
+- Roles: superadmin (Guillermo; can also be given to the owner) · admin = Dirección · coordinacion · contabilidad (no children data) · auditor (read-only, expires) · personal (teachers/caregivers: only pass attendance and see children + contacts, no notes, nothing administrative; `puede_leer()` excludes it). Children permissions: `ve_ninos()`, `ve_notas_ninos()`, `edita_ninos()`, `pasa_lista()` (personal only for today).
 - Salaries live in `salarios` (history by `vigente_desde`) and payroll tables are readable only by admin, contabilidad and auditor (`ve_salarios()` in RLS); coordinación sees staff without salaries.
 - Constants shared by server and client components live in files without "use client".
 - Forms must work on a phone (physical counts are done walking around the classrooms).

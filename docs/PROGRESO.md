@@ -67,3 +67,11 @@ Cada módulo vive en su rama `portal/<modulo>`, que sale de la rama del módulo 
 - Compras: varios archivos por factura (`compra_archivos`; PDF, foto y XML). Al subir el XML de la factura electrónica (Hacienda 4.3/4.4, `src/lib/importacion/facturaElectronica.ts`) se llenan proveedor (o se crea), número, fecha, IVA y líneas, y se sugiere activo/inventario según el umbral. Productos nuevos se crean desde la línea (con categoría obligatoria). Cada activo muestra los archivos de su factura.
 - «Nuevo activo» suelto (sin factura): cantidad, placas y precio por unidad; una ficha por unidad.
 - Proveedores: ficha con sus productos (agregar con mínimo) y «Hacer pedido»: sugiere lo que falta para el mínimo, se corrige y se copia para WhatsApp o se imprime. Cocina no usa el sistema.
+
+## Niños y niñas (rama `portal/ninos`, 19/11)
+
+- Registro: datos, dirección (provincia/cantón/distrito/señas), aula, subsidio (fuente), salud (alergias, condición, medicamentos), responsables (legal, respaldo, orden, puede recoger, teléfonos con botón Llamar/WhatsApp), notas fechadas que no se cambian, retiro/reingreso sin borrar.
+- Rol nuevo «Personal» (maestras, cuidadoras): entra directo a Pasar lista; ve niños y contactos, no notas ni nada administrativo. Solo pasa lista del día; dirección/coordinación corrigen días anteriores.
+- Pasar lista en celular por aula: Llegó (guarda la hora) / No vino / Justificada (con motivo); «marcar los que faltan como No vino».
+- Avisos: 3+ ausencias seguidas, falta fecha de nacimiento, responsable legal, teléfono o aula. Inicio: «Niños que llegaron hoy».
+- Asistencia mensual por subsidio y aula + Excel (P/A/J, totales y %). Formato propio hasta tener el oficial del IMAS/PANI.
