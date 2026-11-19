@@ -5,6 +5,7 @@ import { AreaTexto, BotonEnviar, Campo, CampoArchivos, FormularioAccion, Mensaje
 import { estiloBoton, estiloEtiqueta, estiloInput } from "../../../_ui/estilos";
 import { colones } from "@/lib/portal/formato";
 import { leerFacturaXml, registrarCompra, type LineaCompra } from "../acciones";
+import { sugerirCategoriaProducto } from "../../inventario/datos";
 
 type Opcion = { valor: number | string; texto: string };
 type Producto = { id: number; nombre: string; unidad: string };
@@ -78,7 +79,10 @@ function LineaFormulario({ l, i, cambiar, quitar, productos, ubicaciones, catego
               <select id={id("producto")} className={estiloInput} value={l.producto_id ?? ""}
                 onChange={(e) => {
                   const p = productos.find((x) => String(x.id) === e.target.value);
-                  cambiar({ producto_id: e.target.value, ...(p ? { unidad: p.unidad } : {}), ...(e.target.value === "nuevo" ? { nuevo_nombre: l.nuevo_nombre ?? l.descripcion, nuevo_unidad: l.nuevo_unidad ?? l.unidad } : {}) });
+                  cambiar({ producto_id: e.target.value, ...(p ? { unidad: p.unidad } : {}), ...(e.target.value === "nuevo" ? {
+                    nuevo_nombre: l.nuevo_nombre ?? l.descripcion, nuevo_unidad: l.nuevo_unidad ?? l.unidad,
+                    nuevo_categoria: l.nuevo_categoria || sugerirCategoriaProducto(`${l.nuevo_nombre ?? ""} ${l.descripcion}`) || "",
+                  } : {}) });
                 }}>
                 <option value="">Elija…</option>
                 <option value="nuevo">+ Producto nuevo</option>
@@ -90,7 +94,14 @@ function LineaFormulario({ l, i, cambiar, quitar, productos, ubicaciones, catego
               <div className="grid gap-3 rounded-xl bg-white p-3 sm:col-span-4 sm:grid-cols-3">
                 {campo("nuevo_nombre", "Nombre del producto nuevo")}
                 {campo("nuevo_unidad", "Unidad (kg, litro, paquete…)")}
-                {sel("nuevo_categoria", "Categoría", CATEGORIAS, "Elija…")}
+                <div className={l.nuevo_categoria ? "" : "rounded-xl ring-2 ring-amber-400 ring-offset-2"}>
+                  {sel("nuevo_categoria", "Categoría en el inventario", CATEGORIAS, "Elija una…")}
+                </div>
+                {!l.nuevo_categoria && (
+                  <p className="text-sm font-medium text-amber-800 sm:col-span-3">
+                    Falta elegir la categoría (arriba a la derecha): dice en cuál control de inventario sale este producto, por ejemplo «Material didáctico».
+                  </p>
+                )}
               </div>
             )}
           </>
@@ -150,14 +161,24 @@ export default function FormularioCompra({ proveedores, fuentes, productos, ubic
       const esActivo = u !== null && l.precioUnitario > u;
       return {
         tipo: esActivo ? "activo" : "consumible", descripcion: l.detalle, cantidad: String(l.cantidad), unidad: l.unidad, precio: String(l.precioUnitario),
-        ...(esActivo ? {} : prod ? { producto_id: String(prod) } : { producto_id: "nuevo", nuevo_nombre: l.detalle, nuevo_unidad: l.unidad }),
+        ...(esActivo ? {} : prod ? { producto_id: String(prod) } : { producto_id: "nuevo", nuevo_nombre: l.detalle, nuevo_unidad: l.unidad, nuevo_categoria: sugerirCategoriaProducto(l.detalle) ?? "" }),
       };
     }));
     setAvisoXml(`Se leyó la factura ${f.consecutivo ?? ""} de ${f.emisor.nombre}${f.moneda !== "CRC" ? ` (en ${f.moneda}, convertida a colones con el tipo de cambio ${f.tipoCambio})` : ""}: revise cada línea y márquela como inventario, activo o servicio.`);
   }
 
   return (
-    <FormularioAccion accion={accion} estado={estado} pendiente={pendiente} reiniciar={false} className="space-y-6">
+    <FormularioAccion accion={accion} estado={estado} pendiente={pendiente} reiniciar={false} className="space-y-6"
+      borrador={{ nombre: "compra", titulo: "Compra", volverA: "/portal/compras", alRestaurar: (d) => {
+        try { const ls = JSON.parse(d.lineas ?? ""); if (Array.isArray(ls) && ls.length) setLineas(ls); } catch { /* borrador viejo */ }
+        if (d.proveedor_nuevo) setProveedorNuevo({ nombre: d.proveedor_nuevo, cedula: d.proveedor_cedula || null });
+        else setProveedorId(d.proveedor_id ?? "");
+        setNumero(d.numero_factura ?? "");
+        if (d.fecha) setFecha(d.fecha);
+        setIva(d.iva ?? "0");
+        if (d.total_factura) setTotalFactura(Number(d.total_factura));
+        if (d.aviso_xml) setAvisoXml(d.aviso_xml);
+      } }}>
       <fieldset className="space-y-3 rounded-2xl border-2 border-dashed border-sky-300 bg-sky-50 p-4">
         <legend className="px-1 text-lg font-semibold">Archivos de la factura</legend>
         <CampoArchivos etiqueta="PDF y los 2 XML de la factura electrónica (o una foto)" name="archivos" alSubir={alSubir}
@@ -209,6 +230,9 @@ export default function FormularioCompra({ proveedores, fuentes, productos, ubic
         </div>
       </div>
       <input type="hidden" name="lineas" value={JSON.stringify(lineas)} />
+      {/* Solo para el borrador: lo que dijo la factura electrónica. */}
+      <input type="hidden" name="total_factura" value={totalFactura ?? ""} />
+      <input type="hidden" name="aviso_xml" value={avisoXml ?? ""} />
       <MensajeError estado={estado} />
       <BotonEnviar pendiente="Guardando la compra…">Registrar compra</BotonEnviar>
     </FormularioAccion>

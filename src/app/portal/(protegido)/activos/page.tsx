@@ -4,6 +4,7 @@ import { obtenerSesion } from "@/lib/portal/sesion";
 import { conDepreciacion, consultaActivos } from "@/lib/portal/activos";
 import { ESTADOS_ACTIVO } from "@/lib/portal/catalogos";
 import { colones, hoyCR } from "@/lib/portal/formato";
+import { VolverAlBorrador } from "../../_ui/Borrador";
 import Encabezado from "../../_ui/Encabezado";
 import Tabla from "../../_ui/Tabla";
 import Vacio from "../../_ui/Vacio";
@@ -23,6 +24,7 @@ export default async function ActivosPage() {
 
   return (
     <>
+      <VolverAlBorrador nombre="activo" href="/portal/activos/nuevo" />
       <Encabezado
         migas={[{ etiqueta: "Activos" }]}
         titulo="Activos"

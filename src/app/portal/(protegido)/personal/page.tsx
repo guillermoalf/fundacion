@@ -3,6 +3,7 @@ import Link from "next/link";
 import { sql } from "kysely";
 import { obtenerSesion } from "@/lib/portal/sesion";
 import { colones, fecha } from "@/lib/portal/formato";
+import { VolverAlBorrador } from "../../_ui/Borrador";
 import Encabezado from "../../_ui/Encabezado";
 import Tabla from "../../_ui/Tabla";
 import Vacio from "../../_ui/Vacio";
@@ -19,6 +20,7 @@ export default async function PersonalPage() {
   }));
   return (
     <>
+      <VolverAlBorrador nombre="empleado" href="/portal/personal/nuevo" />
       <Encabezado
         migas={[{ etiqueta: "Personal" }]}
         titulo="Personal"

@@ -92,7 +92,7 @@ export async function registrarCompra(_: R, f: FormData): Promise<R> {
       if (cantidad <= 0) throw new ErrorUsuario(`La cantidad de la línea ${n} debe ser mayor que cero.`);
       if (precio < 0) throw new ErrorUsuario(`El precio de la línea ${n} no puede ser negativo.`);
       if (l.tipo === "consumible" && !l.producto_id) throw new ErrorUsuario(`En la línea ${n} elija el producto del inventario (o «Producto nuevo»).`);
-      if (l.tipo === "consumible" && l.producto_id === "nuevo" && !l.nuevo_categoria) throw new ErrorUsuario(`En la línea ${n} elija la categoría del producto nuevo (comida, limpieza, oficina…): con ella sale en el control de inventario que corresponde.`);
+      if (l.tipo === "consumible" && l.producto_id === "nuevo" && !l.nuevo_categoria) throw new ErrorUsuario(`En la línea ${n} falta la «Categoría en el inventario» del producto nuevo (el último campo, al lado de la unidad). Elija por ejemplo «Material didáctico» o «Limpieza»: con ella sale en el control de inventario que corresponde.`);
       if (l.tipo === "activo" && !Number.isInteger(cantidad)) throw new ErrorUsuario(`En la línea ${n} (activo) la cantidad debe ser un número entero.`);
       const placas = (l.placas ?? "").split(/[,;\s]+/).map((p) => p.trim()).filter(Boolean);
       if (l.tipo === "activo" && placas.length > cantidad) throw new ErrorUsuario(`En la línea ${n} hay más placas (${placas.length}) que unidades (${cantidad}).`);

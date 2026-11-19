@@ -15,7 +15,7 @@ export function FormularioEmpleado({ v = {}, ubicaciones, fuentes, conSalario = 
   const editando = !!v.id;
   const [estado, accion, pendiente] = useActionState(editando ? editarEmpleado : crearEmpleado, null);
   return (
-    <FormularioAccion accion={accion} estado={estado} pendiente={pendiente} reiniciar={false} className="grid gap-4 sm:grid-cols-2">
+    <FormularioAccion accion={accion} estado={estado} pendiente={pendiente} reiniciar={false} className="grid gap-4 sm:grid-cols-2" borrador={editando ? undefined : { nombre: "empleado", titulo: "Registro de persona", volverA: "/portal/personal" }}>
       {editando && <input type="hidden" name="id" value={v.id} />}
       <Campo etiqueta="Nombre completo" name="nombre" defaultValue={v.nombre} required />
       <Campo etiqueta="Cédula" name="cedula" defaultValue={v.cedula} required />
