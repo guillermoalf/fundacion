@@ -19,9 +19,11 @@ const aNumero = (s: string) => {
   return Number.isFinite(n) ? n : 0;
 };
 
-function LineaFormulario({ l, i, cambiar, quitar, productos, ubicaciones, categorias, categoriasProducto, umbral }: {
+function LineaFormulario({ l, i, cambiar, quitar, productos, ubicaciones, categorias, categoriasProducto, umbral, misma }: {
   l: Linea; i: number; cambiar: (c: Partial<Linea>) => void; quitar?: () => void;
   productos: Producto[]; ubicaciones: Opcion[]; categorias: Opcion[]; categoriasProducto: Opcion[]; umbral: number | null;
+  /** «Misma categoría para todas»: la casilla va en la primera línea con producto nuevo; las demás la heredan. */
+  misma?: { tipo: "casilla"; marcada: boolean; cambiar: (v: boolean) => void } | { tipo: "heredada"; de: number };
 }) {
   const id = (k: string) => `l${i}-${k}`;
   const campo = (k: keyof Linea, etiqueta: string, extra: React.InputHTMLAttributes<HTMLInputElement> = {}) => (
@@ -86,10 +88,25 @@ function LineaFormulario({ l, i, cambiar, quitar, productos, ubicaciones, catego
               <div className="grid gap-3 rounded-xl bg-white p-3 sm:col-span-4 sm:grid-cols-3">
                 {campo("nuevo_nombre", "Nombre del producto nuevo")}
                 {campo("nuevo_unidad", "Unidad (kg, litro, paquete…)")}
-                <div className={l.nuevo_categoria ? "" : "rounded-xl ring-2 ring-amber-400 ring-offset-2"}>
-                  {sel("nuevo_categoria", "Categoría en el inventario", categoriasProducto, "Elija una…")}
-                </div>
-                {!l.nuevo_categoria && (
+                {misma?.tipo === "heredada" ? (
+                  <div className="space-y-1.5">
+                    <span className={estiloEtiqueta}>Categoría en el inventario</span>
+                    <p className="rounded-xl bg-sky-50 px-3 py-2.5 text-base text-sky-900">
+                      {categoriasProducto.find((c) => String(c.valor) === l.nuevo_categoria)?.texto ?? "Sin elegir"} <span className="text-sm text-sky-700">(igual que la línea {misma.de + 1})</span>
+                    </p>
+                  </div>
+                ) : (
+                  <div className={l.nuevo_categoria ? "" : "rounded-xl ring-2 ring-amber-400 ring-offset-2"}>
+                    {sel("nuevo_categoria", "Categoría en el inventario", categoriasProducto, "Elija una…")}
+                  </div>
+                )}
+                {misma?.tipo === "casilla" && (
+                  <label className="flex items-center gap-2 text-base font-medium sm:col-span-3">
+                    <input type="checkbox" className="h-5 w-5" checked={misma.marcada} onChange={(e) => misma.cambiar(e.target.checked)} />
+                    Usar esta misma categoría en todas las líneas de productos nuevos
+                  </label>
+                )}
+                {!l.nuevo_categoria && misma?.tipo !== "heredada" && (
                   <p className="text-sm font-medium text-amber-800 sm:col-span-3">
                     Falta elegir la categoría (arriba a la derecha): dice en cuál control de inventario sale este producto, por ejemplo «Material didáctico».
                   </p>
@@ -126,6 +143,13 @@ export default function FormularioCompra({ proveedores, fuentes, productos, ubic
 }) {
   const [estado, accion, pendiente] = useActionState(registrarCompra, null);
   const [lineas, setLineas] = useState<Linea[]>([nueva()]);
+  const [misma, setMisma] = useState(false);
+  // Con «misma categoría», las líneas de productos nuevos toman la categoría de la primera.
+  const esNueva = (l: Linea) => l.tipo === "consumible" && l.producto_id === "nuevo";
+  const primeraNueva = lineas.findIndex(esNueva);
+  const efectivas = misma && primeraNueva >= 0
+    ? lineas.map((l, j) => (j !== primeraNueva && esNueva(l) ? { ...l, nuevo_categoria: lineas[primeraNueva].nuevo_categoria } : l))
+    : lineas;
   const [proveedorId, setProveedorId] = useState("");
   const [proveedorNuevo, setProveedorNuevo] = useState<{ nombre: string; cedula: string | null } | null>(null);
   const [numero, setNumero] = useState("");
@@ -163,6 +187,7 @@ export default function FormularioCompra({ proveedores, fuentes, productos, ubic
     <FormularioAccion accion={accion} estado={estado} pendiente={pendiente} reiniciar={false} className="space-y-6"
       borrador={{ nombre: "compra", titulo: "Compra", volverA: "/portal/compras", alRestaurar: (d) => {
         try { const ls = JSON.parse(d.lineas ?? ""); if (Array.isArray(ls) && ls.length) setLineas(ls); } catch { /* borrador viejo */ }
+        setMisma(d.misma_categoria === "1");
         if (d.proveedor_nuevo) setProveedorNuevo({ nombre: d.proveedor_nuevo, cedula: d.proveedor_cedula || null });
         else setProveedorId(d.proveedor_id ?? "");
         setNumero(d.numero_factura ?? "");
@@ -201,7 +226,10 @@ export default function FormularioCompra({ proveedores, fuentes, productos, ubic
         <legend className="mb-2 text-lg font-semibold">Qué se compró</legend>
         <p className="text-slate-600">Una factura puede mezclar cosas (comida y una computadora, por ejemplo): marque cada línea como lo que es. Todo queda ligado a esta misma factura.</p>
         {lineas.map((l, i) => (
-          <LineaFormulario key={i} l={l} i={i} productos={productos} ubicaciones={ubicaciones} categorias={categorias} categoriasProducto={categoriasProducto} umbral={umbral}
+          <LineaFormulario key={i} l={efectivas[i]} i={i} productos={productos} ubicaciones={ubicaciones} categorias={categorias} categoriasProducto={categoriasProducto} umbral={umbral}
+            misma={i === primeraNueva && lineas.filter(esNueva).length > 1
+              ? { tipo: "casilla", marcada: misma, cambiar: (v) => { if (!v) setLineas(efectivas); setMisma(v); } }
+              : misma && primeraNueva >= 0 && i !== primeraNueva && esNueva(l) ? { tipo: "heredada", de: primeraNueva } : undefined}
             cambiar={(c) => setLineas((ls) => ls.map((x, j) => (j === i ? { ...x, ...c } : x)))}
             quitar={lineas.length > 1 ? () => setLineas((ls) => ls.filter((_, j) => j !== i)) : undefined} />
         ))}
@@ -221,7 +249,8 @@ export default function FormularioCompra({ proveedores, fuentes, productos, ubic
           )}
         </div>
       </div>
-      <input type="hidden" name="lineas" value={JSON.stringify(lineas)} />
+      <input type="hidden" name="lineas" value={JSON.stringify(efectivas)} />
+      <input type="hidden" name="misma_categoria" value={misma ? "1" : ""} />
       {/* Solo para el borrador: lo que dijo la factura electrónica. */}
       <input type="hidden" name="total_factura" value={totalFactura ?? ""} />
       <input type="hidden" name="aviso_xml" value={avisoXml ?? ""} />
