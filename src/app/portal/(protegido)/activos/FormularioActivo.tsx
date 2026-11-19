@@ -25,7 +25,7 @@ export default function FormularioActivo({ v = {}, ubicaciones, fuentes, categor
   const [estado, accion, accionPendiente] = useActionState(editando ? editarActivo : crearActivo, null);
   useAvisoResultado(estado, "Guardado.");
   return (
-    <FormularioAccion accion={accion} estado={estado} pendiente={accionPendiente} className="space-y-6">
+    <FormularioAccion accion={accion} estado={estado} pendiente={accionPendiente} className="space-y-6" borrador={editando ? undefined : { nombre: "activo", titulo: "Registro de activo", volverA: "/portal/activos" }}>
       {editando && <input type="hidden" name="id" value={v.id} />}
       <fieldset className="grid gap-4 sm:grid-cols-2">
         <legend className="mb-2 text-lg font-semibold">Qué es</legend>

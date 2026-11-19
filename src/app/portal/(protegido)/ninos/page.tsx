@@ -3,6 +3,7 @@ import Link from "next/link";
 import { obtenerSesion } from "@/lib/portal/sesion";
 import { hoyCR } from "@/lib/portal/formato";
 import { ausenciasSeguidas, edad, textoEdad, type EstadoAsistencia } from "@/lib/calculos/ninos";
+import { VolverAlBorrador } from "../../_ui/Borrador";
 import Encabezado from "../../_ui/Encabezado";
 import SinPermiso from "../../_ui/SinPermiso";
 import Tabla from "../../_ui/Tabla";
@@ -52,6 +53,7 @@ export default async function NinosPage() {
   const activos = d.ninos.filter((n) => n.estado === "activo").length;
   return (
     <>
+      <VolverAlBorrador nombre="nino" href="/portal/ninos/nuevo" />
       <Encabezado
         migas={[{ etiqueta: "Niños y niñas" }]}
         titulo="Niños y niñas"

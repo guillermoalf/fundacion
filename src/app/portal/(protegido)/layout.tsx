@@ -5,6 +5,7 @@ import { NOMBRE_ROL, obtenerSesion } from "@/lib/portal/sesion";
 import { fecha } from "@/lib/portal/formato";
 import { cerrarSesion } from "../acciones";
 import { ProveedorAvisos } from "../_ui/Avisos";
+import { ProveedorUsuario } from "../_ui/Borrador";
 import Menu from "../_ui/Menu";
 import { MENU } from "../_ui/navegacion";
 
@@ -42,6 +43,7 @@ export default async function PortalProtegidoLayout({ children }: { children: Re
     perfil.rol === "personal" ? i.personal : !i.roles || i.roles.includes(perfil.rol) || perfil.rol === "superadmin") })).filter((s) => s.items.length);
 
   return (
+    <ProveedorUsuario id={usuario.id}>
     <ProveedorAvisos>
       <Menu
         secciones={secciones}
@@ -68,5 +70,6 @@ export default async function PortalProtegidoLayout({ children }: { children: Re
         <div className="mx-auto max-w-6xl">{children}</div>
       </main>
     </ProveedorAvisos>
+    </ProveedorUsuario>
   );
 }

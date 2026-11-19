@@ -33,7 +33,7 @@ export function FormularioNino({ v = {}, aulas, fuentes, hoy }: { v?: VN; aulas:
   const [estado, accion, pendiente] = useActionState(editando ? editarNino : crearNino, null);
   useAvisoResultado(editando ? estado : null, "Datos guardados.");
   return (
-    <FormularioAccion accion={accion} estado={estado} pendiente={pendiente} reiniciar={false} className="space-y-6">
+    <FormularioAccion accion={accion} estado={estado} pendiente={pendiente} reiniciar={false} className="space-y-6" borrador={editando ? undefined : { nombre: "nino", titulo: "Registro de niño o niña", volverA: "/portal/ninos" }}>
       {editando && <input type="hidden" name="id" value={v.id} />}
       <fieldset className="grid gap-4 sm:grid-cols-2">
         <legend className="mb-2 text-lg font-semibold">Datos del niño o niña</legend>

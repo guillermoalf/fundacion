@@ -3,6 +3,7 @@ import Link from "next/link";
 import { sql } from "kysely";
 import { obtenerSesion } from "@/lib/portal/sesion";
 import { colones, fecha } from "@/lib/portal/formato";
+import { VolverAlBorrador } from "../../_ui/Borrador";
 import Encabezado from "../../_ui/Encabezado";
 import Tabla from "../../_ui/Tabla";
 import Vacio from "../../_ui/Vacio";
@@ -21,6 +22,7 @@ export default async function ComprasPage() {
   const TIPO = { activo: "Activos", consumible: "Inventario", servicio: "Servicios" } as Record<string, string>;
   return (
     <>
+      <VolverAlBorrador nombre="compra" href="/portal/compras/nueva" />
       <Encabezado
         migas={[{ etiqueta: "Compras" }]}
         titulo="Compras"

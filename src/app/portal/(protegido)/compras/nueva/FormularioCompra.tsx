@@ -168,7 +168,17 @@ export default function FormularioCompra({ proveedores, fuentes, productos, ubic
   }
 
   return (
-    <FormularioAccion accion={accion} estado={estado} pendiente={pendiente} reiniciar={false} className="space-y-6">
+    <FormularioAccion accion={accion} estado={estado} pendiente={pendiente} reiniciar={false} className="space-y-6"
+      borrador={{ nombre: "compra", titulo: "Compra", volverA: "/portal/compras", alRestaurar: (d) => {
+        try { const ls = JSON.parse(d.lineas ?? ""); if (Array.isArray(ls) && ls.length) setLineas(ls); } catch { /* borrador viejo */ }
+        if (d.proveedor_nuevo) setProveedorNuevo({ nombre: d.proveedor_nuevo, cedula: d.proveedor_cedula || null });
+        else setProveedorId(d.proveedor_id ?? "");
+        setNumero(d.numero_factura ?? "");
+        if (d.fecha) setFecha(d.fecha);
+        setIva(d.iva ?? "0");
+        if (d.total_factura) setTotalFactura(Number(d.total_factura));
+        if (d.aviso_xml) setAvisoXml(d.aviso_xml);
+      } }}>
       <fieldset className="space-y-3 rounded-2xl border-2 border-dashed border-sky-300 bg-sky-50 p-4">
         <legend className="px-1 text-lg font-semibold">Archivos de la factura</legend>
         <CampoArchivos etiqueta="PDF y los 2 XML de la factura electrónica (o una foto)" name="archivos" alSubir={alSubir}
@@ -220,6 +230,9 @@ export default function FormularioCompra({ proveedores, fuentes, productos, ubic
         </div>
       </div>
       <input type="hidden" name="lineas" value={JSON.stringify(lineas)} />
+      {/* Solo para el borrador: lo que dijo la factura electrónica. */}
+      <input type="hidden" name="total_factura" value={totalFactura ?? ""} />
+      <input type="hidden" name="aviso_xml" value={avisoXml ?? ""} />
       <MensajeError estado={estado} />
       <BotonEnviar pendiente="Guardando la compra…">Registrar compra</BotonEnviar>
     </FormularioAccion>
