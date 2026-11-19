@@ -47,7 +47,6 @@ function datosProducto(f: FormData) {
     categoria: textoObligatorio(f, "categoria", "la categoría") as CategoriaProducto,
     unidad: textoObligatorio(f, "unidad", "la unidad (kg, litro, paquete…)"),
     proveedor_habitual_id: entero(f, "proveedor_habitual_id"),
-    codigo_proveedor: texto(f, "codigo_proveedor"),
     stock_minimo: minimo,
   };
 }
