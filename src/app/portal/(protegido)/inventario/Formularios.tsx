@@ -34,19 +34,19 @@ export function FormularioMovimiento({ productos, hoy, tipoInicial = "salida", p
 
 type VP = { id?: number; nombre?: string; categoria?: string; unidad?: string; proveedor_habitual_id?: number | null; codigo_proveedor?: string | null; stock_minimo?: string; activo?: boolean };
 
-export function FormularioProducto({ v = {}, proveedores }: { v?: VP; proveedores: Opcion[] }) {
-  const editando = v.id !== undefined;
+export function FormularioProducto({ v = {}, proveedores, nuevoConProveedor = false }: { v?: VP; proveedores: Opcion[]; nuevoConProveedor?: boolean }) {
+  const editando = v.id !== undefined && !nuevoConProveedor;
   const [estado, accion, accionPendiente] = useActionState(editando ? editarProducto : crearProducto, null);
   useAvisoResultado(estado, "Producto agregado.");
   return (
     <FormularioAccion accion={accion} estado={estado} pendiente={accionPendiente} className="grid gap-4 sm:grid-cols-2">
       {editando && <input type="hidden" name="id" value={v.id} />}
-      <Campo etiqueta="Nombre" name="nombre" defaultValue={v.nombre} required />
-      <Seleccion etiqueta="Categoría" name="categoria" opciones={opcionesCategoria} defaultValue={v.categoria ?? "no_perecedero"} required />
-      <Campo etiqueta="Unidad" name="unidad" defaultValue={v.unidad ?? ""} required placeholder="kg, litro, paquete, unidad…" />
-      <Campo etiqueta="Mínimo en bodega" name="stock_minimo" inputMode="decimal" defaultValue={v.stock_minimo ?? "0"} ayuda="Se avisa cuando queda menos de esto." />
-      <Seleccion etiqueta="Proveedor habitual" name="proveedor_habitual_id" opciones={proveedores} vacio="—" defaultValue={v.proveedor_habitual_id ?? ""} />
-      <Campo etiqueta="Código del proveedor" name="codigo_proveedor" defaultValue={v.codigo_proveedor ?? ""} ayuda="Ej.: el código de PriceSmart." />
+      <Campo etiqueta="Nombre" name="nombre" id="prod-nombre" defaultValue={v.nombre} required />
+      <Seleccion etiqueta="Categoría" name="categoria" id="prod-categoria" opciones={opcionesCategoria} defaultValue={v.categoria ?? "no_perecedero"} required />
+      <Campo etiqueta="Unidad" name="unidad" id="prod-unidad" defaultValue={v.unidad ?? ""} required placeholder="kg, litro, paquete, unidad…" />
+      <Campo etiqueta="Mínimo en bodega" name="stock_minimo" id="prod-stock_minimo" inputMode="decimal" defaultValue={v.stock_minimo ?? "0"} ayuda="Lo que debe haber al empezar la semana. Se avisa si queda menos y se sugiere en el pedido." />
+      <Seleccion etiqueta="Proveedor habitual" name="proveedor_habitual_id" id="prod-proveedor_habitual_id" opciones={proveedores} vacio="—" defaultValue={v.proveedor_habitual_id ?? ""} />
+      <Campo etiqueta="Código del proveedor" name="codigo_proveedor" id="prod-codigo_proveedor" defaultValue={v.codigo_proveedor ?? ""} ayuda="Ej.: el código de PriceSmart." />
       {editando && <Casilla etiqueta="Activo (aparece en compras y salidas)" name="activo" defaultChecked={v.activo ?? true} />}
       <div className="sm:col-span-2"><MensajeError estado={estado} /></div>
       <div className="sm:col-span-2"><BotonEnviar>{editando ? "Guardar cambios" : "Agregar producto"}</BotonEnviar></div>

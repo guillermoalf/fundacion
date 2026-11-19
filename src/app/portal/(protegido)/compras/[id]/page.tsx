@@ -22,15 +22,16 @@ export default async function CompraPage({ params, searchParams }: { params: Pro
     if (!c) return null;
     const lineas = await tx.selectFrom("compra_lineas").selectAll().where("compra_id", "=", id).orderBy("id").execute();
     const ids = lineas.map((l) => l.id);
+    const archivos = await tx.selectFrom("compra_archivos as ca").innerJoin("archivos as a", "a.id", "ca.archivo_id").select(["a.id", "a.nombre", "a.tipo", "a.tamano"]).where("ca.compra_id", "=", id).orderBy("a.nombre").execute();
     const [activos, entradas, sinFactura] = await Promise.all([
-      ids.length ? tx.selectFrom("activos as a").innerJoin("ubicaciones as u", "u.id", "a.ubicacion_id").select(["a.id", "a.placa", "a.tipo_bien", "a.compra_linea_id", "u.nombre as ubicacion"]).where("a.compra_linea_id", "in", ids).execute() : [],
+      ids.length ? tx.selectFrom("activos as a").leftJoin("ubicaciones as u", "u.id", "a.ubicacion_id").select(["a.id", "a.placa", "a.tipo_bien", "a.compra_linea_id", "u.nombre as ubicacion"]).where("a.compra_linea_id", "in", ids).execute() : [],
       ids.length ? tx.selectFrom("inventario_movimientos as m").innerJoin("productos as p", "p.id", "m.producto_id").select(["m.id", "m.cantidad", "m.fecha_vencimiento", "m.compra_linea_id", "p.nombre", "p.unidad"]).where("m.compra_linea_id", "in", ids).execute() : [],
       tx.selectFrom("activos").select(["id", "placa", "tipo_bien"]).where("compra_linea_id", "is", null).where("estado", "<>", "dado_de_baja").orderBy("tipo_bien").execute(),
     ]);
-    return { c, lineas, activos, entradas, sinFactura };
+    return { c, lineas, activos, entradas, sinFactura, archivos };
   });
   if (!d) notFound();
-  const { c, lineas, activos, entradas, sinFactura } = d;
+  const { c, lineas, activos, entradas, sinFactura, archivos } = d;
   const TIPO = { activo: ["Activo", "azul"], consumible: ["Inventario", "verde"], servicio: ["Servicio", "gris"] } as const;
 
   return (
@@ -80,15 +81,19 @@ export default async function CompraPage({ params, searchParams }: { params: Pro
         </section>
         <aside className="space-y-6">
           <section className={`${estiloTarjeta} space-y-3`}>
-            <h2 className="text-xl font-semibold">Factura</h2>
-            {c.factura_url ? (
+            <h2 className="text-xl font-semibold">Archivos de la factura</h2>
+            {archivos.length > 0 ? (
+              <ul className="space-y-1">
+                {archivos.map((a) => (
+                  <li key={a.id}><a href={`/portal/archivos/${a.id}`} target="_blank" className={estiloBoton.enlace}>{a.tipo.includes("xml") ? "XML" : a.tipo === "application/pdf" ? "PDF" : "Foto"}: {a.nombre}</a></li>
+                ))}
+              </ul>
+            ) : c.factura_url ? (
               <a href={c.factura_url} target="_blank" className={estiloBoton.secundario}>Ver la foto o PDF</a>
             ) : (
-              <>
-                <p><Valor v={null} que="la factura" /> Sin foto de la factura.</p>
-                {puedeEscribir && <AdjuntarFactura id={c.id} />}
-              </>
+              <p><Valor v={null} que="la factura" /> Sin archivos de la factura.</p>
             )}
+            {puedeEscribir && <AdjuntarFactura id={c.id} />}
             {c.observaciones && <p className="whitespace-pre-line text-slate-700">{c.observaciones}</p>}
             <p className="text-sm text-slate-500">Registrada por {c.quien ?? "—"}.</p>
           </section>

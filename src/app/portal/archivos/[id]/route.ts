@@ -16,7 +16,8 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
   return new Response(new Uint8Array(archivo.contenido), {
     headers: {
       "Content-Type": archivo.tipo,
-      "Content-Disposition": `inline; filename*=UTF-8''${encodeURIComponent(archivo.nombre)}`,
+      // Fotos y PDF se abren en el navegador; los XML se descargan (abrirlos como página no es seguro).
+      "Content-Disposition": `${archivo.tipo.includes("xml") ? "attachment" : "inline"}; filename*=UTF-8''${encodeURIComponent(archivo.nombre)}`,
       "Cache-Control": "private, max-age=3600",
       "X-Content-Type-Options": "nosniff",
     },

@@ -73,7 +73,7 @@ src/app/marcar/                  attendance kiosk (tablet + PIN); server side in
 src/views, src/components        landing in JS (from CRA), each component with its own .scss. Don't migrate to TS unless asked
 src/lib/calculos/                depreciation, payroll (+ tests). SOURCE OF TRUTH for calculations
 src/lib/catalogos/anexo2.ts      Anexo 2 rows + sugerirCategoria
-src/lib/importacion/             Excel importer + guardar.ts (__fixtures__ is ignored by git)
+src/lib/importacion/             Excel importer + guardar.ts · facturaElectronica.ts (Hacienda XML) (__fixtures__ is ignored by git)
 src/lib/export/                  auxiliarPani.ts (PANI, official columns) · controlInventario.ts (Formulario N.º 1, alimentos/aseo) · controlLimpieza.ts (Word) · planillaPorFuente.ts
 src/lib/db/                      index.ts (conUsuario) · conexion.ts (owner connection, don't import) · tipos.ts (GENERATED, don't edit by hand)
 src/lib/auth.ts                  Better Auth (email + password, no public sign-up)
@@ -104,7 +104,8 @@ scripts/                         db.mts (migrar/reset/test), crear-admin.mts, ge
 3. **Permissions live only in RLS.** The UI hides buttons for usability, not for security.
 4. **Calculations live only in `src/lib/calculos`** (and their SQL mirror in the migration, kept in parity with `scripts/generar-paridad-depreciacion.ts`). Never compute depreciation, aguinaldo or payroll charges inside components.
 5. **Missing data = `null`, never 0, never invented.** If an asset has no cost or date, depreciation and book value stay empty and show up as a pending item. The system calculates everything from the item's cost; no accountant is involved.
-6. **Every amount has a funding source** (`fuente_id`: PANI, IMAS, JPS, PROPIOS, DONACION). Reports filter by funder.
+6. **Assets vs. low-value items (PANI):** an item is an asset only if its cost per unit exceeds `umbral_activo()` (25 % of `salario_base`, parameters). Everything else is still quantified as inventory with a category.
+7b. **Every amount has a funding source** (`fuente_id`: PANI, IMAS, JPS, PROPIOS, DONACION). Reports filter by funder.
 7. **Rates and legal values live in `parametros` / `tramos_renta` / `categorias_activo`** with an effective date, never in code (screen: `/portal/parametros`).
 8. **Reports for funders use their official columns exactly** (e.g. the PANI Auxiliar de activos). Don't rename or reorder columns.
 9. Money: `numeric(14,2)` in the DB, colones formatted with `es-CR`. Dates: Costa Rica time zone.

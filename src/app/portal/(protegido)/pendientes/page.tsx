@@ -10,6 +10,7 @@ export const metadata: Metadata = { title: "Pendientes" };
 
 /** Qué hacer con cada tipo de pendiente (en palabras de la directora). */
 const AYUDA: Record<string, string> = {
+  "Sin ubicación": "Decidir dónde va a estar y asignarla desde la ficha del activo («Asignar ubicación»).",
   "Sin placa": "Ponerle una placa al bien y anotarla en el activo.",
   "Placa repetida en otro activo": "Dos activos tienen la misma placa: revise cuál es la correcta y corrija la otra.",
   "Sin fecha de adquisición": "Buscar la factura y anotar la fecha de compra (sin fecha no se puede calcular la depreciación).",
@@ -74,14 +75,16 @@ export default async function PendientesPage({ searchParams }: { searchParams: P
               celdas: {
                 activo: a.tipo_bien!,
                 placa: a.placa ?? { texto: "Sin placa", tono: "ambar" },
-                ubicacion: a.ubicacion!,
+                ubicacion: a.ubicacion ?? { texto: "Sin ubicación", tono: "ambar" },
                 alerta: { texto: a.alerta!, tono: "ambar" },
                 accion:
-                  a.alerta === "Sin factura adjunta"
+                  a.alerta === "Sin ubicación"
+                    ? { texto: "Asignar →", href: `/portal/activos/${a.activo_id}` }
+                    : a.alerta === "Sin factura adjunta"
                     ? { texto: "Ir a Compras", href: "/portal/compras" }
                     : puedeEscribir ? { texto: "Completar →", href: `/portal/activos/${a.activo_id}/editar` } : { vacio: true },
               },
-              filtros: { ubicacion: a.ubicacion!, alerta: a.alerta! },
+              filtros: { ubicacion: a.ubicacion ?? "Sin ubicación", alerta: a.alerta! },
             }))}
           />
         </div>

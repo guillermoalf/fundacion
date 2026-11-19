@@ -34,7 +34,8 @@ export default async function ActivosPage() {
         }
         acciones={
           <>
-            {puedeEscribir && <Link href="/portal/activos/nuevo" className={estiloBoton.primario}>+ Nuevo activo</Link>}
+            {puedeEscribir && <Link href="/portal/compras/nueva" className={estiloBoton.primario}>+ Registrar compra (factura)</Link>}
+            {puedeEscribir && <Link href="/portal/activos/nuevo" className={estiloBoton.secundario}>Activo sin factura</Link>}
             {puedeEscribir && <Link href="/portal/activos/importar" className={estiloBoton.secundario}>Importar Excel</Link>}
             <Link href="/portal/activos/etiquetas" className={estiloBoton.secundario}>Imprimir etiquetas</Link>
           </>
@@ -57,14 +58,14 @@ export default async function ActivosPage() {
           celdas: {
             bien: [a.tipo_bien, a.marca].filter(Boolean).join(" · "),
             placa: a.placa,
-            ubicacion: a.ubicacion,
+            ubicacion: a.ubicacion ?? { texto: "Sin ubicación", tono: "ambar" },
             fuente: a.fuente,
             estado: { texto: ESTADOS_ACTIVO[a.estado], tono: TONO_ESTADO[a.estado] },
             costo: colones(a.costo),
             libros: a.estado === "dado_de_baja" ? { vacio: true } : colones(a.valorLibros),
           },
           orden: { costo: a.costo === null ? null : Number(a.costo), libros: a.valorLibros, placa: a.placa },
-          filtros: { ubicacion: a.ubicacion, fuente: a.fuente, estado: ESTADOS_ACTIVO[a.estado], categoria: a.categoria ?? "Sin categoría" },
+          filtros: { ubicacion: a.ubicacion ?? "Sin ubicación", fuente: a.fuente, estado: ESTADOS_ACTIVO[a.estado], categoria: a.categoria ?? "Sin categoría" },
         }))}
         vacio={
           <Vacio

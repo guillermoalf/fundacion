@@ -9,7 +9,7 @@ import { hoyCR } from "./formato";
 export function consultaActivos(tx: Tx) {
   return tx
     .selectFrom("activos as a")
-    .innerJoin("ubicaciones as u", "u.id", "a.ubicacion_id")
+    .leftJoin("ubicaciones as u", "u.id", "a.ubicacion_id")
     .innerJoin("fuentes_financiamiento as f", "f.id", "a.fuente_id")
     .leftJoin("categorias_activo as c", "c.id", "a.categoria_id")
     .select([

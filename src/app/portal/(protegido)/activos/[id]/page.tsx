@@ -43,10 +43,13 @@ export default async function ActivoPage({ params, searchParams }: { params: Pro
         ? tx.selectFrom("compra_lineas as l").innerJoin("compras as c", "c.id", "l.compra_id").select(["c.id", "c.numero_factura", "c.fecha"]).where("l.id", "=", a.compra_linea_id).executeTakeFirst()
         : null,
     ]);
-    return { a: conDepreciacion(a, hoy), cal: calendario(a), movs, ubicaciones, compra };
+    const archivos = compra
+      ? await tx.selectFrom("compra_archivos as ca").innerJoin("archivos as f", "f.id", "ca.archivo_id").select(["f.id", "f.nombre", "f.tipo"]).where("ca.compra_id", "=", compra.id).orderBy("f.nombre").execute()
+      : [];
+    return { a: conDepreciacion(a, hoy), cal: calendario(a), movs, ubicaciones, compra, archivos };
   });
   if (!datos) notFound();
-  const { a, cal, movs, ubicaciones, compra } = datos;
+  const { a, cal, movs, ubicaciones, compra, archivos } = datos;
   const titulo = `${a.tipo_bien}${a.placa ? ` · placa ${a.placa}` : ""}`;
   const deBaja = a.estado === "dado_de_baja";
 
@@ -55,7 +58,7 @@ export default async function ActivoPage({ params, searchParams }: { params: Pro
       <Encabezado
         migas={[{ etiqueta: "Activos", href: "/portal/activos" }, { etiqueta: titulo }]}
         titulo={titulo}
-        descripcion={<>{a.ubicacion} · <Insignia tono={deBaja ? "gris" : "verde"}>{ESTADOS_ACTIVO[a.estado]}</Insignia></>}
+        descripcion={<>{a.ubicacion ?? "Sin ubicación"} · <Insignia tono={deBaja ? "gris" : "verde"}>{ESTADOS_ACTIVO[a.estado]}</Insignia></>}
         acciones={
           <>
             {puedeEscribir && !deBaja && <Link href={`/portal/activos/${a.id}/editar`} className={estiloBoton.primario}>Editar</Link>}
@@ -72,9 +75,16 @@ export default async function ActivoPage({ params, searchParams }: { params: Pro
             <Dato t="Marca">{a.marca ?? "—"}</Dato>
             <Dato t="Modelo">{a.modelo ?? "—"}</Dato>
             <Dato t="Serie">{a.serie ?? "—"}</Dato>
-            <Dato t="Ubicación">{a.ubicacion}</Dato>
+            <Dato t="Ubicación"><Valor v={a.ubicacion} que="la ubicación" /></Dato>
             <Dato t="Fuente">{a.fuente}</Dato>
             <Dato t="Factura">{compra ? <Link className={estiloBoton.enlace} href={`/portal/compras/${compra.id}`}>N.º {compra.numero_factura} ({fecha(compra.fecha)})</Link> : <Falta que="la factura" />}</Dato>
+            {archivos.length > 0 && (
+              <Dato t="Archivos de la factura">
+                <span className="flex flex-col items-end gap-0.5">
+                  {archivos.map((f) => <a key={f.id} href={`/portal/archivos/${f.id}`} target="_blank" className={estiloBoton.enlace}>{f.tipo.includes("xml") ? "XML" : f.tipo === "application/pdf" ? "PDF" : "Foto"}: {f.nombre}</a>)}
+                </span>
+              </Dato>
+            )}
             {a.fila_origen && <Dato t="Importado de">{a.fila_origen}</Dato>}
             {deBaja && <Dato t="Dado de baja">{fecha(a.fecha_baja)} · {a.motivo_baja}</Dato>}
             {a.notas && <Dato t="Notas"><span className="whitespace-pre-line">{a.notas}</span></Dato>}
@@ -123,7 +133,7 @@ export default async function ActivoPage({ params, searchParams }: { params: Pro
           <section className={`${estiloTarjeta} space-y-4 lg:col-span-2`}>
             <h2 className="text-xl font-semibold">Movimientos</h2>
             <div className="flex flex-wrap items-start gap-4">
-              <Traslado id={a.id} hoy={hoy} ubicaciones={opciones(ubicaciones, (u) => u.activo && u.id !== a.ubicacion_id)} />
+              <Traslado id={a.id} hoy={hoy} primera={a.ubicacion_id === null} ubicaciones={opciones(ubicaciones, (u) => u.activo && u.id !== a.ubicacion_id)} />
               <Baja id={a.id} hoy={hoy} />
             </div>
           </section>

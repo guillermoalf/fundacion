@@ -84,7 +84,7 @@ export interface Activos {
   serie: string | null;
   tasa_anual_override: Numeric | null;
   tipo_bien: string;
-  ubicacion_id: number;
+  ubicacion_id: number | null;
   unidades_compra: number | null;
   valor_residual: Generated<Numeric>;
 }
@@ -141,6 +141,12 @@ export interface CategoriasActivo {
   palabras_clave: Generated<string[]>;
   referencia: Generated<string>;
   tasa_anual: Numeric;
+}
+
+export interface CompraArchivos {
+  archivo_id: string;
+  compra_id: string;
+  creado_en: Generated<Timestamp>;
 }
 
 export interface CompraLineas {
@@ -381,6 +387,7 @@ export interface DB {
   ausencias: Ausencias;
   bitacora: Bitacora;
   categorias_activo: CategoriasActivo;
+  compra_archivos: CompraArchivos;
   compra_lineas: CompraLineas;
   compras: Compras;
   conteo_detalle: ConteoDetalle;

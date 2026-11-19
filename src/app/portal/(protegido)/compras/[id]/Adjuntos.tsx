@@ -1,18 +1,18 @@
 "use client";
 
 import { useActionState } from "react";
-import { BotonEnviar, CampoArchivo, MensajeError, FormularioAccion } from "../../../_ui/Formulario";
+import { BotonEnviar, CampoArchivos, MensajeError, FormularioAccion } from "../../../_ui/Formulario";
 import { useAvisoResultado } from "../../../_ui/Avisos";
 import { estiloInput } from "../../../_ui/estilos";
 import { adjuntarFactura, ligarActivo } from "../acciones";
 
 export function AdjuntarFactura({ id }: { id: string }) {
   const [estado, accion, accionPendiente] = useActionState(adjuntarFactura, null);
-  useAvisoResultado(estado, "Factura adjuntada.");
+  useAvisoResultado(estado, "Archivos agregados a la factura.");
   return (
     <FormularioAccion accion={accion} estado={estado} pendiente={accionPendiente} className="space-y-3">
       <input type="hidden" name="id" value={id} />
-      <CampoArchivo etiqueta="Foto o PDF de la factura" name="factura" required />
+      <CampoArchivos etiqueta="PDF, XML o foto de la factura" name="archivos" />
       <MensajeError estado={estado} />
       <BotonEnviar variante="secundario">Adjuntar</BotonEnviar>
     </FormularioAccion>

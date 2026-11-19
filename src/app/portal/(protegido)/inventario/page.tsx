@@ -34,6 +34,8 @@ export default async function InventarioPage() {
         acciones={
           <>
             {puedeEscribir && <Link href="/portal/inventario/movimiento" className={estiloBoton.primario}>Registrar salida o merma</Link>}
+            {puedeEscribir && <Link href="/portal/compras/nueva" className={estiloBoton.secundario}>Registrar compra (factura)</Link>}
+            <Link href="/portal/proveedores" className={estiloBoton.secundario}>Hacer pedido a un proveedor</Link>
             <Link href="/portal/inventario/productos" className={estiloBoton.secundario}>Productos</Link>
             <Link href="/portal/inventario/consumo" className={estiloBoton.secundario}>Consumo mensual</Link>
           </>

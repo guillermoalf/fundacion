@@ -1,7 +1,7 @@
 import type { Tx } from "@/lib/db";
 import { ErrorUsuario } from "./acciones";
 
-export const TIPOS_ARCHIVO = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+export const TIPOS_ARCHIVO = ["image/jpeg", "image/png", "image/webp", "application/pdf", "application/xml", "text/xml"];
 /** Tope por archivo: 5 MB (los PDF suben tal cual; las fotos llegan comprimidas del navegador). */
 export const TOPE_ARCHIVO = 5 * 1024 * 1024;
 
@@ -23,7 +23,7 @@ export async function guardarArchivo(tx: Tx, valor: FormDataEntryValue | null): 
     return rutaArchivo(a.id);
   }
   if (valor.size === 0) return null;
-  if (!TIPOS_ARCHIVO.includes(valor.type)) throw new ErrorUsuario("El archivo debe ser una foto (JPG o PNG) o un PDF.");
+  if (!TIPOS_ARCHIVO.includes(valor.type)) throw new ErrorUsuario("El archivo debe ser una foto (JPG o PNG), un PDF o un XML de factura electrónica.");
   if (valor.size > TOPE_ARCHIVO) throw new ErrorUsuario("El archivo pesa más de 5 MB. Use un PDF más liviano.");
   const { id } = await tx
     .insertInto("archivos")
@@ -31,4 +31,10 @@ export async function guardarArchivo(tx: Tx, valor: FormDataEntryValue | null): 
     .returning("id")
     .executeTakeFirstOrThrow();
   return rutaArchivo(id);
+}
+
+/** Ids de varios archivos ya subidos (campo de CampoArchivos: lista separada por comas). */
+export function idsArchivos(valor: FormDataEntryValue | null): string[] {
+  if (!valor || typeof valor !== "string") return [];
+  return valor.split(",").map((x) => x.trim()).filter((x) => /^[0-9a-f-]{36}$/i.test(x));
 }
