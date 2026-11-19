@@ -45,16 +45,17 @@ export default async function PortalProtegidoLayout({ children }: { children: Re
     <ProveedorAvisos>
       <Menu
         secciones={secciones}
+        inicial={perfil.nombre.trim().charAt(0).toUpperCase()}
         cabecera={
           <Link href="/portal" className="block shrink-0">
-            <img src={logo.src} alt="Fundación Creciendo Feliz" className="h-10 w-auto lg:h-12" />
+            <img src={logo.src} alt="Fundación Creciendo Feliz" className="h-10 w-auto max-w-none" />
           </Link>
         }
         pie={
           <div className="space-y-3">
             <div className="text-base leading-tight">
               <div className="font-semibold">{perfil.nombre}</div>
-              <div className="text-sm text-slate-500">
+              <div className="text-sm text-slate-300">
                 {NOMBRE_ROL[perfil.rol]}
                 {perfil.acceso_hasta && ` · acceso hasta ${fecha(perfil.acceso_hasta)}`}
               </div>
@@ -63,7 +64,7 @@ export default async function PortalProtegidoLayout({ children }: { children: Re
           </div>
         }
       />
-      <main className="px-4 py-6 sm:px-6 lg:ml-72 lg:px-10 lg:py-8">
+      <main className="px-4 py-6 sm:px-6 lg:ml-20 lg:px-10 lg:py-8">
         <div className="mx-auto max-w-6xl">{children}</div>
       </main>
     </ProveedorAvisos>
