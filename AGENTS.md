@@ -59,7 +59,7 @@ For UI changes, also check in the browser (`npm run dev`) at desktop and mobile 
   - One branch per task: `portal/<feature>`, `sitio/<change>` or `docs/<change>`. Short commits in Spanish, imperative ("agrega importador de activos").
   - When the task is finished and the definition of done passes: push the branch and tell him it's ready for review. **Merge into `staging` (`--no-ff`) and push it only after his OK**: `staging` is production.
   - **Never delete branches** (neither local nor remote), even after merging them.
-  - **`staging` deploys to production** (Vercel production branch → fundacioncreciendofeliz.com; every merge applies pending migrations to the production database). Feature branches get their own Preview URL for review. `main` is no longer used: never push or merge to it.
+  - **`staging` deploys to production** (Vercel production branch → fundacioncreciendofeliz.com; every merge applies pending migrations to the production database). Feature branches (`portal/*`, `sitio/*`, `docs/*`) do NOT deploy previews (`vercel.json`): each preview created a Neon branch and the free plan's 10 filled up. Review locally; only `staging` deploys. `main` is no longer used: never push or merge to it.
 - Never use `--force`, never rewrite pushed history, never `--no-verify`.
 
 ## Map
