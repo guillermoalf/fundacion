@@ -57,7 +57,7 @@ For UI changes, also check in the browser (`npm run dev`) at desktop and mobile 
 - **Branch flow (always, without being reminded):**
   - `staging` is the reference branch and always the newest code. **Every new task starts from an up-to-date `staging`** (`git checkout staging && git pull` → `git checkout -b <prefix>/<name>`). Never branch from `main` or from another feature branch.
   - One branch per task: `portal/<feature>`, `sitio/<change>` or `docs/<change>`. Short commits in Spanish, imperative ("agrega importador de activos").
-  - When the task is finished and the definition of done passes: push the branch and tell him it's ready for review. **Merge into `staging` (`--no-ff`) and push it only after his OK**: `staging` is production.
+  - When the task is finished and the definition of done passes: push the branch, **merge it into `staging` (`--no-ff`) and push `staging` without asking** (Guillermo's decision, 2026-11-20). Then check the production deploy on Vercel (READY, migration applied) and report. `staging` is production: the plan step for medium/large tasks still applies, and the definition of done must pass before merging.
   - **Never delete branches** (neither local nor remote), even after merging them.
   - **`staging` deploys to production** (Vercel production branch → fundacioncreciendofeliz.com; every merge applies pending migrations to the production database). Feature branches (`portal/*`, `sitio/*`, `docs/*`) do NOT deploy previews (`vercel.json`): each preview created a Neon branch and the free plan's 10 filled up. Review locally; only `staging` deploys. `main` is no longer used: never push or merge to it.
 - Never use `--force`, never rewrite pushed history, never `--no-verify`.
