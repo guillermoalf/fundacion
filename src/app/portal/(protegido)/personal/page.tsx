@@ -32,6 +32,7 @@ export default async function PersonalPage() {
         acciones={puedeEscribir && <Link href="/portal/personal/nuevo" className={estiloBoton.primario}>+ Agregar persona</Link>}
       />
       <Tabla
+        numerar
         columnas={[
           { clave: "nombre", titulo: "Nombre" }, { clave: "puesto", titulo: "Puesto" }, { clave: "aula", titulo: "Aula" },
           { clave: "fuente", titulo: "Salario pagado por" }, ...(veSalarios ? [{ clave: "salario", titulo: "Salario", alinear: "derecha" as const, ocultarEnMovil: true }] : []),

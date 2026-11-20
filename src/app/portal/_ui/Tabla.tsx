@@ -71,7 +71,7 @@ const esFecha = (v: unknown) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.te
  * se guardan por usuario (cada quien ve sus listas como las dejó, en cualquier computadora).
  */
 export default function Tabla({
-  columnas, filas, filtros = [], porPagina = 25, buscador = true, vacio, enlaceEn, id,
+  columnas, filas, filtros = [], porPagina = 25, buscador = true, vacio, enlaceEn, id, numerar = false,
 }: {
   columnas: Columna[];
   filas: Fila[];
@@ -83,6 +83,8 @@ export default function Tabla({
   enlaceEn?: string;
   /** identifica la lista para guardar las preferencias (por defecto, la dirección de la página) */
   id?: string;
+  /** muestra el número de cada fila (1, 2, 3…) según el orden y los filtros actuales */
+  numerar?: boolean;
 }) {
   const pathname = usePathname();
   const idTabla = id ?? pathname;
@@ -317,6 +319,7 @@ export default function Tabla({
             <table className="w-full text-left text-base">
               <thead className="border-b border-slate-200 bg-slate-50 text-sm text-slate-600">
                 <tr>
+                  {numerar && <th scope="col" className="w-12 px-4 py-3 text-right font-semibold">#</th>}
                   {columnasVisibles.map((c) => (
                     <th key={c.clave} scope="col" className={`px-4 py-3 font-semibold ${c.alinear === "derecha" ? "text-right" : ""}`}>
                       <button type="button" className="hover:text-slate-900"
@@ -329,8 +332,9 @@ export default function Tabla({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {enPagina.map((f) => (
+                {enPagina.map((f, i) => (
                   <tr key={f.id} className="hover:bg-slate-50">
+                    {numerar && <td className="px-4 py-3 text-right align-top tabular-nums text-slate-500">{(actual - 1) * porPagina + i + 1}</td>}
                     {columnasVisibles.map((c) => (
                       <td key={c.clave} className={`px-4 py-3 align-top ${c.alinear === "derecha" ? "text-right tabular-nums" : ""}`}>
                         <VerCelda c={f.celdas[c.clave] ?? { vacio: true }} href={c.clave === colEnlace ? f.href : undefined} />
@@ -344,8 +348,9 @@ export default function Tabla({
 
           {/* Celular: tarjetas */}
           <ul className="space-y-3 md:hidden">
-            {enPagina.map((f) => (
+            {enPagina.map((f, i) => (
               <li key={f.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                {numerar && <p className="mb-1 text-sm font-semibold text-slate-500">N.º {(actual - 1) * porPagina + i + 1}</p>}
                 <dl className="space-y-1.5">
                   {columnasVisibles.filter((c) => !c.ocultarEnMovil).map((c, i) => (
                     <div key={c.clave} className={i === 0 ? "text-lg font-semibold" : "flex justify-between gap-3 text-base"}>
