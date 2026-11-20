@@ -12,6 +12,7 @@ import { historialPrecios } from "@/lib/portal/precios";
 import { variacion } from "@/lib/calculos/precios";
 import { categoriasProducto } from "@/lib/portal/catalogos";
 import { opcionesCategoria } from "../../datos";
+import { alfa } from "@/lib/db/orden";
 
 export const metadata: Metadata = { title: "Producto" };
 const TIPO = { entrada: ["Entrada", "verde"], salida: ["Salida", "azul"], merma: ["Merma", "rojo"], ajuste: ["Ajuste", "gris"] } as const;
@@ -26,7 +27,7 @@ export default async function ProductoPage({ params, searchParams }: { params: P
     const movs = await tx.selectFrom("inventario_movimientos as m").leftJoin("compra_lineas as l", "l.id", "m.compra_linea_id").leftJoin("compras as c", "c.id", "l.compra_id")
       .select(["m.id", "m.tipo", "m.cantidad", "m.fecha", "m.entregado_a", "m.motivo", "m.fecha_vencimiento", "c.id as compra_id", "c.numero_factura"])
       .where("m.producto_id", "=", id).orderBy("m.fecha").orderBy("m.creado_en").execute();
-    const proveedores = await tx.selectFrom("proveedores").select(["id", "nombre"]).orderBy("nombre").execute();
+    const proveedores = await tx.selectFrom("proveedores").select(["id", "nombre"]).orderBy(alfa("nombre")).execute();
     return { p, movs, proveedores, cats: await categoriasProducto(tx), precios: await historialPrecios(tx, id) };
   });
   if (!d) notFound();

@@ -7,6 +7,7 @@ import Encabezado from "../../../_ui/Encabezado";
 import { Insignia, Valor } from "../../../_ui/Insignias";
 import { estiloBoton, estiloTarjeta } from "../../../_ui/estilos";
 import { AdjuntarFactura, LigarActivo } from "./Adjuntos";
+import { alfa } from "@/lib/db/orden";
 
 export const metadata: Metadata = { title: "Compra" };
 
@@ -22,11 +23,11 @@ export default async function CompraPage({ params, searchParams }: { params: Pro
     if (!c) return null;
     const lineas = await tx.selectFrom("compra_lineas").selectAll().where("compra_id", "=", id).orderBy("id").execute();
     const ids = lineas.map((l) => l.id);
-    const archivos = await tx.selectFrom("compra_archivos as ca").innerJoin("archivos as a", "a.id", "ca.archivo_id").select(["a.id", "a.nombre", "a.tipo", "a.tamano"]).where("ca.compra_id", "=", id).orderBy("a.nombre").execute();
+    const archivos = await tx.selectFrom("compra_archivos as ca").innerJoin("archivos as a", "a.id", "ca.archivo_id").select(["a.id", "a.nombre", "a.tipo", "a.tamano"]).where("ca.compra_id", "=", id).orderBy(alfa("a.nombre")).execute();
     const [activos, entradas, sinFactura] = await Promise.all([
       ids.length ? tx.selectFrom("activos as a").leftJoin("ubicaciones as u", "u.id", "a.ubicacion_id").select(["a.id", "a.placa", "a.tipo_bien", "a.compra_linea_id", "u.nombre as ubicacion"]).where("a.compra_linea_id", "in", ids).execute() : [],
       ids.length ? tx.selectFrom("inventario_movimientos as m").innerJoin("productos as p", "p.id", "m.producto_id").select(["m.id", "m.cantidad", "m.fecha_vencimiento", "m.compra_linea_id", "p.nombre", "p.unidad"]).where("m.compra_linea_id", "in", ids).execute() : [],
-      tx.selectFrom("activos").select(["id", "placa", "tipo_bien"]).where("compra_linea_id", "is", null).where("estado", "<>", "dado_de_baja").orderBy("tipo_bien").execute(),
+      tx.selectFrom("activos").select(["id", "placa", "tipo_bien"]).where("compra_linea_id", "is", null).where("estado", "<>", "dado_de_baja").orderBy(alfa("tipo_bien")).execute(),
     ]);
     return { c, lineas, activos, entradas, sinFactura, archivos };
   });

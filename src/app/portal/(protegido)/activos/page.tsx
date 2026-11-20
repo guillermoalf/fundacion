@@ -9,6 +9,7 @@ import Encabezado from "../../_ui/Encabezado";
 import Tabla from "../../_ui/Tabla";
 import Vacio from "../../_ui/Vacio";
 import { estiloBoton } from "../../_ui/estilos";
+import { alfa } from "@/lib/db/orden";
 
 export const metadata: Metadata = { title: "Activos" };
 
@@ -17,7 +18,7 @@ const TONO_ESTADO = { en_uso: "verde", en_reparacion: "ambar", en_bodega: "gris"
 export default async function ActivosPage() {
   const { consultar, puedeEscribir } = await obtenerSesion();
   const hoy = hoyCR();
-  const activos = (await consultar((tx) => consultaActivos(tx).orderBy("u.nombre").orderBy("a.placa").execute())).map((a) => conDepreciacion(a, hoy));
+  const activos = (await consultar((tx) => consultaActivos(tx).orderBy(alfa("u.nombre")).orderBy("a.placa").execute())).map((a) => conDepreciacion(a, hoy));
   const vigentes = activos.filter((a) => a.estado !== "dado_de_baja");
   const totalLibros = vigentes.reduce((s, a) => s + (a.valorLibros ?? 0), 0);
   const sinValor = vigentes.filter((a) => a.valorLibros === null).length;

@@ -4,6 +4,7 @@ import { fecha as fechaTexto, hoyCR } from "@/lib/portal/formato";
 import Encabezado from "../../../_ui/Encabezado";
 import SinPermiso from "../../../_ui/SinPermiso";
 import Lista from "./Lista";
+import { alfa } from "@/lib/db/orden";
 
 export const metadata: Metadata = { title: "Pasar lista" };
 
@@ -19,7 +20,7 @@ export default async function ListaPage({ searchParams }: { searchParams: Promis
       .select(["n.id", "n.nombre", "n.apellidos", "n.alergias", "n.aula_id", "u.nombre as aula"])
       .where("n.fecha_ingreso", "<=", dia)
       .where((eb) => eb.or([eb("n.estado", "=", "activo"), eb("n.fecha_retiro", ">=", dia)]))
-      .orderBy("n.nombre").orderBy("n.apellidos").execute(),
+      .orderBy(alfa("n.nombre")).orderBy(alfa("n.apellidos")).execute(),
     marcas: await tx.selectFrom("asistencia_ninos").select(["nino_id", "estado", "hora_llegada", "motivo"]).where("fecha", "=", dia).execute(),
   }));
   const aulas = [...new Map(d.ninos.map((n) => [n.aula_id ?? 0, n.aula ?? "Sin aula"])).entries()].sort((a, b) => a[1].localeCompare(b[1]));

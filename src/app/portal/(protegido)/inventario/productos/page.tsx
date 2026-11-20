@@ -9,6 +9,7 @@ import { opcionesCategoria } from "../datos";
 import { celdaPrecio, ultimosPrecios } from "@/lib/portal/precios";
 import { fecha } from "@/lib/portal/formato";
 import { FormularioProducto } from "../Formularios";
+import { alfa } from "@/lib/db/orden";
 
 export const metadata: Metadata = { title: "Productos" };
 
@@ -18,8 +19,8 @@ export default async function ProductosPage() {
     cats: await categoriasProducto(tx),
     precios: await ultimosPrecios(tx),
     productos: await tx.selectFrom("productos as p").leftJoin("proveedores as pr", "pr.id", "p.proveedor_habitual_id")
-      .select(["p.id", "p.nombre", "p.categoria", "p.unidad", "p.stock_minimo", "p.activo", "pr.nombre as proveedor"]).orderBy("p.nombre").execute(),
-    proveedores: await tx.selectFrom("proveedores").select(["id", "nombre"]).where("activo", "=", true).orderBy("nombre").execute(),
+      .select(["p.id", "p.nombre", "p.categoria", "p.unidad", "p.stock_minimo", "p.activo", "pr.nombre as proveedor"]).orderBy(alfa("p.nombre")).execute(),
+    proveedores: await tx.selectFrom("proveedores").select(["id", "nombre"]).where("activo", "=", true).orderBy(alfa("nombre")).execute(),
   }));
   const nombreCat = new Map(cats.map((c) => [c.codigo, c.nombre]));
   return (

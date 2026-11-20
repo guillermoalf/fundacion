@@ -7,6 +7,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { sql } from "kysely";
 import { verifyPassword } from "better-auth/crypto";
 import { dbDueno } from "@/lib/db/conexion";
+import { alfa } from "@/lib/db/orden";
 
 export const COOKIE_KIOSKO = "kiosko_token";
 /** Intentos fallidos permitidos por persona en la ventana, y por tablet (alguien probando con todos). */
@@ -24,7 +25,7 @@ export async function dispositivoPorToken(token: string | undefined) {
 }
 
 export async function personalParaKiosko() {
-  return dbDueno.selectFrom("empleados").select(["id", "nombre", "foto_url"]).where("activo", "=", true).orderBy("nombre").execute();
+  return dbDueno.selectFrom("empleados").select(["id", "nombre", "foto_url"]).where("activo", "=", true).orderBy(alfa("nombre")).execute();
 }
 
 /** Foto de una persona activa (solo la sirve a una tablet registrada). */

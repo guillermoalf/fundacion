@@ -8,6 +8,7 @@ import { asistenciaDelMes } from "@/lib/portal/ninos";
 import Encabezado from "../../../_ui/Encabezado";
 import SinPermiso from "../../../_ui/SinPermiso";
 import { estiloBoton, estiloTarjeta } from "../../../_ui/estilos";
+import { alfa } from "@/lib/db/orden";
 
 export const metadata: Metadata = { title: "Asistencia de niños" };
 
@@ -24,7 +25,7 @@ export default async function AsistenciaNinosPage({ searchParams }: { searchPara
   const d = await consultar(async (tx) => ({
     ...(await asistenciaDelMes(tx, mes, { fuente, aula })),
     fuentes: await tx.selectFrom("fuentes_financiamiento").select(["codigo", "nombre"]).orderBy("id").execute(),
-    aulas: await tx.selectFrom("ubicaciones").select(["id", "nombre"]).orderBy("nombre").execute(),
+    aulas: await tx.selectFrom("ubicaciones").select(["id", "nombre"]).orderBy(alfa("nombre")).execute(),
   }));
   const general = resumenAsistencia(d.filas.flatMap((f) => Object.values(f.porDia)));
   const qs = new URLSearchParams({ mes, ...(fuente ? { fuente } : {}), ...(aula ? { aula: String(aula) } : {}) }).toString();

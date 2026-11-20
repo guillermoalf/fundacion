@@ -5,6 +5,7 @@ import Encabezado from "../../_ui/Encabezado";
 import Tabla from "../../_ui/Tabla";
 import { estiloTarjeta } from "../../_ui/estilos";
 import { FormularioCategoria } from "./Formularios";
+import { alfa } from "@/lib/db/orden";
 
 export const metadata: Metadata = { title: "Tabla de depreciación" };
 
@@ -15,7 +16,7 @@ export default async function DepreciacionPage({ searchParams }: { searchParams:
     tx.selectFrom("categorias_activo as c")
       .select(["c.id", "c.nombre", "c.tasa_anual", "c.anios_vida", "c.referencia", "c.activa", "c.palabras_clave",
         sql<number>`(select count(*)::int from activos a where a.categoria_id = c.id and a.estado <> 'dado_de_baja')`.as("en_uso")])
-      .orderBy("c.nombre").execute(),
+      .orderBy(alfa("c.nombre")).execute(),
   );
 
   return (

@@ -1,12 +1,13 @@
 import { sql } from "kysely";
 import type { Tx } from "@/lib/db";
+import { alfa } from "@/lib/db/orden";
 
 /** Listas que usan los formularios (solo lo activo, ordenado para mostrar). */
 export async function catalogosActivos(tx: Tx) {
   const [ubicaciones, fuentes, categorias] = await Promise.all([
-    tx.selectFrom("ubicaciones").select(["id", "nombre", "activo"]).orderBy("nombre").execute(),
+    tx.selectFrom("ubicaciones").select(["id", "nombre", "activo"]).orderBy(alfa("nombre")).execute(),
     tx.selectFrom("fuentes_financiamiento").select(["id", "codigo", "nombre", "activo"]).orderBy("id").execute(),
-    tx.selectFrom("categorias_activo").select(["id", "nombre", "tasa_anual", "anios_vida", "palabras_clave", "activa"]).orderBy("nombre").execute(),
+    tx.selectFrom("categorias_activo").select(["id", "nombre", "tasa_anual", "anios_vida", "palabras_clave", "activa"]).orderBy(alfa("nombre")).execute(),
   ]);
   return { ubicaciones, fuentes, categorias };
 }
@@ -32,4 +33,4 @@ export async function umbralActivo(tx: Tx, fecha?: string | null): Promise<numbe
 
 /** Categorías de productos del inventario, en su orden (activas e inactivas). */
 export const categoriasProducto = (tx: Tx) =>
-  tx.selectFrom("categorias_producto").select(["codigo", "nombre", "reporte", "activo"]).orderBy("orden").orderBy("nombre").execute();
+  tx.selectFrom("categorias_producto").select(["codigo", "nombre", "reporte", "activo"]).orderBy("orden").orderBy(alfa("nombre")).execute();

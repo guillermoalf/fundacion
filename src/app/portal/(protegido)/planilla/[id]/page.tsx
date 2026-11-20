@@ -10,6 +10,7 @@ import { Insignia } from "../../../_ui/Insignias";
 import { estiloBoton, estiloTarjeta } from "../../../_ui/estilos";
 import { AjusteLinea, BotonEstado } from "../Formularios";
 import { ESTADOS } from "../estados";
+import { alfa } from "@/lib/db/orden";
 
 export const metadata: Metadata = { title: "Planilla" };
 
@@ -24,7 +25,7 @@ export default async function PlanillaDetallePage({ params }: { params: Promise<
     const p = await tx.selectFrom("planillas as p").leftJoin("perfiles as u", "u.id", "p.aprobada_por").select(["p.id", "p.periodo_inicio", "p.periodo_fin", "p.tipo", "p.estado", "p.aprobada_en", "u.nombre as aprobo"]).where("p.id", "=", id).executeTakeFirst();
     if (!p) return null;
     const lineas = await tx.selectFrom("planilla_lineas as l").innerJoin("empleados as e", "e.id", "l.empleado_id").leftJoin("fuentes_financiamiento as f", "f.id", "l.fuente_id")
-      .selectAll("l").select(["e.nombre", "e.puesto", "f.codigo as fuente"]).where("l.planilla_id", "=", id).orderBy("f.codigo").orderBy("e.nombre").execute();
+      .selectAll("l").select(["e.nombre", "e.puesto", "f.codigo as fuente"]).where("l.planilla_id", "=", id).orderBy("f.codigo").orderBy(alfa("e.nombre")).execute();
     const fuentes = await tx.selectFrom("fuentes_financiamiento").select(["id", "codigo"]).execute();
     const vacaciones = (await saldosVacaciones(tx, p.periodo_fin, lineas.map((l) => l.empleado_id))).saldos;
     return { p, lineas, fuentes, vacaciones };

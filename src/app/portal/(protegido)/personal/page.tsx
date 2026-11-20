@@ -9,6 +9,7 @@ import Encabezado from "../../_ui/Encabezado";
 import Tabla from "../../_ui/Tabla";
 import Vacio from "../../_ui/Vacio";
 import { estiloBoton } from "../../_ui/estilos";
+import { alfa } from "@/lib/db/orden";
 
 export const metadata: Metadata = { title: "Personal" };
 
@@ -19,7 +20,7 @@ export default async function PersonalPage() {
     aportes: veSalarios ? await tx.selectFrom("salario_aportes as a").innerJoin("fuentes_financiamiento as f", "f.id", "a.fuente_id")
       .select(["a.empleado_id", "a.vigente_desde", "a.monto", "f.codigo"]).where("a.vigente_desde", "<=", hoyCR()).orderBy("a.vigente_desde", "desc").execute() : [],
     personas: await tx.selectFrom("empleados as e").leftJoin("ubicaciones as u", "u.id", "e.ubicacion_id").leftJoin("fuentes_financiamiento as f", "f.id", "e.fuente_id")
-      .select(["e.id", "e.nombre", "e.puesto", sql<string | null>`salario_vigente(e.id)`.as("salario_mensual"), "e.fecha_ingreso", "e.activo", "u.nombre as aula", "f.codigo as fuente"]).orderBy("e.activo", "desc").orderBy("e.nombre").execute(),
+      .select(["e.id", "e.nombre", "e.puesto", sql<string | null>`salario_vigente(e.id)`.as("salario_mensual"), "e.fecha_ingreso", "e.activo", "u.nombre as aula", "f.codigo as fuente"]).orderBy("e.activo", "desc").orderBy(alfa("e.nombre")).execute(),
     conPin: new Set((await sql<{ empleados_con_pin: string }>`select empleados_con_pin()`.execute(tx)).rows.map((r) => r.empleados_con_pin)),
   }));
   return (

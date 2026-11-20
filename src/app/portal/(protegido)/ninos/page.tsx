@@ -10,6 +10,7 @@ import Tabla from "../../_ui/Tabla";
 import Vacio from "../../_ui/Vacio";
 import { estiloBoton } from "../../_ui/estilos";
 import { AVISO_AUSENCIAS } from "./datos";
+import { alfa } from "@/lib/db/orden";
 
 export const metadata: Metadata = { title: "Niños y niñas" };
 
@@ -20,7 +21,7 @@ export default async function NinosPage() {
   const d = await consultar(async (tx) => {
     const ninos = await tx.selectFrom("ninos as n").leftJoin("ubicaciones as u", "u.id", "n.aula_id").leftJoin("fuentes_financiamiento as f", "f.id", "n.fuente_id")
       .select(["n.id", "n.nombre", "n.apellidos", "n.fecha_nacimiento", "n.estado", "n.identificacion", "n.alergias", "u.nombre as aula", "f.codigo as fuente"])
-      .orderBy("n.estado").orderBy("n.nombre").orderBy("n.apellidos").execute();
+      .orderBy("n.estado").orderBy(alfa("n.nombre")).orderBy(alfa("n.apellidos")).execute();
     const responsables = await tx.selectFrom("responsables_nino").select(["nino_id", "nombre", "parentesco", "telefono", "es_legal", "orden"])
       .where("activo", "=", true).orderBy("orden").orderBy("id").execute();
     const asistencia = await tx.selectFrom("asistencia_ninos").select(["nino_id", "fecha", "estado"])

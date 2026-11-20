@@ -9,6 +9,7 @@ import Encabezado from "../../../_ui/Encabezado";
 import { Falta, Insignia, Valor } from "../../../_ui/Insignias";
 import { estiloBoton, estiloTarjeta } from "../../../_ui/estilos";
 import { Baja, Traslado } from "./Acciones";
+import { alfa } from "@/lib/db/orden";
 
 export const metadata: Metadata = { title: "Activo" };
 
@@ -38,13 +39,13 @@ export default async function ActivoPage({ params, searchParams }: { params: Pro
         .leftJoin("perfiles as p", "p.id", "m.registrado_por")
         .select(["m.id", "m.tipo", "m.fecha", "m.motivo", "m.documento_url", "m.creado_en", "o.nombre as origen", "d.nombre as destino", "p.nombre as quien"])
         .where("m.activo_id", "=", id).orderBy("m.creado_en", "desc").execute(),
-      tx.selectFrom("ubicaciones").select(["id", "nombre", "activo"]).orderBy("nombre").execute(),
+      tx.selectFrom("ubicaciones").select(["id", "nombre", "activo"]).orderBy(alfa("nombre")).execute(),
       a.compra_linea_id
         ? tx.selectFrom("compra_lineas as l").innerJoin("compras as c", "c.id", "l.compra_id").select(["c.id", "c.numero_factura", "c.fecha"]).where("l.id", "=", a.compra_linea_id).executeTakeFirst()
         : null,
     ]);
     const archivos = compra
-      ? await tx.selectFrom("compra_archivos as ca").innerJoin("archivos as f", "f.id", "ca.archivo_id").select(["f.id", "f.nombre", "f.tipo"]).where("ca.compra_id", "=", compra.id).orderBy("f.nombre").execute()
+      ? await tx.selectFrom("compra_archivos as ca").innerJoin("archivos as f", "f.id", "ca.archivo_id").select(["f.id", "f.nombre", "f.tipo"]).where("ca.compra_id", "=", compra.id).orderBy(alfa("f.nombre")).execute()
       : [];
     return { a: conDepreciacion(a, hoy), cal: calendario(a), movs, ubicaciones, compra, archivos };
   });

@@ -10,6 +10,7 @@ import { Insignia } from "../../../_ui/Insignias";
 import { estiloTarjeta } from "../../../_ui/estilos";
 import { FormularioNino, FormularioNota, FormularioReingreso, FormularioResponsable, FormularioRetiro } from "../Formularios";
 import { ESTADOS_ASISTENCIA } from "../datos";
+import { alfa } from "@/lib/db/orden";
 
 export const metadata: Metadata = { title: "Niño o niña" };
 
@@ -39,7 +40,7 @@ export default async function NinoPage({ params, searchParams }: { params: Promi
         ? await tx.selectFrom("notas_nino as t").leftJoin("perfiles as p", "p.id", "t.autor").select(["t.id", "t.fecha", "t.texto", "p.nombre as autor"]).where("t.nino_id", "=", id).orderBy("t.fecha", "desc").orderBy("t.id", "desc").execute()
         : [],
       asistencia: await tx.selectFrom("asistencia_ninos").select(["fecha", "estado", "hora_llegada", "motivo"]).where("nino_id", "=", id).where("fecha", ">=", desde).where("fecha", "<=", hasta).orderBy("fecha", "desc").execute(),
-      aulas: editaNinos ? await tx.selectFrom("ubicaciones").select(["id", "nombre"]).orderBy("nombre").execute() : [],
+      aulas: editaNinos ? await tx.selectFrom("ubicaciones").select(["id", "nombre"]).orderBy(alfa("nombre")).execute() : [],
       fuentes: editaNinos ? await tx.selectFrom("fuentes_financiamiento").select(["id", "codigo", "nombre"]).orderBy("id").execute() : [],
     };
   });

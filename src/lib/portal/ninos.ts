@@ -2,6 +2,7 @@ import type { Tx } from "@/lib/db";
 import { rangoMes } from "@/lib/portal/formato";
 import type { EstadoAsistencia } from "@/lib/calculos/ninos";
 import type { FilaAsistenciaNino } from "@/lib/export/asistenciaNinos";
+import { alfa } from "@/lib/db/orden";
 
 /**
  * Asistencia de un mes "YYYY-MM": los niños que estuvieron en la fundación ese mes (aunque luego se retiraran)
@@ -15,7 +16,7 @@ export async function asistenciaDelMes(tx: Tx, mes: string, filtro: { fuente?: s
     .where((eb) => eb.or([eb("n.estado", "=", "activo"), eb("n.fecha_retiro", ">=", desde)]));
   if (filtro.fuente) q = q.where("f.codigo", "=", filtro.fuente);
   if (filtro.aula) q = q.where("n.aula_id", "=", filtro.aula);
-  const ninos = await q.orderBy("n.nombre").orderBy("n.apellidos").execute();
+  const ninos = await q.orderBy(alfa("n.nombre")).orderBy(alfa("n.apellidos")).execute();
   const marcas = ninos.length
     ? await tx.selectFrom("asistencia_ninos").select(["nino_id", "fecha", "estado"]).where("fecha", ">=", desde).where("fecha", "<=", hasta)
       .where("nino_id", "in", ninos.map((n) => n.id)).execute()

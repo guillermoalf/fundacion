@@ -8,6 +8,7 @@ import SinPermiso from "../../_ui/SinPermiso";
 import Vacio from "../../_ui/Vacio";
 import { Insignia } from "../../_ui/Insignias";
 import { estiloBoton, estiloEtiqueta, estiloInput } from "../../_ui/estilos";
+import { alfa } from "@/lib/db/orden";
 
 export const metadata: Metadata = { title: "Bitácora" };
 
@@ -63,7 +64,7 @@ export default async function BitacoraPage({ searchParams }: { searchParams: Pro
     if (sp.registro) q = q.where("b.registro_id", "=", sp.registro);
     return {
       filas: await q.orderBy("b.id", "desc").limit(POR_PAGINA + 1).offset((pagina - 1) * POR_PAGINA).execute(),
-      usuarios: await tx.selectFrom("perfiles").select(["id", "nombre"]).orderBy("nombre").execute(),
+      usuarios: await tx.selectFrom("perfiles").select(["id", "nombre"]).orderBy(alfa("nombre")).execute(),
       llaves: esSuperadmin ? new Map((await sql<{ tabla: string; llave: string[] }>`select * from tablas_corregibles()`.execute(tx)).rows.map((r) => [r.tabla, r.llave])) : new Map<string, string[]>(),
     };
   });
