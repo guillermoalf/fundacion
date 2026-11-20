@@ -6,6 +6,7 @@ import Encabezado from "../../../_ui/Encabezado";
 import Vacio from "../../../_ui/Vacio";
 import { estiloBoton, estiloInput } from "../../../_ui/estilos";
 import BotonImprimir from "./BotonImprimir";
+import { alfa } from "@/lib/db/orden";
 
 export const metadata: Metadata = { title: "Etiquetas de activos" };
 
@@ -20,14 +21,14 @@ export default async function EtiquetasPage({ searchParams }: { searchParams: Pr
   const origen = `${h.get("x-forwarded-proto") ?? "https"}://${h.get("host")}`;
 
   const { ubicaciones, activos } = await consultar(async (tx) => {
-    const ubicaciones = await tx.selectFrom("ubicaciones").select(["id", "nombre"]).orderBy("nombre").execute();
+    const ubicaciones = await tx.selectFrom("ubicaciones").select(["id", "nombre"]).orderBy(alfa("nombre")).execute();
     if (!ids && !ubicacion) return { ubicaciones, activos: [] };
     let q = tx.selectFrom("activos as a").leftJoin("ubicaciones as u", "u.id", "a.ubicacion_id")
       .select(["a.id", "a.placa", "a.tipo_bien", "u.nombre as ubicacion"]).where("a.estado", "<>", "dado_de_baja");
     if (ids) q = q.where("a.id", "in", ids.split(",").filter((x) => /^[0-9a-f-]{36}$/.test(x)));
     if (ubicacion && ubicacion !== "todas") q = q.where("a.ubicacion_id", "=", Number(ubicacion));
     if (!sinPlaca) q = q.where("a.placa", "is not", null);
-    return { ubicaciones, activos: await q.orderBy("u.nombre").orderBy("a.placa").execute() };
+    return { ubicaciones, activos: await q.orderBy(alfa("u.nombre")).orderBy("a.placa").execute() };
   });
 
   const etiquetas = await Promise.all(

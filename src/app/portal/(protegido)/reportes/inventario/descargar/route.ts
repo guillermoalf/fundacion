@@ -6,6 +6,7 @@ import { filasFormulario1, generarFormulario1 } from "@/lib/export/controlInvent
 import { filasLimpieza, generarControlLimpieza } from "@/lib/export/controlLimpieza";
 import { XLSX_MIME } from "@/lib/export/auxiliarPani";
 import { hoyCR, rangoMes } from "@/lib/portal/formato";
+import { alfa } from "@/lib/db/orden";
 
 const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 /** Qué categorías entran en cada reporte: lo dice `categorias_producto.reporte` (editable en Inventario → Categorías). */
@@ -27,7 +28,7 @@ export async function GET(req: Request) {
     const cats = (await tx.selectFrom("categorias_producto").select("codigo").where("reporte", "=", REPORTE[tipo]).execute()).map((c) => c.codigo);
     if (!cats.length) cats.push("__ninguna__");
     return {
-    productos: await tx.selectFrom("productos").select(["id", "nombre", "unidad"]).where("categoria", "in", cats).orderBy("nombre").execute(),
+    productos: await tx.selectFrom("productos").select(["id", "nombre", "unidad"]).where("categoria", "in", cats).orderBy(alfa("nombre")).execute(),
     movs: await tx.selectFrom("inventario_movimientos as m").innerJoin("productos as p", "p.id", "m.producto_id")
       .leftJoin("compra_lineas as l", "l.id", "m.compra_linea_id").leftJoin("compras as c", "c.id", "l.compra_id").leftJoin("perfiles as u", "u.id", "m.registrado_por")
       .select(["m.producto_id", "m.tipo", "m.cantidad", "m.fecha", "m.entregado_a", "m.motivo", "c.numero_factura as factura", "u.nombre as registrado_por"])

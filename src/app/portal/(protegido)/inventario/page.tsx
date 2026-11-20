@@ -8,6 +8,7 @@ import Tabla from "../../_ui/Tabla";
 import { estiloBoton, estiloTarjeta } from "../../_ui/estilos";
 import { DIAS_AVISO_VENCIMIENTO } from "./datos";
 import { celdaPrecio, ultimosPrecios } from "@/lib/portal/precios";
+import { alfa } from "@/lib/db/orden";
 
 export const metadata: Metadata = { title: "Inventario" };
 
@@ -19,7 +20,7 @@ export default async function InventarioPage() {
     saldos: await tx.selectFrom("v_saldo_inventario as v").innerJoin("productos as p", "p.id", "v.producto_id").innerJoin("categorias_producto as cp", "cp.codigo", "p.categoria")
       .leftJoin("proveedores as ph", "ph.id", "p.proveedor_habitual_id")
       .select(["ph.nombre as habitual", "cp.reporte",
-        "v.producto_id", "v.nombre", "cp.nombre as categoria", "v.unidad", "v.stock_minimo", "v.saldo"]).where("p.activo", "=", true).orderBy("v.nombre").execute(),
+        "v.producto_id", "v.nombre", "cp.nombre as categoria", "v.unidad", "v.stock_minimo", "v.saldo"]).where("p.activo", "=", true).orderBy(alfa("v.nombre")).execute(),
     porVencer: await tx.selectFrom("inventario_movimientos as m").innerJoin("v_saldo_inventario as v", "v.producto_id", "m.producto_id")
       .select(["m.id", "m.fecha_vencimiento", "m.cantidad", "v.nombre", "v.unidad", "v.saldo"])
       .where("m.tipo", "=", "entrada").where("m.fecha_vencimiento", "is not", null)

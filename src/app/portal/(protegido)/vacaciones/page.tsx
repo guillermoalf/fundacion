@@ -9,6 +9,7 @@ import Tabla from "../../_ui/Tabla";
 import { Insignia } from "../../_ui/Insignias";
 import { estiloBoton, estiloTarjeta } from "../../_ui/estilos";
 import { BotonAnular, BotonesResolver, FormularioSolicitud } from "./Formularios";
+import { alfa } from "@/lib/db/orden";
 
 export const metadata: Metadata = { title: "Vacaciones" };
 
@@ -24,7 +25,7 @@ export default async function VacacionesPage() {
       .select(["s.id", "s.empleado_id", "s.desde", "s.hasta", "s.dias_habiles", "s.nota", "s.estado", "s.creada_en", "s.respuesta", "s.resuelta_en", "e.nombre", "r.nombre as resolvio"])
       .orderBy("s.creada_en", "desc").execute();
     const ve = !esPersonal;
-    const personas = ve && puedeEscribir ? await tx.selectFrom("empleados").select(["id", "nombre"]).where("activo", "=", true).orderBy("nombre").execute() : [];
+    const personas = ve && puedeEscribir ? await tx.selectFrom("empleados").select(["id", "nombre"]).where("activo", "=", true).orderBy(alfa("nombre")).execute() : [];
     const { saldos, diasAnuales } = await saldosVacaciones(tx, hoy);
     return { mio, solicitudes, personas, saldos, diasAnuales };
   });

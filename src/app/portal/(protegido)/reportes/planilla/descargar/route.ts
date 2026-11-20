@@ -4,6 +4,7 @@ import { generarPlanillaPorFuente } from "@/lib/export/planillaPorFuente";
 import { XLSX_MIME } from "@/lib/export/auxiliarPani";
 import { fecha } from "@/lib/portal/formato";
 import { lineaPorFondo } from "@/lib/portal/planilla";
+import { alfa } from "@/lib/db/orden";
 
 /** Planilla en Excel agrupada por fuente. Ruta sin punto (la protege el middleware) y con revisión de sesión. */
 export async function GET(req: Request) {
@@ -15,7 +16,7 @@ export async function GET(req: Request) {
     const p = await tx.selectFrom("planillas").selectAll().where("id", "=", id).executeTakeFirst();
     if (!p) return null;
     const lineas = await tx.selectFrom("planilla_lineas as l").innerJoin("empleados as e", "e.id", "l.empleado_id").leftJoin("fuentes_financiamiento as f", "f.id", "l.fuente_id")
-      .selectAll("l").select(["e.nombre", "e.cedula", "e.puesto", "f.codigo as fuente"]).where("l.planilla_id", "=", id).orderBy("e.nombre").execute();
+      .selectAll("l").select(["e.nombre", "e.cedula", "e.puesto", "f.codigo as fuente"]).where("l.planilla_id", "=", id).orderBy(alfa("e.nombre")).execute();
     const codigos = new Map((await tx.selectFrom("fuentes_financiamiento").select(["id", "codigo"]).execute()).map((f) => [f.id, f.codigo]));
     return { p, lineas, codigos };
   });

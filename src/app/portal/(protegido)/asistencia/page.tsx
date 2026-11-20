@@ -8,6 +8,7 @@ import Tabla from "../../_ui/Tabla";
 import Vacio from "../../_ui/Vacio";
 import { estiloBoton, estiloEtiqueta, estiloInput, estiloTarjeta } from "../../_ui/estilos";
 import FormularioMarca from "./FormularioMarca";
+import { alfa } from "@/lib/db/orden";
 
 export const metadata: Metadata = { title: "Asistencia" };
 const ORIGEN = { kiosko: ["Kiosko", "verde"], hoja_firmada: ["Hoja firmada", "azul"], manual: ["Manual", "ambar"] } as const;
@@ -20,7 +21,7 @@ export default async function AsistenciaPage({ searchParams }: { searchParams: P
     marcas: await tx.selectFrom("marcas as m").innerJoin("empleados as e", "e.id", "m.empleado_id").leftJoin("perfiles as p", "p.id", "m.registrado_por")
       .select(["m.id", "m.tipo", "m.marcado_en", "m.origen", "m.motivo_manual", "m.documento_url", "e.nombre", "p.nombre as quien"])
       .where(sql<boolean>`(m.marcado_en at time zone 'America/Costa_Rica')::date = ${dia}::date`).orderBy("m.marcado_en").execute(),
-    personal: await tx.selectFrom("empleados").select(["id", "nombre"]).where("activo", "=", true).orderBy("nombre").execute(),
+    personal: await tx.selectFrom("empleados").select(["id", "nombre"]).where("activo", "=", true).orderBy(alfa("nombre")).execute(),
   }));
   const p = partesCR();
   const ahora = `${p.ymd}T${p.hhmm}`;

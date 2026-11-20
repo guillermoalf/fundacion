@@ -4,6 +4,7 @@ import { saldosVacaciones } from "@/lib/portal/vacaciones";
 import { cantidad, fecha, hoyCR } from "@/lib/portal/formato";
 import Encabezado from "../../../_ui/Encabezado";
 import Tabla from "../../../_ui/Tabla";
+import { alfa } from "@/lib/db/orden";
 
 export const metadata: Metadata = { title: "Saldo de vacaciones" };
 
@@ -13,7 +14,7 @@ export default async function SaldosPage() {
   const { personas, saldos, anuales } = await consultar(async (tx) => {
     const { saldos, diasAnuales } = await saldosVacaciones(tx, hoy);
     return {
-      personas: await tx.selectFrom("empleados").select(["id", "nombre", "fecha_ingreso"]).where("activo", "=", true).orderBy("nombre").execute(),
+      personas: await tx.selectFrom("empleados").select(["id", "nombre", "fecha_ingreso"]).where("activo", "=", true).orderBy(alfa("nombre")).execute(),
       saldos, anuales: diasAnuales,
     };
   });

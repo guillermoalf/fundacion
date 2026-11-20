@@ -7,6 +7,7 @@ import Encabezado from "../../../_ui/Encabezado";
 import SinPermiso from "../../../_ui/SinPermiso";
 import { estiloBoton, estiloTarjeta } from "../../../_ui/estilos";
 import FormularioCompra from "./FormularioCompra";
+import { alfa } from "@/lib/db/orden";
 
 export const metadata: Metadata = { title: "Registrar compra" };
 
@@ -14,13 +15,13 @@ export default async function NuevaCompraPage() {
   const { consultar, puedeEscribir } = await obtenerSesion();
   if (!puedeEscribir) return <SinPermiso que="el registro de compras" />;
   const c = await consultar(async (tx) => ({
-    proveedores: await tx.selectFrom("proveedores").select(["id", "nombre"]).where("activo", "=", true).orderBy("nombre").execute(),
+    proveedores: await tx.selectFrom("proveedores").select(["id", "nombre"]).where("activo", "=", true).orderBy(alfa("nombre")).execute(),
     fuentes: await tx.selectFrom("fuentes_financiamiento").select(["id", "codigo", "nombre"]).where("activo", "=", true).orderBy("id").execute(),
-    productos: await tx.selectFrom("productos").select(["id", "nombre", "unidad"]).where("activo", "=", true).orderBy("nombre").execute(),
-    ubicaciones: await tx.selectFrom("ubicaciones").select(["id", "nombre"]).where("activo", "=", true).orderBy("nombre").execute(),
+    productos: await tx.selectFrom("productos").select(["id", "nombre", "unidad"]).where("activo", "=", true).orderBy(alfa("nombre")).execute(),
+    ubicaciones: await tx.selectFrom("ubicaciones").select(["id", "nombre"]).where("activo", "=", true).orderBy(alfa("nombre")).execute(),
     umbral: await umbralActivo(tx),
     categoriasProducto: (await categoriasProducto(tx)).filter((x) => x.activo),
-    categorias: await tx.selectFrom("categorias_activo").select(["id", "nombre", "tasa_anual"]).where("activa", "=", true).orderBy("nombre").execute(),
+    categorias: await tx.selectFrom("categorias_activo").select(["id", "nombre", "tasa_anual"]).where("activa", "=", true).orderBy(alfa("nombre")).execute(),
   }));
   return (
     <>

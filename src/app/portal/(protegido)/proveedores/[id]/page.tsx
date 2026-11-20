@@ -10,6 +10,7 @@ import { categoriasProducto } from "@/lib/portal/catalogos";
 import { opcionesCategoria } from "../../inventario/datos";
 import { FormularioProducto } from "../../inventario/Formularios";
 import FormularioProveedor from "../Formulario";
+import { alfa } from "@/lib/db/orden";
 
 export const metadata: Metadata = { title: "Proveedor" };
 
@@ -20,8 +21,8 @@ export default async function ProveedorPage({ params }: { params: Promise<{ id: 
     const p = await tx.selectFrom("proveedores").selectAll().where("id", "=", id).executeTakeFirst();
     if (!p) return null;
     const productos = await tx.selectFrom("productos as pr").innerJoin("v_saldo_inventario as v", "v.producto_id", "pr.id")
-      .select(["pr.id", "pr.nombre", "pr.unidad", "pr.categoria", "pr.stock_minimo", "pr.activo", "v.saldo"]).where("pr.proveedor_habitual_id", "=", id).orderBy("pr.nombre").execute();
-    const proveedores = await tx.selectFrom("proveedores").select(["id", "nombre"]).orderBy("nombre").execute();
+      .select(["pr.id", "pr.nombre", "pr.unidad", "pr.categoria", "pr.stock_minimo", "pr.activo", "v.saldo"]).where("pr.proveedor_habitual_id", "=", id).orderBy(alfa("pr.nombre")).execute();
+    const proveedores = await tx.selectFrom("proveedores").select(["id", "nombre"]).orderBy(alfa("nombre")).execute();
     return { p, productos, proveedores, cats: await categoriasProducto(tx) };
   });
   if (!d) notFound();

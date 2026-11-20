@@ -8,6 +8,7 @@ import { calcularAguinaldo, calcularLineaPlanilla, diasHabiles, repartirLinea, r
 import { ErrorUsuario } from "./acciones";
 import { rangoMes } from "./formato";
 import { resumenAsistenciaMes } from "./asistencia";
+import { alfa } from "@/lib/db/orden";
 
 const CLAVES = {
   ccssObreroPct: "ccss_obrero_pct",
@@ -74,7 +75,7 @@ export async function lineasMensuales(tx: Tx, mes: string) {
   const aportes = await aportesVigentes(tx, hasta);
   const [empleados, ausencias, asistencia] = await Promise.all([
     tx.selectFrom("empleados").select(["id", "nombre", "fuente_id", "fecha_ingreso", "fecha_salida", sql<string | null>`salario_vigente(id, ${hasta}::date)`.as("salario_mensual")])
-      .where("fecha_ingreso", "<=", hasta).where((eb) => eb.or([eb("fecha_salida", "is", null), eb("fecha_salida", ">=", desde)])).orderBy("nombre").execute(),
+      .where("fecha_ingreso", "<=", hasta).where((eb) => eb.or([eb("fecha_salida", "is", null), eb("fecha_salida", ">=", desde)])).orderBy(alfa("nombre")).execute(),
     tx.selectFrom("ausencias").select(["empleado_id", "tipo", "desde", "hasta", "dias_habiles"]).where("desde", "<=", hasta).where("hasta", ">=", desde).execute(),
     resumenAsistenciaMes(tx, mes),
   ]);

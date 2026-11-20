@@ -6,6 +6,7 @@ import { sql } from "kysely";
 import type { Tx } from "@/lib/db";
 import { detectarTardias, horasTrabajadas, type Tardia } from "@/lib/calculos/planilla";
 import { partesCR, rangoMes, relojCR } from "./formato";
+import { alfa } from "@/lib/db/orden";
 
 export type ResumenAsistencia = {
   empleadoId: string;
@@ -20,7 +21,7 @@ export type ResumenAsistencia = {
 export async function resumenAsistenciaMes(tx: Tx, mes: string, empleadoId?: string): Promise<{ tolerancia: number | null; filas: ResumenAsistencia[] }> {
   const { desde, hasta } = rangoMes(mes);
   const [personas, marcas, horarios, tol] = await Promise.all([
-    tx.selectFrom("empleados").select(["id", "nombre"]).where("activo", "=", true).$if(!!empleadoId, (q) => q.where("id", "=", empleadoId!)).orderBy("nombre").execute(),
+    tx.selectFrom("empleados").select(["id", "nombre"]).where("activo", "=", true).$if(!!empleadoId, (q) => q.where("id", "=", empleadoId!)).orderBy(alfa("nombre")).execute(),
     tx.selectFrom("marcas").select(["empleado_id", "tipo", "marcado_en"])
       .where(sql<boolean>`(marcado_en at time zone 'America/Costa_Rica')::date between ${desde}::date and ${hasta}::date`).orderBy("marcado_en").execute(),
     tx.selectFrom("horarios").select(["empleado_id", "dia_semana", "hora_entrada", "vigente_desde", "vigente_hasta"])

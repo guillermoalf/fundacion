@@ -4,6 +4,7 @@ import Encabezado from "../../../_ui/Encabezado";
 import SinPermiso from "../../../_ui/SinPermiso";
 import { estiloTarjeta } from "../../../_ui/estilos";
 import { FormularioEmpleado } from "../Formularios";
+import { alfa } from "@/lib/db/orden";
 
 export const metadata: Metadata = { title: "Agregar persona" };
 
@@ -11,7 +12,7 @@ export default async function NuevoEmpleadoPage() {
   const { consultar, puedeEscribir, editaSalarios } = await obtenerSesion();
   if (!puedeEscribir) return <SinPermiso que="el registro de personal" />;
   const c = await consultar(async (tx) => ({
-    ubicaciones: await tx.selectFrom("ubicaciones").select(["id", "nombre"]).where("activo", "=", true).orderBy("nombre").execute(),
+    ubicaciones: await tx.selectFrom("ubicaciones").select(["id", "nombre"]).where("activo", "=", true).orderBy(alfa("nombre")).execute(),
     fuentes: await tx.selectFrom("fuentes_financiamiento").select(["id", "codigo", "nombre"]).where("activo", "=", true).orderBy("id").execute(),
   }));
   return (

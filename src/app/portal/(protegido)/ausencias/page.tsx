@@ -8,6 +8,7 @@ import Vacio from "../../_ui/Vacio";
 import { estiloBoton, estiloTarjeta } from "../../_ui/estilos";
 import FormularioAusencia from "./FormularioAusencia";
 import { CON_BOLETA, TIPOS_AUSENCIA } from "./tipos";
+import { alfa } from "@/lib/db/orden";
 
 export const metadata: Metadata = { title: "Ausencias" };
 
@@ -17,7 +18,7 @@ export default async function AusenciasPage() {
   const { ausencias, personal } = await consultar(async (tx) => ({
     ausencias: await tx.selectFrom("ausencias as a").innerJoin("empleados as e", "e.id", "a.empleado_id")
       .select(["a.id", "a.tipo", "a.desde", "a.hasta", "a.dias_habiles", "a.numero_boleta", "a.documento_url", "e.nombre"]).orderBy("a.desde", "desc").execute(),
-    personal: await tx.selectFrom("empleados").select(["id", "nombre"]).where("activo", "=", true).orderBy("nombre").execute(),
+    personal: await tx.selectFrom("empleados").select(["id", "nombre"]).where("activo", "=", true).orderBy(alfa("nombre")).execute(),
   }));
   const hoyAusentes = ausencias.filter((a) => a.desde <= hoy && a.hasta >= hoy);
   return (

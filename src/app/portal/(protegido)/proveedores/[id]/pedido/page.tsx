@@ -7,6 +7,7 @@ import Encabezado from "../../../../_ui/Encabezado";
 import Vacio from "../../../../_ui/Vacio";
 import { estiloBoton } from "../../../../_ui/estilos";
 import Pedido from "./Pedido";
+import { alfa } from "@/lib/db/orden";
 
 export const metadata: Metadata = { title: "Hacer pedido" };
 
@@ -17,7 +18,7 @@ export default async function PedidoPage({ params }: { params: Promise<{ id: str
     const p = await tx.selectFrom("proveedores").select(["id", "nombre", "telefono"]).where("id", "=", id).executeTakeFirst();
     if (!p) return null;
     const items = await tx.selectFrom("productos as pr").innerJoin("v_saldo_inventario as v", "v.producto_id", "pr.id")
-      .select(["pr.id", "pr.nombre", "pr.unidad", "v.saldo", "pr.stock_minimo"]).where("pr.proveedor_habitual_id", "=", id).where("pr.activo", "=", true).orderBy("pr.nombre").execute();
+      .select(["pr.id", "pr.nombre", "pr.unidad", "v.saldo", "pr.stock_minimo"]).where("pr.proveedor_habitual_id", "=", id).where("pr.activo", "=", true).orderBy(alfa("pr.nombre")).execute();
     return { p, items };
   });
   if (!d) notFound();

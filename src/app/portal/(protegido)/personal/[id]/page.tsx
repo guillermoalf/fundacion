@@ -8,6 +8,7 @@ import { estiloTarjeta } from "../../../_ui/estilos";
 import { FormularioAportes, FormularioDatosVacaciones, FormularioEmpleado, FormularioHorario, FormularioPin, FormularioSalario } from "../Formularios";
 import { saldosVacaciones } from "@/lib/portal/vacaciones";
 import { Insignia } from "../../../_ui/Insignias";
+import { alfa } from "@/lib/db/orden";
 
 export const metadata: Metadata = { title: "Persona" };
 
@@ -25,13 +26,13 @@ export default async function EmpleadoPage({ params, searchParams }: { params: P
         .where("vigente_desde", "<=", hoy).where((eb) => eb.or([eb("vigente_hasta", "is", null), eb("vigente_hasta", ">=", hoy)])).execute(),
       tienePin: (await sql<{ si: boolean }>`select ${id}::uuid in (select empleados_con_pin()) as si`.execute(tx)).rows[0].si,
       salarios: await tx.selectFrom("salarios").select(["salario_mensual", "vigente_desde", "motivo"]).where("empleado_id", "=", id).orderBy("vigente_desde", "desc").execute(),
-      ubicaciones: await tx.selectFrom("ubicaciones").select(["id", "nombre"]).orderBy("nombre").execute(),
+      ubicaciones: await tx.selectFrom("ubicaciones").select(["id", "nombre"]).orderBy(alfa("nombre")).execute(),
       fuentes: await tx.selectFrom("fuentes_financiamiento").select(["id", "codigo", "nombre"]).orderBy("id").execute(),
       aportes: veSalarios ? await tx.selectFrom("salario_aportes as a").innerJoin("fuentes_financiamiento as f", "f.id", "a.fuente_id")
         .select(["a.vigente_desde", "a.fuente_id", "a.monto", "f.codigo"]).where("a.empleado_id", "=", id).orderBy("a.vigente_desde", "desc").orderBy("a.monto").execute() : [],
       vacaciones: (await saldosVacaciones(tx, hoy, [id])).saldos.get(id) ?? null,
       solicitudes: await tx.selectFrom("solicitudes_vacaciones").select(["id", "desde", "hasta", "dias_habiles", "estado"]).where("empleado_id", "=", id).orderBy("desde", "desc").limit(10).execute(),
-      usuarios: esAdmin ? await tx.selectFrom("perfiles").select(["id", "nombre"]).where("activo", "=", true).orderBy("nombre").execute() : [],
+      usuarios: esAdmin ? await tx.selectFrom("perfiles").select(["id", "nombre"]).where("activo", "=", true).orderBy(alfa("nombre")).execute() : [],
     };
   });
   if (!d) notFound();

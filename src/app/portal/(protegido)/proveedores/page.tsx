@@ -7,6 +7,7 @@ import Tabla from "../../_ui/Tabla";
 import { estiloTarjeta } from "../../_ui/estilos";
 import FormularioProveedor from "./Formulario";
 import { TIPOS_PROVEEDOR } from "./tipos";
+import { alfa } from "@/lib/db/orden";
 
 export const metadata: Metadata = { title: "Proveedores" };
 const nombreTipo = (t: string | null) => TIPOS_PROVEEDOR.find((x) => x.valor === t)?.texto ?? t ?? "—";
@@ -19,7 +20,7 @@ export default async function ProveedoresPage({ searchParams }: { searchParams: 
       .select(["p.id", "p.nombre", "p.tipo", "p.telefono", "p.activo", "p.cedula_juridica",
         sql<number>`(select count(*)::int from compras c where c.proveedor_id = p.id)`.as("compras"),
         sql<string | null>`(select sum(total) from compras c where c.proveedor_id = p.id)`.as("total")])
-      .orderBy("p.nombre").execute(),
+      .orderBy(alfa("p.nombre")).execute(),
   );
   return (
     <>

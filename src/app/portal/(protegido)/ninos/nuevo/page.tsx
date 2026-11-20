@@ -5,6 +5,7 @@ import Encabezado from "../../../_ui/Encabezado";
 import SinPermiso from "../../../_ui/SinPermiso";
 import { estiloTarjeta } from "../../../_ui/estilos";
 import { FormularioNino } from "../Formularios";
+import { alfa } from "@/lib/db/orden";
 
 export const metadata: Metadata = { title: "Registrar niño o niña" };
 
@@ -12,7 +13,7 @@ export default async function NuevoNinoPage() {
   const { consultar, editaNinos } = await obtenerSesion();
   if (!editaNinos) return <SinPermiso que="registrar niños" />;
   const { aulas, fuentes } = await consultar(async (tx) => ({
-    aulas: await tx.selectFrom("ubicaciones").select(["id", "nombre"]).orderBy("nombre").execute(),
+    aulas: await tx.selectFrom("ubicaciones").select(["id", "nombre"]).orderBy(alfa("nombre")).execute(),
     fuentes: await tx.selectFrom("fuentes_financiamiento").select(["id", "codigo", "nombre"]).orderBy("id").execute(),
   }));
   return (

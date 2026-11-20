@@ -7,6 +7,7 @@ import Tabla from "../../_ui/Tabla";
 import Vacio from "../../_ui/Vacio";
 import { estiloTarjeta } from "../../_ui/estilos";
 import { IniciarConteo } from "./Formularios";
+import { alfa } from "@/lib/db/orden";
 
 export const metadata: Metadata = { title: "Conteo físico" };
 
@@ -17,8 +18,8 @@ export default async function ConteosPage() {
       .select(["c.id", "c.fecha", "c.cerrado", "c.acta_firmada_url", "u.nombre as ubicacion", "e.nombre as responsable",
         sql<number>`(select count(*)::int from conteo_detalle d where d.conteo_id = c.id and not d.encontrado)`.as("faltantes")])
       .orderBy("c.fecha", "desc").execute(),
-    ubicaciones: await tx.selectFrom("ubicaciones").select(["id", "nombre"]).where("activo", "=", true).orderBy("nombre").execute(),
-    personal: await tx.selectFrom("empleados").select(["id", "nombre"]).where("activo", "=", true).orderBy("nombre").execute(),
+    ubicaciones: await tx.selectFrom("ubicaciones").select(["id", "nombre"]).where("activo", "=", true).orderBy(alfa("nombre")).execute(),
+    personal: await tx.selectFrom("empleados").select(["id", "nombre"]).where("activo", "=", true).orderBy(alfa("nombre")).execute(),
   }));
   return (
     <>
