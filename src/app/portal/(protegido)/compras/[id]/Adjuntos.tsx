@@ -1,10 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useTransition } from "react";
 import { BotonEnviar, CampoArchivos, MensajeError, FormularioAccion } from "../../../_ui/Formulario";
-import { useAvisoResultado } from "../../../_ui/Avisos";
-import { estiloInput } from "../../../_ui/estilos";
-import { adjuntarFactura, ligarActivo } from "../acciones";
+import { useAviso, useAvisoResultado } from "../../../_ui/Avisos";
+import { estiloBoton, estiloInput } from "../../../_ui/estilos";
+import { adjuntarFactura, ligarActivo, pasarAActivos } from "../acciones";
 
 export function AdjuntarFactura({ id }: { id: string }) {
   const [estado, accion, accionPendiente] = useActionState(adjuntarFactura, null);
@@ -37,5 +37,20 @@ export function LigarActivo({ compraId, lineaId, opciones }: { compraId: string;
       <BotonEnviar variante="secundario">Ligar</BotonEnviar>
       <div className="w-full"><MensajeError estado={estado} /></div>
     </FormularioAccion>
+  );
+}
+
+/** Para una línea que entró como inventario pero es un activo (mueble, equipo, útiles…). */
+export function PasarAActivos({ lineaId, descripcion, unidades }: { lineaId: string; descripcion: string; unidades: number }) {
+  const [pend, iniciar] = useTransition();
+  const aviso = useAviso();
+  return (
+    <button type="button" disabled={pend} className={estiloBoton.secundario}
+      onClick={() => {
+        if (!confirm(`¿Pasar «${descripcion}» a activos? Sale del inventario y se crea${unidades === 1 ? " 1 activo" : `n ${unidades} activos`} con esta factura (luego les pone placa y aula).`)) return;
+        iniciar(async () => { const r = await pasarAActivos(lineaId); aviso(r.ok ? "Listo: ya están en Activos." : r.error, r.ok ? "exito" : "error"); });
+      }}>
+      {pend ? "Pasando…" : "Pasar a activos"}
+    </button>
   );
 }

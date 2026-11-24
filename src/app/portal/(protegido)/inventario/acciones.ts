@@ -81,7 +81,7 @@ export async function editarProducto(_: R, f: FormData): Promise<R> {
 function datosCategoria(f: FormData) {
   const reporte = textoObligatorio(f, "reporte", "en cuál reporte sale");
   if (!["alimentos", "aseo", "ninguno"].includes(reporte)) throw new ErrorUsuario("Elija un reporte de la lista.");
-  return { nombre: textoObligatorio(f, "nombre", "el nombre de la categoría"), reporte, orden: entero(f, "orden") ?? 100 };
+  return { nombre: textoObligatorio(f, "nombre", "el nombre de la categoría"), reporte };
 }
 
 const SIN_PERMISO_CATEGORIAS = "Solo la dirección puede cambiar las categorías.";

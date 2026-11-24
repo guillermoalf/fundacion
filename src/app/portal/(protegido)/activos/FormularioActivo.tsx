@@ -1,8 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { AreaTexto, BotonEnviar, Campo, CampoArchivo, Casilla, MensajeError, Seleccion, FormularioAccion } from "../../_ui/Formulario";
-import { colones } from "@/lib/portal/formato";
+import { AreaTexto, BotonEnviar, Campo, CampoArchivo, MensajeError, Seleccion, FormularioAccion } from "../../_ui/Formulario";
 import { useAvisoResultado } from "../../_ui/Avisos";
 import { crearActivo, editarActivo } from "./acciones";
 
@@ -20,7 +19,7 @@ const ESTADOS = [
   { valor: "extraviado", texto: "Extraviado" },
 ];
 
-export default function FormularioActivo({ v = {}, ubicaciones, fuentes, categorias, umbral = null }: { v?: ValoresActivo; ubicaciones: Opcion[]; fuentes: Opcion[]; categorias: Opcion[]; umbral?: number | null }) {
+export default function FormularioActivo({ v = {}, ubicaciones, fuentes, categorias }: { v?: ValoresActivo; ubicaciones: Opcion[]; fuentes: Opcion[]; categorias: Opcion[] }) {
   const editando = !!v.id;
   const [estado, accion, accionPendiente] = useActionState(editando ? editarActivo : crearActivo, null);
   useAvisoResultado(estado, "Guardado.");
@@ -52,7 +51,7 @@ export default function FormularioActivo({ v = {}, ubicaciones, fuentes, categor
         <Seleccion etiqueta="Fuente de financiamiento" name="fuente_id" opciones={fuentes} vacio="Elija…" required defaultValue={v.fuente_id ?? ""} />
         <Campo etiqueta="Fecha de compra" name="fecha_adquisicion" type="date" defaultValue={v.fecha_adquisicion ?? ""} ayuda="Si no la sabe, déjela vacía: queda como pendiente." />
         <Campo etiqueta="Precio por unidad (₡)" name="costo" inputMode="decimal" defaultValue={v.costo ?? ""}
-          ayuda={umbral ? `Costo de UNA unidad (sin el total). Es activo si supera ${colones(umbral)}; si no, va al inventario.` : "Costo de una unidad. Si no lo sabe, déjelo vacío."} />
+          ayuda="Costo de UNA unidad (no el total). Si no lo sabe, déjelo vacío: queda como pendiente." />
         <Seleccion etiqueta="Fila de la tabla de depreciación" name="categoria_id" opciones={categorias} vacio="Sin definir (queda pendiente)" defaultValue={v.categoria_id ?? ""} />
         <details className="sm:col-span-2">
           <summary className="cursor-pointer text-base font-medium text-sky-700">Opciones avanzadas de depreciación</summary>
@@ -68,7 +67,6 @@ export default function FormularioActivo({ v = {}, ubicaciones, fuentes, categor
         <CampoArchivo etiqueta={editando ? "Cambiar foto" : "Foto"} name="foto" aceptar="image/*" />
         <AreaTexto etiqueta="Notas" name="notas" defaultValue={v.notas ?? ""} />
       </fieldset>
-      {!editando && <Casilla etiqueta="Es activo aunque cueste menos del monto de baja cuantía (excepción)" name="es_activo_igual" />}
       <MensajeError estado={estado} />
       <BotonEnviar>{editando ? "Guardar cambios" : "Registrar activo"}</BotonEnviar>
     </FormularioAccion>

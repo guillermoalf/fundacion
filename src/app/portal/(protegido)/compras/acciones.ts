@@ -7,7 +7,6 @@ import { obtenerSesion } from "@/lib/portal/sesion";
 import { ejecutar, ErrorUsuario, entero, numero, texto, textoObligatorio, type Resultado } from "@/lib/portal/acciones";
 import { idsArchivos, rutaArchivo } from "@/lib/portal/archivos";
 import { umbralActivo } from "@/lib/portal/catalogos";
-import { colones } from "@/lib/portal/formato";
 import { leerFacturaElectronica, type FacturaElectronica } from "@/lib/importacion/facturaElectronica";
 import { sql } from "kysely";
 import type { TipoLineaCompra } from "@/lib/db/tipos";
@@ -106,12 +105,6 @@ export async function registrarCompra(_: R, f: FormData): Promise<R> {
     const adjuntos = idsArchivos(f.get("archivos"));
 
     const id = await consultar(async (tx) => {
-      const umbral = await umbralActivo(tx, fecha);
-      for (const l of limpias) {
-        if (l.tipo === "activo" && umbral !== null && l.precio <= umbral && !l.es_activo_igual) {
-          throw new ErrorUsuario(`Línea ${l.n} («${l.descripcion}»): cada unidad cuesta ${colones(l.precio)} y no supera ${colones(umbral)} (25 % de un salario base). Es de baja cuantía: márquela como «Inventario». Si de verdad es un activo, marque «Es activo igual».`);
-        }
-      }
       if (!proveedor) {
         const existente = await tx.selectFrom("proveedores").select("id").where(sql`lower(nombre)`, "=", proveedorNuevo!.toLowerCase()).executeTakeFirst();
         proveedor = existente?.id ?? (await tx.insertInto("proveedores").values({ nombre: proveedorNuevo!, cedula_juridica: texto(f, "proveedor_cedula") }).returning("id").executeTakeFirstOrThrow()).id;
@@ -202,5 +195,42 @@ export async function adjuntarFactura(_: R, f: FormData): Promise<R> {
     return {};
   });
   if (r.ok) revalidatePath(`/portal/compras/${id}`);
+  return r;
+}
+
+/**
+ * Una línea que entró como inventario pero es un activo (p. ej. 3 sillas de bebé): sale del inventario
+ * (queda la salida con el motivo) y se crea un activo por unidad, ligado a esta misma factura.
+ */
+export async function pasarAActivos(lineaId: string): Promise<Resultado> {
+  const { consultar } = await obtenerSesion();
+  const r = await ejecutar(async () => {
+    const compraId = await consultar(async (tx) => {
+      const l = await tx.selectFrom("compra_lineas as l").innerJoin("compras as c", "c.id", "l.compra_id")
+        .select(["l.id", "l.tipo", "l.descripcion", "l.cantidad", "l.precio_unitario", "l.producto_id", "c.id as compra_id", "c.fuente_id", "c.fecha", "c.numero_factura"])
+        .where("l.id", "=", lineaId).executeTakeFirst();
+      if (!l) throw new ErrorUsuario("No se encontró esa línea de la factura.");
+      if (l.tipo !== "consumible") throw new ErrorUsuario("Esta línea ya no está en el inventario.");
+      const unidades = Number(l.cantidad);
+      if (!Number.isInteger(unidades) || unidades < 1 || unidades > 200) throw new ErrorUsuario("Para pasarla a activos la cantidad debe ser un número entero de unidades (entre 1 y 200).");
+      const motivo = `Pasado a activos (factura N.º ${l.numero_factura})`;
+      if (l.producto_id) {
+        await tx.insertInto("inventario_movimientos").values({ producto_id: l.producto_id, tipo: "salida", cantidad: unidades, compra_linea_id: l.id, motivo, entregado_a: "Activos" }).execute();
+      }
+      const n = await tx.updateTable("compra_lineas").set({ tipo: "activo" }).where("id", "=", l.id).returning("id").executeTakeFirst();
+      if (!n) throw new ErrorUsuario("No tiene permiso para cambiar esta compra.");
+      for (let u = 0; u < unidades; u++) {
+        const { id } = await tx.insertInto("activos").values({
+          tipo_bien: l.descripcion, fuente_id: l.fuente_id, fecha_adquisicion: l.fecha, costo: l.precio_unitario, compra_linea_id: l.id, origen: "formulario",
+        }).returning("id").executeTakeFirstOrThrow();
+        await tx.insertInto("activo_movimientos").values({ activo_id: id, tipo: "alta", fecha: l.fecha, motivo }).execute();
+      }
+      return l.compra_id;
+    });
+    revalidatePath(`/portal/compras/${compraId}`);
+    revalidatePath("/portal/activos");
+    revalidatePath("/portal/inventario", "layout");
+    return {};
+  });
   return r;
 }

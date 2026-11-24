@@ -1,55 +1,45 @@
 import type { Metadata } from "next";
-import { sql } from "kysely";
+import Link from "next/link";
+import { alfa } from "@/lib/db/orden";
+import Tabla from "../../_ui/Tabla";
+import Vacio from "../../_ui/Vacio";
 import { obtenerSesion } from "@/lib/portal/sesion";
-import { colones, fecha, hoyCR } from "@/lib/portal/formato";
+import { hoyCR } from "@/lib/portal/formato";
 import Encabezado from "../../_ui/Encabezado";
 import { estiloBoton, estiloEtiqueta, estiloInput, estiloTarjeta } from "../../_ui/estilos";
 
 export const metadata: Metadata = { title: "Reportes" };
 
-export default async function ReportesPage({ searchParams }: { searchParams: Promise<{ corte?: string; fuente?: string }> }) {
-  const sp = await searchParams;
-  const corte = /^\d{4}-\d{2}-\d{2}$/.test(sp.corte ?? "") ? sp.corte! : hoyCR();
-  const fuente = sp.fuente ?? "PANI";
-  const { consultar } = await obtenerSesion();
-  const { fuentes, resumen } = await consultar(async (tx) => ({
-    fuentes: await tx.selectFrom("fuentes_financiamiento").select(["codigo", "nombre"]).orderBy("id").execute(),
-    resumen: (await sql<{ n: number; costo: string | null; libros: string | null; sin_valor: number }>`
-      select count(*)::int as n, sum(costo) as costo, sum(valor_libros) as libros, count(*) filter (where valor_libros is null)::int as sin_valor
-      from activos_al_corte(${corte}::date, ${fuente || null})`.execute(tx)).rows[0],
-  }));
-  const params = new URLSearchParams({ corte, ...(fuente ? { fuente } : {}) });
+export default async function ReportesPage() {
+  const corte = hoyCR();
+  const { consultar, esAdmin } = await obtenerSesion();
+  const reportes = await consultar((tx) => tx.selectFrom("reportes_activos").select(["id", "nombre", "descripcion", "activo"]).orderBy("activo", "desc").orderBy(alfa("nombre")).execute());
 
   return (
     <>
-      <Encabezado migas={[{ etiqueta: "Reportes" }]} titulo="Reportes" descripcion="Reportes para los entes que financian a la fundación, con sus columnas oficiales." />
-      <section className={`${estiloTarjeta} space-y-5`}>
-        <div>
-          <h2 className="text-xl font-semibold">Auxiliar de activos fijos (PANI)</h2>
-          <p className="text-slate-600">Excel con las columnas exactas del formato oficial: tipo de bien, marca, modelo, serie, ubicación, placa, fecha, costo, depreciación acumulada y valor en libros.</p>
+      <Encabezado migas={[{ etiqueta: "Reportes" }]} titulo="Reportes" descripcion="Los reportes que se entregan a quienes financian a la fundación. Se llenan solos con los datos del portal." />
+      <section className="space-y-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-xl font-semibold">Reportes de activos</h2>
+            <p className="text-slate-600">Cada reporte tiene sus especificaciones (fondos, monto mínimo, aulas…) y se llena solo al exportarlo, con el formato del Auxiliar de activos fijos.</p>
+          </div>
+          {esAdmin && <Link href="/portal/reportes/activos/nuevo" className={estiloBoton.primario}>+ Nuevo reporte</Link>}
         </div>
-        <form className="flex flex-wrap items-end gap-3">
-          <label className="space-y-1.5">
-            <span className={estiloEtiqueta}>Fecha de corte</span>
-            <input type="date" name="corte" defaultValue={corte} className={estiloInput} />
-          </label>
-          <label className="space-y-1.5">
-            <span className={estiloEtiqueta}>Fuente de financiamiento</span>
-            <select name="fuente" defaultValue={fuente} className={estiloInput}>
-              {fuentes.map((f) => <option key={f.codigo} value={f.codigo}>{f.codigo} · {f.nombre}</option>)}
-              <option value="">Todas las fuentes</option>
-            </select>
-          </label>
-          <button type="submit" className={estiloBoton.secundario}>Actualizar resumen</button>
-        </form>
-        <div className="rounded-xl bg-slate-50 px-4 py-3 text-base">
-          Al {fecha(corte)}{fuente ? ` con recursos ${fuente}` : ""}: <strong>{resumen.n}</strong> activos · costo {colones(resumen.costo) ?? "₡0,00"} · valor en libros {colones(resumen.libros) ?? "₡0,00"}.
-          {resumen.sin_valor > 0 && <span className="text-amber-800"> {resumen.sin_valor} sin valor en libros por datos faltantes (sus celdas quedan vacías en el Excel).</span>}
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <a href={`/portal/reportes/pani/descargar?${params}`} className={estiloBoton.primario}>Descargar Excel para el PANI</a>
-          <a href={`/portal/reportes/pani/descargar?${params}&pendientes=1`} className={estiloBoton.secundario}>Descargar con hoja de pendientes (uso interno)</a>
-        </div>
+        <Tabla
+          id="reportes-activos"
+          columnas={[{ clave: "nombre", titulo: "Reporte" }, { clave: "descripcion", titulo: "Para qué es" }, { clave: "estado", titulo: "Estado" }]}
+          filtros={[{ clave: "estado", titulo: "Estado" }]}
+          filas={reportes.map((r) => ({
+            id: r.id,
+            href: `/portal/reportes/activos/${r.id}`,
+            celdas: { nombre: r.nombre, descripcion: r.descripcion ?? { vacio: true }, estado: r.activo ? { texto: "Activo", tono: "verde" } : { texto: "Desactivado", tono: "gris" } },
+            filtros: { estado: r.activo ? "Activo" : "Desactivado" },
+          }))}
+          vacio={<Vacio titulo="Todavía no hay reportes de activos." accion={esAdmin && <Link href="/portal/reportes/activos/nuevo" className={estiloBoton.primario}>Crear el primero</Link>}>
+            Por ejemplo «PANI activos 2026»: solo fondos PANI, desde el 25 % del salario base por unidad y dividido por aula.
+          </Vacio>}
+        />
       </section>
 
       <section className={`${estiloTarjeta} mt-6 space-y-4`}>
