@@ -6,7 +6,7 @@ import { cantidad, colones, fecha } from "@/lib/portal/formato";
 import Encabezado from "../../../_ui/Encabezado";
 import { Insignia, Valor } from "../../../_ui/Insignias";
 import { estiloBoton, estiloTarjeta } from "../../../_ui/estilos";
-import { AdjuntarFactura, LigarActivo } from "./Adjuntos";
+import { AdjuntarFactura, LigarActivo, PasarAActivos } from "./Adjuntos";
 import { alfa } from "@/lib/db/orden";
 
 export const metadata: Metadata = { title: "Compra" };
@@ -68,6 +68,12 @@ export default async function CompraPage({ params, searchParams }: { params: Pro
                     {e.fecha_vencimiento && ` · vence ${fecha(e.fecha_vencimiento)}`}
                   </p>
                 ))}
+                {l.tipo === "consumible" && puedeEscribir && (
+                  <div className="flex flex-wrap items-center gap-3">
+                    <PasarAActivos lineaId={l.id} descripcion={l.descripcion} unidades={Number(l.cantidad)} />
+                    <span className="text-sm text-slate-500">Si no es perecedero (mueble, equipo, útiles…), es un activo.</span>
+                  </div>
+                )}
                 {l.tipo === "activo" && puedeEscribir && (
                   <LigarActivo compraId={c.id} lineaId={l.id} opciones={sinFactura.map((a) => ({ valor: a.id, texto: `${a.tipo_bien}${a.placa ? ` · placa ${a.placa}` : " · sin placa"}` }))} />
                 )}

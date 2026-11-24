@@ -3,10 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { obtenerSesion } from "@/lib/portal/sesion";
-import { casilla, ejecutar, ErrorUsuario, entero, numero, texto, textoObligatorio, type Resultado } from "@/lib/portal/acciones";
-import { umbralActivo } from "@/lib/portal/catalogos";
+import { ejecutar, ErrorUsuario, entero, numero, texto, textoObligatorio, type Resultado } from "@/lib/portal/acciones";
 import { guardarArchivo } from "@/lib/portal/archivos";
-import { colones, hoyCR } from "@/lib/portal/formato";
+import { hoyCR } from "@/lib/portal/formato";
 import type { EstadoActivo, MetodoDepreciacion } from "@/lib/db/tipos";
 
 type R = Resultado | null;
@@ -45,10 +44,6 @@ export async function crearActivo(_: R, f: FormData): Promise<R> {
     const placas = (texto(f, "placas") ?? datos.placa ?? "").split(/[,;\s]+/).map((p) => p.trim()).filter(Boolean);
     if (placas.length > cantidad) throw new ErrorUsuario(`Hay más placas (${placas.length}) que unidades (${cantidad}).`);
     const ids = await consultar(async (tx) => {
-      const umbral = await umbralActivo(tx, datos.fecha_adquisicion);
-      if (datos.costo !== null && umbral !== null && datos.costo <= umbral && !casilla(f, "es_activo_igual")) {
-        throw new ErrorUsuario(`Cada unidad cuesta ${colones(datos.costo)}: no supera ${colones(umbral)} (25 % de un salario base), así que es de baja cuantía y va al inventario, no a activos. Si de verdad es un activo, marque la casilla de confirmación.`);
-      }
       const foto = await guardarArchivo(tx, f.get("foto"));
       const creados: string[] = [];
       // Un activo por unidad, cada uno con su placa (las que falten quedan en Pendientes).

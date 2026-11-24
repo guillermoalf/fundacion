@@ -19,9 +19,9 @@ const aNumero = (s: string) => {
   return Number.isFinite(n) ? n : 0;
 };
 
-function LineaFormulario({ l, i, cambiar, quitar, productos, ubicaciones, categorias, categoriasProducto, umbral, misma }: {
+function LineaFormulario({ l, i, cambiar, quitar, productos, ubicaciones, categorias, categoriasProducto, misma }: {
   l: Linea; i: number; cambiar: (c: Partial<Linea>) => void; quitar?: () => void;
-  productos: Producto[]; ubicaciones: Opcion[]; categorias: Opcion[]; categoriasProducto: Opcion[]; umbral: number | null;
+  productos: Producto[]; ubicaciones: Opcion[]; categorias: Opcion[]; categoriasProducto: Opcion[];
   /** «Misma categoría para todas»: la casilla va en la primera línea con producto nuevo; las demás la heredan. */
   misma?: { tipo: "casilla"; marcada: boolean; cambiar: (v: boolean) => void } | { tipo: "heredada"; de: number };
 }) {
@@ -42,7 +42,6 @@ function LineaFormulario({ l, i, cambiar, quitar, productos, ubicaciones, catego
     </label>
   );
   const precio = aNumero(l.precio);
-  const bajaCuantia = l.tipo === "activo" && umbral !== null && l.precio !== "" && precio <= umbral;
   return (
     <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
       <div className="flex items-center justify-between gap-2">
@@ -121,17 +120,7 @@ function LineaFormulario({ l, i, cambiar, quitar, productos, ubicaciones, catego
             {sel("ubicacion_id", "¿Dónde va a estar?", ubicaciones, "Todavía no se sabe")}
             {sel("categoria_id", "Fila del Anexo 2", categorias, "Sin definir")}
             <div className="sm:col-span-2">{campo("placas", "Placas (separadas por coma)", { placeholder: "Ej.: 120, 121, 122" })}</div>
-            {bajaCuantia ? (
-              <div className="space-y-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-amber-900 sm:col-span-4">
-                <p>Cada unidad cuesta {colones(precio)} y no supera {colones(umbral)} (25 % de un salario base): para el PANI es de <strong>baja cuantía</strong> y va al inventario, no a activos.</p>
-                <div className="flex flex-wrap gap-3">
-                  <button type="button" className={estiloBoton.secundario} onClick={() => cambiar({ tipo: "consumible" })}>Pasarla a Inventario</button>
-                  <label className="flex items-center gap-2"><input type="checkbox" className="h-5 w-5" checked={!!l.es_activo_igual} onChange={(e) => cambiar({ es_activo_igual: e.target.checked })} /> Es activo igual (excepción)</label>
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm text-slate-500 sm:col-span-4">Se crea una ficha por unidad, con esta factura y sus archivos. Las placas que falten quedan en Pendientes.</p>
-            )}
+            <p className="text-sm text-slate-500 sm:col-span-4">Se crea una ficha por unidad, con esta factura y sus archivos. Las placas que falten quedan en Pendientes.</p>
           </>
         )}
       </div>
@@ -139,8 +128,8 @@ function LineaFormulario({ l, i, cambiar, quitar, productos, ubicaciones, catego
   );
 }
 
-export default function FormularioCompra({ proveedores, fuentes, productos, ubicaciones, categorias, categoriasProducto, hoy, umbral }: {
-  proveedores: Opcion[]; fuentes: Opcion[]; productos: Producto[]; ubicaciones: Opcion[]; categorias: Opcion[]; categoriasProducto: Opcion[]; hoy: string; umbral: number | null;
+export default function FormularioCompra({ proveedores, fuentes, productos, ubicaciones, categorias, categoriasProducto, hoy }: {
+  proveedores: Opcion[]; fuentes: Opcion[]; productos: Producto[]; ubicaciones: Opcion[]; categorias: Opcion[]; categoriasProducto: Opcion[]; hoy: string;
 }) {
   const [estado, accion, pendiente] = useActionState(registrarCompra, null);
   const [lineas, setLineas] = useState<Linea[]>([nueva()]);
@@ -172,13 +161,12 @@ export default function FormularioCompra({ proveedores, fuentes, productos, ubic
     if (f.fecha) setFecha(f.fecha);
     setIva(String(f.impuesto));
     setTotalFactura(f.total);
-    const u = r.umbral ?? umbral;
     setLineas(f.lineas.map((l, i) => {
       const prod = r.productos?.find((p) => p.linea === i)?.productoId;
-      const esActivo = u !== null && l.precioUnitario > u;
       return {
-        tipo: esActivo ? "activo" : "consumible", descripcion: l.detalle, cantidad: String(l.cantidad), unidad: l.unidad, precio: String(l.precioUnitario), iva: String(l.impuesto),
-        ...(esActivo ? {} : prod ? { producto_id: String(prod) } : { producto_id: "nuevo", nuevo_nombre: l.detalle, nuevo_unidad: l.unidad, nuevo_categoria: sugerirCategoriaProducto(l.detalle, categoriasProducto.map((c) => String(c.valor))) ?? "" }),
+        tipo: "consumible", descripcion: l.detalle, cantidad: String(l.cantidad), unidad: l.unidad, precio: String(l.precioUnitario), iva: String(l.impuesto),
+        // Todo entra como inventario: la persona marca como activo lo que no es perecedero (mueble, equipo, útiles…).
+        ...(prod ? { producto_id: String(prod) } : { producto_id: "nuevo", nuevo_nombre: l.detalle, nuevo_unidad: l.unidad, nuevo_categoria: sugerirCategoriaProducto(l.detalle, categoriasProducto.map((c) => String(c.valor))) ?? "" }),
       };
     }));
     setAvisoXml(`Se leyó la factura ${f.consecutivo ?? ""} de ${f.emisor.nombre}${f.moneda !== "CRC" ? ` (en ${f.moneda}, convertida a colones con el tipo de cambio ${f.tipoCambio})` : ""}: revise cada línea y márquela como inventario, activo o servicio.`);
@@ -227,7 +215,7 @@ export default function FormularioCompra({ proveedores, fuentes, productos, ubic
         <legend className="mb-2 text-lg font-semibold">Qué se compró</legend>
         <p className="text-slate-600">Una factura puede mezclar cosas (comida y una computadora, por ejemplo): marque cada línea como lo que es. Todo queda ligado a esta misma factura.</p>
         {lineas.map((l, i) => (
-          <LineaFormulario key={i} l={efectivas[i]} i={i} productos={productos} ubicaciones={ubicaciones} categorias={categorias} categoriasProducto={categoriasProducto} umbral={umbral}
+          <LineaFormulario key={i} l={efectivas[i]} i={i} productos={productos} ubicaciones={ubicaciones} categorias={categorias} categoriasProducto={categoriasProducto}
             misma={i === primeraNueva && lineas.filter(esNueva).length > 1
               ? { tipo: "casilla", marcada: misma, cambiar: (v) => { if (!v) setLineas(efectivas); setMisma(v); } }
               : misma && primeraNueva >= 0 && i !== primeraNueva && esNueva(l) ? { tipo: "heredada", de: primeraNueva } : undefined}

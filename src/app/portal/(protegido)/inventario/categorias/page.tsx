@@ -15,7 +15,7 @@ export default async function CategoriasPage() {
     const lista = await tx.selectFrom("categorias_producto as c")
       .select((eb) => ["c.codigo", "c.nombre", "c.reporte", "c.orden", "c.activo",
         eb.selectFrom("productos as p").select((e) => e.fn.countAll<number>().as("n")).whereRef("p.categoria", "=", "c.codigo").as("productos")])
-      .orderBy("c.activo", "desc").orderBy("c.orden").orderBy(alfa("c.nombre")).execute();
+      .orderBy("c.activo", "desc").orderBy(alfa("c.nombre")).execute();
     return lista;
   });
   return (

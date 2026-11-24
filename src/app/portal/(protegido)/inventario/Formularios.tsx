@@ -38,7 +38,8 @@ export function FormularioProducto({ v = {}, proveedores, categorias, nuevoConPr
   const [estado, accion, accionPendiente] = useActionState(editando ? editarProducto : crearProducto, null);
   useAvisoResultado(estado, "Producto agregado.");
   return (
-    <FormularioAccion accion={accion} estado={estado} pendiente={accionPendiente} className="grid gap-4 sm:grid-cols-2">
+    <FormularioAccion accion={accion} estado={estado} pendiente={accionPendiente} className="grid gap-4 sm:grid-cols-2"
+      borrador={editando ? undefined : { nombre: nuevoConProveedor ? `producto-proveedor-${v.proveedor_habitual_id}` : "producto", titulo: "Producto nuevo" }}>
       {editando && <input type="hidden" name="id" value={v.id} />}
       <Campo etiqueta="Nombre" name="nombre" id="prod-nombre" defaultValue={v.nombre} required />
       <Seleccion etiqueta="Categoría" name="categoria" id="prod-categoria" opciones={categorias} vacio="Elija una…" defaultValue={v.categoria ?? ""} ayuda={<>¿Falta una? Agréguela en <a href="/portal/inventario/categorias" className="text-sky-700 underline">Categorías</a>.</>} required />

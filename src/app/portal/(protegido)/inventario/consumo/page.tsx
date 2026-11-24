@@ -25,7 +25,7 @@ export default async function ConsumoPage() {
     p.porMes[m.fecha.slice(0, 7)] = (p.porMes[m.fecha.slice(0, 7)] ?? 0) + Number(m.cantidad);
     productos.set(m.id, p);
   }
-  const filas = [...productos.values()].sort((a, b) => a.orden - b.orden || a.nombre.localeCompare(b.nombre, "es"));
+  const filas = [...productos.values()].sort((a, b) => a.categoria.localeCompare(b.categoria, "es") || a.nombre.localeCompare(b.nombre, "es"));
 
   return (
     <>

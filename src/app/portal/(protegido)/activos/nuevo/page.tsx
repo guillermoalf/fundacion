@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { obtenerSesion } from "@/lib/portal/sesion";
-import { catalogosActivos, opciones, umbralActivo } from "@/lib/portal/catalogos";
+import { catalogosActivos, opciones } from "@/lib/portal/catalogos";
 import Encabezado from "../../../_ui/Encabezado";
 import SinPermiso from "../../../_ui/SinPermiso";
 import { estiloTarjeta } from "../../../_ui/estilos";
@@ -11,13 +11,12 @@ export const metadata: Metadata = { title: "Nuevo activo" };
 export default async function NuevoActivoPage() {
   const { consultar, puedeEscribir } = await obtenerSesion();
   if (!puedeEscribir) return <SinPermiso que="el registro de activos" />;
-  const { c, umbral } = await consultar(async (tx) => ({ c: await catalogosActivos(tx), umbral: await umbralActivo(tx) }));
+  const c = await consultar((tx) => catalogosActivos(tx));
   return (
     <>
       <Encabezado migas={[{ etiqueta: "Activos", href: "/portal/activos" }, { etiqueta: "Nuevo" }]} titulo="Registrar un activo sin factura" descripcion="Para donaciones o activos viejos. Si tiene la factura, mejor regístrelo en Compras: así el activo queda con la factura y sus XML. Lo que no sepa todavía lo puede dejar vacío." />
       <div className={estiloTarjeta}>
         <FormularioActivo
-          umbral={umbral}
           ubicaciones={opciones(c.ubicaciones, (u) => u.activo)}
           fuentes={c.fuentes.filter((x) => x.activo).map((x) => ({ valor: x.id, texto: `${x.codigo} · ${x.nombre}` }))}
           categorias={c.categorias.filter((x) => x.activa).map((x) => ({ valor: x.id, texto: `${x.nombre} (${Number(x.tasa_anual)} %)` }))}

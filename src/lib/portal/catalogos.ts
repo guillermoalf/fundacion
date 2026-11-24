@@ -33,4 +33,4 @@ export async function umbralActivo(tx: Tx, fecha?: string | null): Promise<numbe
 
 /** Categorías de productos del inventario, en su orden (activas e inactivas). */
 export const categoriasProducto = (tx: Tx) =>
-  tx.selectFrom("categorias_producto").select(["codigo", "nombre", "reporte", "activo"]).orderBy("orden").orderBy(alfa("nombre")).execute();
+  tx.selectFrom("categorias_producto").select(["codigo", "nombre", "reporte", "activo"]).orderBy(alfa("nombre")).execute();

@@ -411,6 +411,17 @@ export interface Proveedores {
   tipo: string | null;
 }
 
+export interface ReportesActivos {
+  activo: Generated<boolean>;
+  actualizado_en: Generated<Timestamp>;
+  config: Json;
+  creado_en: Generated<Timestamp>;
+  creado_por: Generated<string | null>;
+  descripcion: string | null;
+  id: Generated<string>;
+  nombre: string;
+}
+
 export interface ResponsablesNino {
   activo: Generated<boolean>;
   correo: string | null;
@@ -542,6 +553,7 @@ export interface DB {
   preferencias_tabla: PreferenciasTabla;
   productos: Productos;
   proveedores: Proveedores;
+  reportes_activos: ReportesActivos;
   responsables_nino: ResponsablesNino;
   salario_aportes: SalarioAportes;
   salarios: Salarios;

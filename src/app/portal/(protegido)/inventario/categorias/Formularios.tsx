@@ -13,16 +13,15 @@ export function FormularioCategoria({ v }: { v?: { codigo: string; nombre: strin
   useAvisoResultado(estado, v ? "Categoría guardada." : "Categoría agregada.");
   const p = v ? `cat-${v.codigo}-` : "cat-nueva-";
   return (
-    <FormularioAccion accion={accion} estado={estado} pendiente={pendiente} reiniciar={!v} className="grid gap-3 sm:grid-cols-[2fr_2fr_6rem_auto] sm:items-end">
+    <FormularioAccion accion={accion} estado={estado} pendiente={pendiente} reiniciar={!v} className="grid gap-3 sm:grid-cols-[2fr_2fr_auto] sm:items-end">
       {v && <input type="hidden" name="codigo" value={v.codigo} />}
       <Campo etiqueta="Nombre" name="nombre" id={`${p}nombre`} defaultValue={v?.nombre} required placeholder="Ej.: Artículos de jardín" />
       <Seleccion etiqueta="Sale en el reporte" name="reporte" id={`${p}reporte`} opciones={OPCIONES_REPORTE} defaultValue={v?.reporte ?? "ninguno"} required />
-      <Campo etiqueta="Orden" name="orden" id={`${p}orden`} inputMode="numeric" defaultValue={v?.orden ?? 100} />
       <div className="flex items-center gap-4 pb-1">
         {v && <Casilla etiqueta="En uso" name="activo" id={`${p}activo`} defaultChecked={v.activo} />}
         <BotonEnviar variante={v ? "secundario" : "primario"}>{v ? "Guardar" : "Agregar"}</BotonEnviar>
       </div>
-      <div className="sm:col-span-4"><MensajeError estado={estado} /></div>
+      <div className="sm:col-span-3"><MensajeError estado={estado} /></div>
     </FormularioAccion>
   );
 }

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { obtenerSesion } from "@/lib/portal/sesion";
 import { hoyCR } from "@/lib/portal/formato";
-import { categoriasProducto, umbralActivo } from "@/lib/portal/catalogos";
+import { categoriasProducto } from "@/lib/portal/catalogos";
 import Encabezado from "../../../_ui/Encabezado";
 import SinPermiso from "../../../_ui/SinPermiso";
 import { estiloBoton, estiloTarjeta } from "../../../_ui/estilos";
@@ -19,7 +19,6 @@ export default async function NuevaCompraPage() {
     fuentes: await tx.selectFrom("fuentes_financiamiento").select(["id", "codigo", "nombre"]).where("activo", "=", true).orderBy("id").execute(),
     productos: await tx.selectFrom("productos").select(["id", "nombre", "unidad"]).where("activo", "=", true).orderBy(alfa("nombre")).execute(),
     ubicaciones: await tx.selectFrom("ubicaciones").select(["id", "nombre"]).where("activo", "=", true).orderBy(alfa("nombre")).execute(),
-    umbral: await umbralActivo(tx),
     categoriasProducto: (await categoriasProducto(tx)).filter((x) => x.activo),
     categorias: await tx.selectFrom("categorias_activo").select(["id", "nombre", "tasa_anual"]).where("activa", "=", true).orderBy(alfa("nombre")).execute(),
   }));
@@ -33,7 +32,6 @@ export default async function NuevaCompraPage() {
       <div className={estiloTarjeta}>
         <FormularioCompra
           hoy={hoyCR()}
-          umbral={c.umbral}
           proveedores={c.proveedores.map((p) => ({ valor: p.id, texto: p.nombre }))}
           fuentes={c.fuentes.map((f) => ({ valor: f.id, texto: `${f.codigo} · ${f.nombre}` }))}
           productos={c.productos}
