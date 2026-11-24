@@ -4,7 +4,7 @@ import { estadoEstudio, type EstadoEstudio, type ReglasEstudio } from "@/lib/cal
 
 export type EstudioNino = {
   ninoId: string; nombre: string; aula: string | null;
-  ultimo: { fecha: string; trabajador: string | null; documento: string | null } | null;
+  ultimo: { fecha: string; vence: string; trabajador: string | null; documento: string | null } | null;
   estado: EstadoEstudio; vence: string | null; diasRestantes: number | null;
 };
 
@@ -31,7 +31,7 @@ export async function estudiosPani(tx: Tx, hoy: string, soloNino?: string): Prom
   if (soloNino) q = q.where("n.id", "=", soloNino);
   const ninos = await q.execute();
   const ultimos = ninos.length
-    ? await tx.selectFrom("estudios_socioeconomicos").select(["nino_id", "fecha_elaboracion", "trabajador_social", "documento_url"])
+    ? await tx.selectFrom("estudios_socioeconomicos").select(["nino_id", "fecha_elaboracion", "fecha_vencimiento", "trabajador_social", "documento_url"])
       .where("nino_id", "in", ninos.map((n) => n.id)).orderBy("fecha_elaboracion", "desc").orderBy("creado_en", "desc").execute()
     : [];
   const porNino = new Map<string, (typeof ultimos)[number]>();
@@ -42,8 +42,8 @@ export async function estudiosPani(tx: Tx, hoy: string, soloNino?: string): Prom
       const e = porNino.get(n.id);
       return {
         ninoId: n.id, nombre: `${n.nombre} ${n.apellidos}`, aula: n.aula,
-        ultimo: e ? { fecha: e.fecha_elaboracion, trabajador: e.trabajador_social, documento: e.documento_url } : null,
-        ...estadoEstudio(e?.fecha_elaboracion ?? null, hoy, reglas),
+        ultimo: e ? { fecha: e.fecha_elaboracion, vence: e.fecha_vencimiento, trabajador: e.trabajador_social, documento: e.documento_url } : null,
+        ...estadoEstudio(e?.fecha_elaboracion ?? null, hoy, reglas, e?.fecha_vencimiento),
       };
     }),
   };

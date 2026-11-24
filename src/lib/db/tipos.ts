@@ -246,6 +246,7 @@ export interface EstudiosSocioeconomicos {
   creado_en: Generated<Timestamp>;
   documento_url: string | null;
   fecha_elaboracion: string;
+  fecha_vencimiento: string;
   id: Generated<string>;
   nino_id: string;
   observaciones: string | null;
