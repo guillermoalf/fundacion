@@ -100,6 +100,7 @@ scripts/                         db.mts (migrar/reset/test), crear-admin.mts, ge
 - Purchase prices are shown WITH IVA (+ small breakdown): `compra_lineas.iva_linea` (from the e-invoice XML, else prorated via `src/lib/calculos/precios.ts`); history in `v_precios_producto`, helpers in `src/lib/portal/precios.ts`.
 - Salary funds: `salario_aportes` (fixed amount per fund + at most one «el resto», history by `vigente_desde`, `repartoSalario` in calculos). Each payroll line freezes its split in `planilla_lineas.reparto_fuentes`; totals/Excel use `lineaPorFondo` (src/lib/portal/planilla.ts).
 - Vacations: balance via `saldosVacaciones` (src/lib/portal/vacaciones.ts; optional `vacaciones_saldo_inicial/al` per employee). Requests in `solicitudes_vacaciones`; employees request for themselves (their user = `empleados.perfil_id`, `mi_empleado()`), Dirección approves via `resolver_vacaciones()` (creates the vacaciones ausencia).
+- PANI socioeconomic studies: `estudios_socioeconomicos` (history, never edited; seen by `ve_notas_ninos()`). Expiry/warnings from `parametros` (`estudio_socioeconomico_vigencia_anios/aviso_dias/urgente_dias`) via `estadoEstudio` (calculos) and `estudiosPani` (src/lib/portal/estudios.ts). Non-dismissible banner in the portal layout.
 - Constants shared by server and client components live in files without "use client".
 - Forms must work on a phone (physical counts are done walking around the classrooms).
 

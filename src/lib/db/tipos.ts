@@ -242,6 +242,17 @@ export interface Empleados {
   vacaciones_saldo_inicial: Numeric | null;
 }
 
+export interface EstudiosSocioeconomicos {
+  creado_en: Generated<Timestamp>;
+  documento_url: string | null;
+  fecha_elaboracion: string;
+  id: Generated<string>;
+  nino_id: string;
+  observaciones: string | null;
+  registrado_por: Generated<string | null>;
+  trabajador_social: string | null;
+}
+
 export interface FuentesFinanciamiento {
   activo: Generated<boolean>;
   codigo: string;
@@ -516,6 +527,7 @@ export interface DB {
   conteos_fisicos: ConteosFisicos;
   dispositivos_kiosko: DispositivosKiosko;
   empleados: Empleados;
+  estudios_socioeconomicos: EstudiosSocioeconomicos;
   fuentes_financiamiento: FuentesFinanciamiento;
   horarios: Horarios;
   inventario_movimientos: InventarioMovimientos;

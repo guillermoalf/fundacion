@@ -27,3 +27,19 @@ describe("asistencia", () => {
     expect(ausenciasSeguidas([{ fecha: "2026-11-19", estado: "justificada" }, { fecha: "2026-11-18", estado: "ausente" }])).toBe(0);
   });
 });
+
+import { estadoEstudio } from "./ninos";
+describe("estudio socioeconómico", () => {
+  const r = { vigenciaAnios: 5, avisoDias: 180, urgenteDias: 90 };
+  it("vence a los 5 años y avisa a los 6 y 3 meses", () => {
+    expect(estadoEstudio("2022-03-01", "2026-11-24", r)).toEqual({ estado: "aviso", vence: "2027-03-01", diasRestantes: 97 });
+  });
+  it("cada estado", () => {
+    expect(estadoEstudio(null, "2026-11-24", r).estado).toBe("falta");
+    expect(estadoEstudio("2021-11-24", "2026-11-24", r).estado).toBe("vencido");
+    expect(estadoEstudio("2022-02-01", "2026-11-24", r).estado).toBe("urgente");
+    expect(estadoEstudio("2022-05-01", "2026-11-24", r).estado).toBe("aviso");
+    expect(estadoEstudio("2024-01-01", "2026-11-24", r).estado).toBe("vigente");
+    expect(estadoEstudio("2020-02-29", "2024-01-01", { ...r, vigenciaAnios: 5 }).vence).toBe("2025-02-28");
+  });
+});

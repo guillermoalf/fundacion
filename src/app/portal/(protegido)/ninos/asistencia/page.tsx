@@ -5,6 +5,7 @@ import { fecha, hoyCR, mesLargo } from "@/lib/portal/formato";
 import { resumenAsistencia, type EstadoAsistencia } from "@/lib/calculos/ninos";
 import { LETRA } from "@/lib/export/asistenciaNinos";
 import { asistenciaDelMes } from "@/lib/portal/ninos";
+import { estudiosPani } from "@/lib/portal/estudios";
 import Encabezado from "../../../_ui/Encabezado";
 import SinPermiso from "../../../_ui/SinPermiso";
 import { estiloBoton, estiloTarjeta } from "../../../_ui/estilos";
@@ -15,7 +16,7 @@ export const metadata: Metadata = { title: "Asistencia de niños" };
 const COLOR: Record<EstadoAsistencia, string> = { presente: "text-emerald-700", ausente: "bg-red-50 text-red-700 font-semibold", justificada: "text-slate-500" };
 
 export default async function AsistenciaNinosPage({ searchParams }: { searchParams: Promise<{ mes?: string; fuente?: string; aula?: string }> }) {
-  const { consultar, veNinos, esPersonal } = await obtenerSesion();
+  const { consultar, veNinos, esPersonal, veNotasNinos } = await obtenerSesion();
   if (!veNinos || esPersonal) return <SinPermiso que="el reporte de asistencia de los niños" />;
   const sp = await searchParams;
   const hoy = hoyCR();
@@ -25,6 +26,7 @@ export default async function AsistenciaNinosPage({ searchParams }: { searchPara
   const d = await consultar(async (tx) => ({
     ...(await asistenciaDelMes(tx, mes, { fuente, aula })),
     fuentes: await tx.selectFrom("fuentes_financiamiento").select(["codigo", "nombre"]).orderBy("id").execute(),
+    estudios: veNotasNinos ? new Map((await estudiosPani(tx, hoy)).estudios.map((e) => [e.ninoId, e.estado])) : new Map<string, string>(),
     aulas: await tx.selectFrom("ubicaciones").select(["id", "nombre"]).orderBy(alfa("nombre")).execute(),
   }));
   const general = resumenAsistencia(d.filas.flatMap((f) => Object.values(f.porDia)));
@@ -74,7 +76,13 @@ export default async function AsistenciaNinosPage({ searchParams }: { searchPara
                 const r = resumenAsistencia(Object.values(f.porDia));
                 return (
                   <tr key={f.id}>
-                    <td className="sticky left-0 whitespace-nowrap bg-white px-3 py-2"><Link href={`/portal/ninos/${f.id}`} className="font-medium text-sky-700 hover:underline">{f.nombre}</Link></td>
+                    <td className="sticky left-0 whitespace-nowrap bg-white px-3 py-2"><Link href={`/portal/ninos/${f.id}`} className="font-medium text-sky-700 hover:underline">{f.nombre}</Link>
+                      {["vencido", "falta"].includes(d.estudios.get(f.id) ?? "") && (
+                        <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-800" title="El PANI puede cobrar este tiempo">
+                          {d.estudios.get(f.id) === "falta" ? "Sin estudio" : "Estudio vencido"}
+                        </span>
+                      )}
+                    </td>
                     {d.dias.map((x) => <td key={x} className={`px-1.5 py-2 text-center ${f.porDia[x] ? COLOR[f.porDia[x]] : "text-slate-300"}`}>{f.porDia[x] ? LETRA[f.porDia[x]] : "·"}</td>)}
                     <td className="px-3 py-2 text-right">{r.presentes}</td>
                     <td className="px-3 py-2 text-right">{r.ausentes}{r.justificadas ? ` (+${r.justificadas} J)` : ""}</td>

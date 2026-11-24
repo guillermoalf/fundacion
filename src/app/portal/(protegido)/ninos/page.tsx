@@ -9,13 +9,14 @@ import SinPermiso from "../../_ui/SinPermiso";
 import Tabla from "../../_ui/Tabla";
 import Vacio from "../../_ui/Vacio";
 import { estiloBoton } from "../../_ui/estilos";
-import { AVISO_AUSENCIAS } from "./datos";
+import { AVISO_AUSENCIAS, ESTADOS_ESTUDIO } from "./datos";
+import { estudiosPani } from "@/lib/portal/estudios";
 import { alfa } from "@/lib/db/orden";
 
 export const metadata: Metadata = { title: "Niños y niñas" };
 
 export default async function NinosPage() {
-  const { consultar, veNinos, editaNinos, esPersonal } = await obtenerSesion();
+  const { consultar, veNinos, editaNinos, esPersonal, veNotasNinos } = await obtenerSesion();
   if (!veNinos) return <SinPermiso que="los datos de los niños" />;
   const hoy = hoyCR();
   const d = await consultar(async (tx) => {
@@ -26,7 +27,8 @@ export default async function NinosPage() {
       .where("activo", "=", true).orderBy("orden").orderBy("id").execute();
     const asistencia = await tx.selectFrom("asistencia_ninos").select(["nino_id", "fecha", "estado"])
       .where("fecha", ">=", new Date(Date.parse(hoy) - 30 * 86400000).toISOString().slice(0, 10)).execute();
-    return { ninos, responsables, asistencia };
+    const estudios = veNotasNinos ? new Map((await estudiosPani(tx, hoy)).estudios.map((e) => [e.ninoId, e])) : null;
+    return { ninos, responsables, asistencia, estudios };
   });
   const principal = new Map<string, (typeof d.responsables)[number]>();
   const hayLegal = new Set<string>();
@@ -71,9 +73,10 @@ export default async function NinosPage() {
           { clave: "nombre", titulo: "Nombre" }, { clave: "edad", titulo: "Edad" }, { clave: "aula", titulo: "Aula" },
           { clave: "responsable", titulo: "Responsable" }, { clave: "telefono", titulo: "Teléfono" },
           ...(esPersonal ? [] : [{ clave: "fuente", titulo: "Subsidio", ocultarEnMovil: true }]),
+          ...(d.estudios ? [{ clave: "estudio", titulo: "Estudio PANI" }] : []),
           { clave: "avisos", titulo: "Avisos" }, { clave: "estado", titulo: "Estado", ocultarEnMovil: true },
         ]}
-        filtros={[{ clave: "estado", titulo: "Estado" }, { clave: "aula", titulo: "Aula" }, ...(esPersonal ? [] : [{ clave: "fuente", titulo: "Subsidio" }, { clave: "aviso", titulo: "Avisos" }])]}
+        filtros={[{ clave: "estado", titulo: "Estado" }, { clave: "aula", titulo: "Aula" }, ...(esPersonal ? [] : [{ clave: "fuente", titulo: "Subsidio" }, { clave: "aviso", titulo: "Avisos" }]), ...(d.estudios ? [{ clave: "estudio", titulo: "Estudio PANI" }] : [])]}
         filas={d.ninos.map((n) => {
           const r = principal.get(n.id);
           const a = avisos(n);
@@ -90,9 +93,13 @@ export default async function NinosPage() {
               fuente: n.fuente ?? { vacio: true },
               avisos: a.length ? { texto: a.join(" · "), tono: "ambar" } : n.alergias ? { texto: "Alergias", tono: "rojo" } : { vacio: true },
               estado: n.estado === "activo" ? { texto: "Activo", tono: "verde" } : { texto: "Retirado", tono: "gris" },
+              estudio: (() => {
+                const e = d.estudios?.get(n.id);
+                return e ? { texto: ESTADOS_ESTUDIO[e.estado].texto, tono: ESTADOS_ESTUDIO[e.estado].tono } : { vacio: true };
+              })(),
             },
             orden: { edad: e ? e.anios * 12 + e.meses : null },
-            filtros: { estado: n.estado === "activo" ? "Activo" : "Retirado", aula: n.aula ?? "Sin aula", fuente: n.fuente ?? "Sin definir", aviso: a.length ? "Con avisos" : "Sin avisos" },
+            filtros: { estado: n.estado === "activo" ? "Activo" : "Retirado", aula: n.aula ?? "Sin aula", fuente: n.fuente ?? "Sin definir", aviso: a.length ? "Con avisos" : "Sin avisos", estudio: (() => { const e = d.estudios?.get(n.id); return e ? ESTADOS_ESTUDIO[e.estado].texto : "No es PANI"; })() },
           };
         })}
         vacio={<Vacio titulo="Todavía no hay niños registrados." accion={editaNinos && <Link href="/portal/ninos/nuevo" className={estiloBoton.primario}>Registrar el primero</Link>} />}

@@ -2,7 +2,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import logo from "@/assets/logo-abc.png";
 import { NOMBRE_ROL, obtenerSesion } from "@/lib/portal/sesion";
-import { fecha } from "@/lib/portal/formato";
+import { fecha, hoyCR } from "@/lib/portal/formato";
+import { estudiosPani, resumenEstudios } from "@/lib/portal/estudios";
 import { cerrarSesion } from "../acciones";
 import { ProveedorAvisos } from "../_ui/Avisos";
 import { ProveedorUsuario } from "../_ui/Borrador";
@@ -20,7 +21,7 @@ function BotonSalir() {
 }
 
 export default async function PortalProtegidoLayout({ children }: { children: ReactNode }) {
-  const { usuario, perfil } = await obtenerSesion();
+  const { usuario, perfil, veNotasNinos, consultar } = await obtenerSesion();
 
   if (!perfil) {
     return (
@@ -38,6 +39,10 @@ export default async function PortalProtegidoLayout({ children }: { children: Re
       </main>
     );
   }
+
+  // Estudios socioeconómicos PANI: aviso fijo (no se puede cerrar) en todo el portal para quien los gestiona.
+  const estudios = veNotasNinos ? resumenEstudios((await consultar((tx) => estudiosPani(tx, hoyCR()))).estudios) : null;
+  const urgentes = estudios ? estudios.falta + estudios.vencido + estudios.urgente : 0;
 
   const secciones = MENU.map((s) => ({ ...s, items: s.items.filter((i) =>
     perfil.rol === "personal" ? i.personal : !i.roles || i.roles.includes(perfil.rol) || perfil.rol === "superadmin") })).filter((s) => s.items.length);
@@ -67,7 +72,22 @@ export default async function PortalProtegidoLayout({ children }: { children: Re
         }
       />
       <main className="px-4 py-6 sm:px-6 lg:ml-20 lg:px-10 lg:py-8">
-        <div className="mx-auto max-w-6xl">{children}</div>
+        <div className="mx-auto max-w-6xl">
+          {estudios && (urgentes > 0 || estudios.aviso > 0) && (
+            <Link href="/portal/ninos/estudios" role="alert"
+              className={`mb-5 block rounded-2xl border-2 px-4 py-3 text-base ${urgentes > 0 ? "border-red-400 bg-red-50 text-red-900" : "border-amber-300 bg-amber-50 text-amber-900"}`}>
+              <strong>{urgentes > 0 ? "⚠ Urgente — estudios socioeconómicos PANI: " : "Estudios socioeconómicos PANI: "}</strong>
+              {[
+                estudios.vencido && `${estudios.vencido} vencido${estudios.vencido === 1 ? "" : "s"}`,
+                estudios.urgente && `${estudios.urgente} vence${estudios.urgente === 1 ? "" : "n"} en menos de 3 meses`,
+                estudios.falta && `${estudios.falta} niño${estudios.falta === 1 ? "" : "s"} sin estudio registrado`,
+                estudios.aviso && `${estudios.aviso} vence${estudios.aviso === 1 ? "" : "n"} en menos de 6 meses`,
+              ].filter(Boolean).join(" · ")}
+              . <span className="font-semibold underline">Ver y actualizar →</span>
+            </Link>
+          )}
+          {children}
+        </div>
       </main>
     </ProveedorAvisos>
     </ProveedorUsuario>
