@@ -25,6 +25,8 @@ export const MENU: SeccionMenu[] = [
       { href: "/portal/compras", etiqueta: "Compras" },
       { href: "/portal/proveedores", etiqueta: "Proveedores" },
       { href: "/portal/inventario", etiqueta: "Inventario" },
+      { href: "/portal/inventario/productos", etiqueta: "Productos" },
+      { href: "/portal/inventario/categorias", etiqueta: "Categorías de inventario" },
     ] },
   { titulo: "Personal", icono: "personal", color: "#fb7185", items: [
       { href: "/portal/personal", etiqueta: "Personal" },
