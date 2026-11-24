@@ -184,10 +184,12 @@ export async function registrarEstudio(_: R, f: FormData): Promise<R> {
   const r = await ejecutar(async () => {
     const fecha = textoObligatorio(f, "fecha_elaboracion", "la fecha en que se elaboró el estudio");
     if (fecha > hoyCR()) throw new ErrorUsuario("La fecha del estudio no puede ser en el futuro.");
+    const vence = textoObligatorio(f, "fecha_vencimiento", "la fecha de vencimiento del estudio");
+    if (vence <= fecha) throw new ErrorUsuario("La fecha de vencimiento debe ser después de la fecha en que se elaboró.");
     await consultar(async (tx) => {
       const doc = await guardarArchivo(tx, f.get("documento"));
       const n = await tx.insertInto("estudios_socioeconomicos").values({
-        nino_id: ninoId, fecha_elaboracion: fecha, trabajador_social: texto(f, "trabajador_social"), documento_url: doc, observaciones: texto(f, "observaciones"),
+        nino_id: ninoId, fecha_elaboracion: fecha, fecha_vencimiento: vence, trabajador_social: texto(f, "trabajador_social"), documento_url: doc, observaciones: texto(f, "observaciones"),
       }).returning("id").executeTakeFirst();
       if (!n) throw new ErrorUsuario("No tiene permiso para registrar estudios.");
     });

@@ -25,7 +25,7 @@ export default async function EstudiosPage() {
         migas={[{ etiqueta: "Niños y niñas", href: "/portal/ninos" }, { etiqueta: "Estudios socioeconómicos" }]}
         titulo="Estudios socioeconómicos (PANI)"
         descripcion={reglas
-          ? `Cada niño PANI necesita su estudio vigente: vence ${reglas.vigenciaAnios} años después de elaborado. Aviso a los ${Math.round(reglas.avisoDias / 30)} meses y urgente a los ${Math.round(reglas.urgenteDias / 30)}.`
+          ? `Cada niño PANI necesita su estudio vigente. Aviso cuando faltan ${Math.round(reglas.avisoDias / 30)} meses para que venza y urgente cuando faltan ${Math.round(reglas.urgenteDias / 30)}.`
           : "Faltan los parámetros del estudio socioeconómico (vigencia y avisos)."}
         acciones={<a href={`/portal/ninos/estudios/descargar?al=${hoy}`} className={estiloBoton.secundario}>Descargar Excel</a>}
       />

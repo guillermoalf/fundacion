@@ -45,7 +45,7 @@ export default async function NinoPage({ params, searchParams }: { params: Promi
       fuentes: editaNinos ? await tx.selectFrom("fuentes_financiamiento").select(["id", "codigo", "nombre"]).orderBy("id").execute() : [],
       estudio: veNotasNinos ? await estudiosPani(tx, hoy, id) : null,
       historialEstudios: veNotasNinos ? await tx.selectFrom("estudios_socioeconomicos as e").leftJoin("perfiles as p", "p.id", "e.registrado_por")
-        .select(["e.id", "e.fecha_elaboracion", "e.trabajador_social", "e.documento_url", "e.observaciones", "p.nombre as registro"])
+        .select(["e.id", "e.fecha_elaboracion", "e.fecha_vencimiento", "e.trabajador_social", "e.documento_url", "e.observaciones", "p.nombre as registro"])
         .where("e.nino_id", "=", id).orderBy("e.fecha_elaboracion", "desc").execute() : [],
     };
   });
@@ -65,18 +65,6 @@ export default async function NinoPage({ params, searchParams }: { params: Promi
         descripcion={[e, n.aula, n.estado === "retirado" ? `Retirado el ${fecha(n.fecha_retiro)} (${n.motivo_retiro})` : null].filter(Boolean).join(" · ")}
       />
       {guardado && <p role="status" className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-900">Quedó registrado.</p>}
-      {(() => {
-        const est = d.estudio?.estudios[0];
-        if (!est || est.estado === "vigente" || n.estado !== "activo") return null;
-        const rojo = est.estado !== "aviso";
-        return (
-          <div role="alert" className={`mb-6 rounded-2xl border px-4 py-3 ${rojo ? "border-red-300 bg-red-50 text-red-900" : "border-amber-300 bg-amber-50 text-amber-900"}`}>
-            <strong>Estudio socioeconómico: {ESTADOS_ESTUDIO[est.estado].texto.toLowerCase()}.</strong>{" "}
-            {est.estado === "falta" ? "Es niño PANI y no tiene estudio registrado." : `Vence el ${fecha(est.vence)}${est.diasRestantes !== null && est.diasRestantes > 0 ? ` (faltan ${est.diasRestantes} días)` : ""}.`}
-            {" "}Si el PANI paga con el estudio vencido, después le cobra a la fundación ese tiempo.
-          </div>
-        );
-      })()}
       {salud.length > 0 && (
         <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-red-900">
           {salud.map(([k, v]) => <p key={k}><span className="font-semibold">{k}:</span> {v}</p>)}
@@ -184,7 +172,7 @@ export default async function NinoPage({ params, searchParams }: { params: Promi
                 <ul className="mb-4 space-y-2">
                   {d.historialEstudios.map((e, i) => (
                     <li key={e.id} className={`rounded-xl border p-3 ${i === 0 ? "border-slate-300" : "border-slate-100 text-slate-500"}`}>
-                      <p className="font-medium">Elaborado el {fecha(e.fecha_elaboracion)}{e.trabajador_social ? ` · ${e.trabajador_social}` : ""}{i === 0 ? " (el actual)" : ""}</p>
+                      <p className="font-medium">Elaborado el {fecha(e.fecha_elaboracion)} · vence el {fecha(e.fecha_vencimiento)}{e.trabajador_social ? ` · ${e.trabajador_social}` : ""}{i === 0 ? " (el actual)" : ""}</p>
                       <p className="text-sm">
                         {e.documento_url ? <a href={e.documento_url} target="_blank" rel="noreferrer" className="font-medium text-sky-700 underline">Ver estudio</a> : "Sin documento adjunto"}
                         {e.observaciones ? ` · ${e.observaciones}` : ""}{e.registro ? ` · registró ${e.registro}` : ""}
@@ -196,7 +184,7 @@ export default async function NinoPage({ params, searchParams }: { params: Promi
               {editaNinos && n.estado === "activo" && (
                 <details open={!d.historialEstudios.length || (d.estudio?.estudios[0]?.estado ?? "vigente") !== "vigente"}>
                   <summary className="cursor-pointer font-medium text-sky-700">{d.historialEstudios.length ? "Registrar el estudio renovado" : "Registrar el estudio"}</summary>
-                  <div className="mt-3"><FormularioEstudio ninoId={id} hoy={hoy} renovacion={d.historialEstudios.length > 0} /></div>
+                  <div className="mt-3"><FormularioEstudio ninoId={id} hoy={hoy} renovacion={d.historialEstudios.length > 0} vigenciaAnios={d.estudio?.reglas?.vigenciaAnios ?? null} /></div>
                 </details>
               )}
             </section>

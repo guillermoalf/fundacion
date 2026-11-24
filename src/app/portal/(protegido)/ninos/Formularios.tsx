@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { AreaTexto, BotonEnviar, Campo, CampoArchivo, Casilla, FormularioAccion, MensajeError, Seleccion } from "../../_ui/Formulario";
 import { useAvisoResultado } from "../../_ui/Avisos";
 import { agregarNota, crearNino, editarNino, guardarResponsable, registrarEstudio, reingresarNino, retirarNino } from "./acciones";
 import { PROVINCIAS } from "./datos";
+import { sumarAnios } from "@/lib/calculos/ninos";
 
 type Opcion = { valor: number | string; texto: string };
 type VN = {
@@ -153,13 +154,20 @@ export function FormularioReingreso({ ninoId }: { ninoId: string }) {
   );
 }
 
-export function FormularioEstudio({ ninoId, hoy, renovacion }: { ninoId: string; hoy: string; renovacion: boolean }) {
+export function FormularioEstudio({ ninoId, hoy, renovacion, vigenciaAnios }: { ninoId: string; hoy: string; renovacion: boolean; vigenciaAnios: number | null }) {
   const [estado, accion, pendiente] = useActionState(registrarEstudio, null);
   useAvisoResultado(estado, "Estudio registrado.");
+  const [elaborado, setElaborado] = useState("");
+  const [vence, setVence] = useState("");
+  const [tocado, setTocado] = useState(false);
+  useEffect(() => { if (estado?.ok) { setElaborado(""); setVence(""); setTocado(false); } }, [estado]);
   return (
     <FormularioAccion accion={accion} estado={estado} pendiente={pendiente} className="grid gap-3 sm:grid-cols-2">
       <input type="hidden" name="nino_id" value={ninoId} />
-      <Campo etiqueta="Fecha en que se elaboró" name="fecha_elaboracion" id="est-fecha" type="date" max={hoy} required ayuda="La que puso el trabajador social. Desde ahí cuentan los 5 años." />
+      <Campo etiqueta="Fecha en que se elaboró" name="fecha_elaboracion" id="est-fecha" type="date" max={hoy} required value={elaborado}
+        onChange={(e) => { setElaborado(e.target.value); if (!tocado && e.target.value && vigenciaAnios) setVence(sumarAnios(e.target.value, vigenciaAnios)); }} />
+      <Campo etiqueta="Fecha de vencimiento" name="fecha_vencimiento" id="est-vence" type="date" min={elaborado || undefined} required value={vence}
+        onChange={(e) => { setVence(e.target.value); setTocado(true); }} ayuda={vigenciaAnios ? `Se sugiere a ${vigenciaAnios} años; cámbiela si el estudio dice otra.` : undefined} />
       <Campo etiqueta="Trabajador(a) social" name="trabajador_social" id="est-trabajador" />
       <div className="sm:col-span-2"><CampoArchivo etiqueta="Estudio (PDF o foto)" name="documento" /></div>
       <AreaTexto etiqueta="Observaciones" name="observaciones" id="est-obs" rows={2} className="sm:col-span-2" />
