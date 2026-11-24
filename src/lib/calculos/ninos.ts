@@ -44,3 +44,27 @@ export function ausenciasSeguidas(registros: { fecha: string; estado: EstadoAsis
   }
   return n;
 }
+
+// ---------------------------------------------------------------- Estudio socioeconómico (PANI)
+export type EstadoEstudio = "falta" | "vencido" | "urgente" | "aviso" | "vigente";
+export type ReglasEstudio = { vigenciaAnios: number; avisoDias: number; urgenteDias: number };
+
+/** Suma años a una fecha "YYYY-MM-DD" (el 29 de febrero pasa al 28 si el año no es bisiesto). */
+function sumarAnios(fecha: string, anios: number): string {
+  const [y, m, d] = fecha.split("-").map(Number);
+  const ultimo = new Date(Date.UTC(y + anios, m, 0)).getUTCDate();
+  return `${y + anios}-${String(m).padStart(2, "0")}-${String(Math.min(d, ultimo)).padStart(2, "0")}`;
+}
+const dias = (desde: string, hasta: string) => Math.round((Date.parse(hasta) - Date.parse(desde)) / 86_400_000);
+
+/**
+ * Estado del estudio socioeconómico a una fecha: vence `vigenciaAnios` después de elaborado.
+ * «urgente» cuando faltan `urgenteDias` o menos; «aviso» cuando faltan `avisoDias` o menos; «vencido» desde el día que vence.
+ */
+export function estadoEstudio(elaboracion: string | null, hoy: string, r: ReglasEstudio): { estado: EstadoEstudio; vence: string | null; diasRestantes: number | null } {
+  if (!elaboracion) return { estado: "falta", vence: null, diasRestantes: null };
+  const vence = sumarAnios(elaboracion, r.vigenciaAnios);
+  const restantes = dias(hoy, vence);
+  const estado: EstadoEstudio = restantes <= 0 ? "vencido" : restantes <= r.urgenteDias ? "urgente" : restantes <= r.avisoDias ? "aviso" : "vigente";
+  return { estado, vence, diasRestantes: restantes };
+}

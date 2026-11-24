@@ -13,6 +13,7 @@ export const MENU: SeccionMenu[] = [
       { href: "/portal/ninos", etiqueta: "Niños y niñas", roles: ["admin", "coordinacion", "auditor", "personal"], personal: true },
       { href: "/portal/ninos/lista", etiqueta: "Pasar lista", roles: ["admin", "coordinacion", "personal"], personal: true },
       { href: "/portal/ninos/asistencia", etiqueta: "Asistencia de niños", roles: ["admin", "coordinacion", "auditor"] },
+      { href: "/portal/ninos/estudios", etiqueta: "Estudios socioeconómicos", roles: ["admin", "coordinacion", "auditor"] },
     ] },
   { titulo: "Activos", icono: "activos", color: "#fbbf24", items: [
       { href: "/portal/activos", etiqueta: "Activos" },

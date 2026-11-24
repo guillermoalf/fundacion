@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { obtenerSesion } from "@/lib/portal/sesion";
 import { casilla, ejecutar, ErrorUsuario, entero, texto, textoObligatorio, type Resultado } from "@/lib/portal/acciones";
 import { hoyCR, partesCR } from "@/lib/portal/formato";
+import { guardarArchivo } from "@/lib/portal/archivos";
 
 type R = Resultado | null;
 const SIN_PERMISO = "No tiene permiso para cambiar los datos de los niños. Pídaselo a la dirección.";
@@ -174,4 +175,24 @@ export async function marcarAsistencia(
       return { hora: horaFinal?.slice(0, 5) ?? null };
     });
   });
+}
+
+/** Registra el estudio socioeconómico (nuevo o renovación). Los anteriores quedan en el historial. */
+export async function registrarEstudio(_: R, f: FormData): Promise<R> {
+  const { consultar } = await obtenerSesion();
+  const ninoId = String(f.get("nino_id"));
+  const r = await ejecutar(async () => {
+    const fecha = textoObligatorio(f, "fecha_elaboracion", "la fecha en que se elaboró el estudio");
+    if (fecha > hoyCR()) throw new ErrorUsuario("La fecha del estudio no puede ser en el futuro.");
+    await consultar(async (tx) => {
+      const doc = await guardarArchivo(tx, f.get("documento"));
+      const n = await tx.insertInto("estudios_socioeconomicos").values({
+        nino_id: ninoId, fecha_elaboracion: fecha, trabajador_social: texto(f, "trabajador_social"), documento_url: doc, observaciones: texto(f, "observaciones"),
+      }).returning("id").executeTakeFirst();
+      if (!n) throw new ErrorUsuario("No tiene permiso para registrar estudios.");
+    });
+    return {};
+  });
+  if (r.ok) { revalidatePath(`/portal/ninos/${ninoId}`); revalidatePath("/portal/ninos", "layout"); revalidatePath("/portal", "layout"); }
+  return r;
 }

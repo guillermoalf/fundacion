@@ -1,9 +1,9 @@
 "use client";
 
 import { useActionState } from "react";
-import { AreaTexto, BotonEnviar, Campo, Casilla, FormularioAccion, MensajeError, Seleccion } from "../../_ui/Formulario";
+import { AreaTexto, BotonEnviar, Campo, CampoArchivo, Casilla, FormularioAccion, MensajeError, Seleccion } from "../../_ui/Formulario";
 import { useAvisoResultado } from "../../_ui/Avisos";
-import { agregarNota, crearNino, editarNino, guardarResponsable, reingresarNino, retirarNino } from "./acciones";
+import { agregarNota, crearNino, editarNino, guardarResponsable, registrarEstudio, reingresarNino, retirarNino } from "./acciones";
 import { PROVINCIAS } from "./datos";
 
 type Opcion = { valor: number | string; texto: string };
@@ -149,6 +149,22 @@ export function FormularioReingreso({ ninoId }: { ninoId: string }) {
       <input type="hidden" name="id" value={ninoId} />
       <MensajeError estado={estado} />
       <BotonEnviar variante="secundario">Volvió a la fundación</BotonEnviar>
+    </FormularioAccion>
+  );
+}
+
+export function FormularioEstudio({ ninoId, hoy, renovacion }: { ninoId: string; hoy: string; renovacion: boolean }) {
+  const [estado, accion, pendiente] = useActionState(registrarEstudio, null);
+  useAvisoResultado(estado, "Estudio registrado.");
+  return (
+    <FormularioAccion accion={accion} estado={estado} pendiente={pendiente} className="grid gap-3 sm:grid-cols-2">
+      <input type="hidden" name="nino_id" value={ninoId} />
+      <Campo etiqueta="Fecha en que se elaboró" name="fecha_elaboracion" id="est-fecha" type="date" max={hoy} required ayuda="La que puso el trabajador social. Desde ahí cuentan los 5 años." />
+      <Campo etiqueta="Trabajador(a) social" name="trabajador_social" id="est-trabajador" />
+      <div className="sm:col-span-2"><CampoArchivo etiqueta="Estudio (PDF o foto)" name="documento" /></div>
+      <AreaTexto etiqueta="Observaciones" name="observaciones" id="est-obs" rows={2} className="sm:col-span-2" />
+      <div className="sm:col-span-2"><MensajeError estado={estado} /></div>
+      <div className="sm:col-span-2"><BotonEnviar>{renovacion ? "Registrar el estudio nuevo" : "Registrar estudio"}</BotonEnviar></div>
     </FormularioAccion>
   );
 }
