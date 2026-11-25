@@ -3,7 +3,7 @@ import Link from "next/link";
 import { obtenerSesion } from "@/lib/portal/sesion";
 import { hoyCR } from "@/lib/portal/formato";
 import { ausenciasSeguidas, edad, textoEdad, type EstadoAsistencia } from "@/lib/calculos/ninos";
-import { subsidioNino } from "@/lib/portal/ninos";
+import { PRIVADO, subsidioNino, SUBSIDIOS_NINOS } from "@/lib/portal/ninos";
 import { VolverAlBorrador } from "../../_ui/Borrador";
 import Encabezado from "../../_ui/Encabezado";
 import SinPermiso from "../../_ui/SinPermiso";
@@ -77,7 +77,7 @@ export default async function NinosPage() {
           ...(d.estudios ? [{ clave: "estudio", titulo: "Estudio PANI" }] : []),
           { clave: "avisos", titulo: "Avisos" }, { clave: "estado", titulo: "Estado", ocultarEnMovil: true },
         ]}
-        filtros={[{ clave: "estado", titulo: "Estado" }, { clave: "aula", titulo: "Aula" }, ...(esPersonal ? [] : [{ clave: "fuente", titulo: "Subsidio" }, { clave: "aviso", titulo: "Avisos" }]), ...(d.estudios ? [{ clave: "estudio", titulo: "Estudio PANI" }] : [])]}
+        filtros={[{ clave: "estado", titulo: "Estado" }, { clave: "aula", titulo: "Aula" }, ...(esPersonal ? [] : [{ clave: "fuente", titulo: "Subsidio", opciones: [...SUBSIDIOS_NINOS, PRIVADO, "Sin definir"] }, { clave: "aviso", titulo: "Avisos" }]), ...(d.estudios ? [{ clave: "estudio", titulo: "Estudio PANI" }] : [])]}
         filas={d.ninos.map((n) => {
           const r = principal.get(n.id);
           const a = avisos(n);
