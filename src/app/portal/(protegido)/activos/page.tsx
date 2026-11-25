@@ -44,7 +44,7 @@ export default async function ActivosPage() {
           { clave: "estado", titulo: "Estado" },
           { clave: "costo", titulo: "Costo", alinear: "derecha", ocultarEnMovil: true },
           { clave: "libros", titulo: "Valor en libros", alinear: "derecha" },
-          { clave: "categoria", titulo: "Categoría (Anexo 2)", oculta: true },
+          { clave: "categoria", titulo: "Categoría", oculta: true },
           { clave: "marca", titulo: "Marca", oculta: true },
           { clave: "modelo", titulo: "Modelo", oculta: true },
           { clave: "serie", titulo: "Serie", oculta: true },

@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { obtenerSesion } from "@/lib/portal/sesion";
 import { fecha, hoyCR, mesLargo, rangoMes } from "@/lib/portal/formato";
 import { edad, resumenAsistencia, textoEdad, type EstadoAsistencia } from "@/lib/calculos/ninos";
-import { subsidioNino } from "@/lib/portal/ninos";
+import { subsidioNino, SUBSIDIOS_NINOS } from "@/lib/portal/ninos";
 import Encabezado from "../../../_ui/Encabezado";
 import SinPermiso from "../../../_ui/SinPermiso";
 import { Insignia } from "../../../_ui/Insignias";
@@ -43,7 +43,7 @@ export default async function NinoPage({ params, searchParams }: { params: Promi
         : [],
       asistencia: await tx.selectFrom("asistencia_ninos").select(["fecha", "estado", "hora_llegada", "motivo"]).where("nino_id", "=", id).where("fecha", ">=", desde).where("fecha", "<=", hasta).orderBy("fecha", "desc").execute(),
       aulas: editaNinos ? await tx.selectFrom("ubicaciones").select(["id", "nombre"]).orderBy(alfa("nombre")).execute() : [],
-      fuentes: editaNinos ? await tx.selectFrom("fuentes_financiamiento").select(["id", "codigo", "nombre"]).orderBy("id").execute() : [],
+      fuentes: editaNinos ? await tx.selectFrom("fuentes_financiamiento").select(["id", "codigo", "nombre"]).where("codigo", "in", SUBSIDIOS_NINOS).orderBy("id").execute() : [],
       estudio: veNotasNinos ? await estudiosPani(tx, hoy, id) : null,
       historialEstudios: veNotasNinos ? await tx.selectFrom("estudios_socioeconomicos as e").leftJoin("perfiles as p", "p.id", "e.registrado_por")
         .select(["e.id", "e.fecha_elaboracion", "e.fecha_vencimiento", "e.trabajador_social", "e.documento_url", "e.observaciones", "p.nombre as registro"])
