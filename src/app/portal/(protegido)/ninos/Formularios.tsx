@@ -10,7 +10,7 @@ import { sumarAnios } from "@/lib/calculos/ninos";
 type Opcion = { valor: number | string; texto: string };
 type VN = {
   id?: string; nombre?: string; apellidos?: string; identificacion?: string | null; fecha_nacimiento?: string | null; sexo?: string | null;
-  provincia?: string | null; canton?: string | null; distrito?: string | null; direccion?: string | null; aula_id?: number | null; fuente_id?: number | null;
+  provincia?: string | null; canton?: string | null; distrito?: string | null; direccion?: string | null; aula_id?: number | null; fuente_id?: number | null; privado?: boolean;
   fecha_ingreso?: string; alergias?: string | null; condicion_medica?: string | null; medicamentos?: string | null;
 };
 
@@ -44,7 +44,7 @@ export function FormularioNino({ v = {}, aulas, fuentes, hoy }: { v?: VN; aulas:
         <Campo etiqueta="Cédula o identificación" name="identificacion" defaultValue={v.identificacion ?? ""} />
         <Seleccion etiqueta="Sexo" name="sexo" opciones={[{ valor: "F", texto: "Niña" }, { valor: "M", texto: "Niño" }]} vacio="Sin indicar" defaultValue={v.sexo ?? ""} />
         <Seleccion etiqueta="Aula o grupo" name="aula_id" opciones={aulas} vacio="Sin asignar" defaultValue={v.aula_id ?? ""} />
-        <Seleccion etiqueta="Lo subsidia" name="fuente_id" opciones={fuentes} vacio="Sin definir" defaultValue={v.fuente_id ?? ""} ayuda="Para el reporte de asistencia de cada entidad." />
+        <Seleccion etiqueta="Lo subsidia" name="fuente_id" opciones={[...fuentes, { valor: "privado", texto: "Privado" }]} vacio="Sin definir" defaultValue={v.privado ? "privado" : v.fuente_id ?? ""} ayuda="Para el reporte de asistencia de cada entidad." />
         <Campo etiqueta="Fecha de ingreso a la fundación" name="fecha_ingreso" type="date" defaultValue={v.fecha_ingreso ?? hoy} required />
       </fieldset>
       <fieldset className="grid gap-4 sm:grid-cols-3">
