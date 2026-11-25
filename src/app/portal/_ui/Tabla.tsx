@@ -17,7 +17,7 @@ import { guardarPreferenciaTabla, leerPreferenciaTabla, type PreferenciaTabla } 
  */
 export type Celda =
   | string | number | null
-  | { texto: string; href?: string; tono?: Tono; insignia?: boolean; detalle?: string; extra?: { texto: string; tono: Tono } }
+  | { texto: string; href?: string; tono?: Tono; insignia?: boolean; detalle?: string; extra?: { texto: string; tono: Tono }; ayuda?: string[] }
   | { vacio: true };
 
 /** `oculta`: no se ve hasta que la persona la agregue en «Columnas». */
@@ -42,11 +42,33 @@ const textoCelda = (c: Celda): string => {
 
 const COLOR_EXTRA: Record<Tono, string> = { gris: "text-slate-500", verde: "text-emerald-700", ambar: "text-amber-700", rojo: "text-red-700", azul: "text-sky-700" };
 
+/** Insignia con una lista que se ve al pasar el mouse o al tocarla. Va «fija» en la pantalla para que el borde de la tabla no la corte. */
+function CeldaConAyuda({ texto, tono, ayuda }: { texto: string; tono?: Tono; ayuda: string[] }) {
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  const abrir = (e: React.SyntheticEvent<HTMLElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    setPos({ x: Math.min(r.left, window.innerWidth - 300), y: r.bottom + 6 });
+  };
+  return (
+    <span className="inline-block" tabIndex={0} aria-label={`${texto}: ${ayuda.join(", ")}`}
+      onMouseEnter={abrir} onFocus={abrir} onClick={(e) => (pos ? setPos(null) : abrir(e))} onMouseLeave={() => setPos(null)} onBlur={() => setPos(null)}>
+      <span className="cursor-help"><Insignia tono={tono}>{texto}</Insignia></span>
+      {pos && (
+        <span role="tooltip" style={{ left: pos.x, top: pos.y }} className="pointer-events-none fixed z-50 w-max max-w-xs rounded-xl bg-slate-900 px-3 py-2 text-sm text-white shadow-lg">
+          <ul className="space-y-0.5">{ayuda.map((x) => <li key={x}>• {x}</li>)}</ul>
+        </span>
+      )}
+    </span>
+  );
+}
+
 function VerCelda({ c, href }: { c: Celda; href?: string }) {
   if (c === null) return <Falta />;
   if (typeof c === "string" || typeof c === "number") return href ? <Link href={href} className="font-medium text-sky-700 hover:underline">{c}</Link> : <>{c}</>;
   if ("vacio" in c) return <span className="text-slate-400">—</span>;
   const enlace = c.href ?? href;
+  // `ayuda`: lista que aparece al pasar el mouse (o al tocar, en el celular) sobre la celda.
+  if (c.ayuda?.length) return <CeldaConAyuda texto={c.texto} tono={c.tono} ayuda={c.ayuda} />;
   const principal = c.insignia || (c.tono && !c.extra && !c.detalle)
     ? <Insignia tono={c.tono}>{c.texto}</Insignia>
     : enlace ? <Link href={enlace} className="font-medium text-sky-700 hover:underline">{c.texto}</Link> : <>{c.texto}</>;

@@ -23,13 +23,36 @@ const AYUDA: Record<string, string> = {
 export default async function PendientesPage({ searchParams }: { searchParams: Promise<{ tipo?: string }> }) {
   const { tipo } = await searchParams;
   const { consultar, puedeEscribir } = await obtenerSesion();
-  const alertas = await consultar((tx) =>
-    tx.selectFrom("v_activos_alertas").select(["activo_id", "placa", "tipo_bien", "ubicacion", "alerta"]).orderBy("ubicacion").orderBy("placa").execute(),
-  );
+  const { alertas, lineas } = await consultar(async (tx) => {
+    const alertas = await tx.selectFrom("v_activos_alertas").select(["activo_id", "placa", "tipo_bien", "ubicacion", "alerta"]).orderBy("ubicacion").orderBy("placa").execute();
+    const ids = [...new Set(alertas.map((a) => a.activo_id!))];
+    const lineas = ids.length
+      ? await tx.selectFrom("activos as a").leftJoin("compra_lineas as l", "l.id", "a.compra_linea_id").select(["a.id", "a.compra_linea_id", "l.compra_id"]).where("a.id", "in", ids).execute()
+      : [];
+    return { alertas, lineas };
+  });
   const porTipo = new Map<string, number>();
   for (const a of alertas) porTipo.set(a.alerta!, (porTipo.get(a.alerta!) ?? 0) + 1);
   const activosConAlgo = new Set(alertas.map((a) => a.activo_id)).size;
-  const visibles = tipo ? alertas.filter((a) => a.alerta === tipo) : alertas;
+
+  // Una fila por activo con sus pendientes; los iguales (mismo bien, misma compra, mismo lugar y mismos pendientes,
+  // p. ej. 3 sillas de una factura) se juntan en una sola fila con la cantidad de unidades.
+  const porActivo = new Map<string, { id: string; tipoBien: string; placa: string | null; ubicacion: string | null; pendientes: string[] }>();
+  for (const a of alertas) {
+    const x = porActivo.get(a.activo_id!) ?? { id: a.activo_id!, tipoBien: a.tipo_bien!, placa: a.placa, ubicacion: a.ubicacion, pendientes: [] };
+    x.pendientes.push(a.alerta!);
+    porActivo.set(a.activo_id!, x);
+  }
+  const compraDe = new Map(lineas.map((l) => [l.id, { linea: l.compra_linea_id, compra: l.compra_id }]));
+  const grupos = new Map<string, { activos: (typeof porActivo extends Map<string, infer V> ? V : never)[]; compra: string | null }>();
+  for (const a of porActivo.values()) {
+    const c = compraDe.get(a.id);
+    const clave = a.placa ? a.id : [a.tipoBien.trim().toLowerCase(), c?.linea ?? a.id, a.ubicacion ?? "", [...a.pendientes].sort().join("|")].join("·");
+    const g = grupos.get(clave) ?? { activos: [], compra: c?.compra ?? null };
+    g.activos.push(a);
+    grupos.set(clave, g);
+  }
+  const visibles = [...grupos.values()].filter((g) => !tipo || g.activos[0].pendientes.includes(tipo));
 
   return (
     <>
@@ -63,29 +86,34 @@ export default async function PendientesPage({ searchParams }: { searchParams: P
           <Tabla
             columnas={[
               { clave: "activo", titulo: "Activo" },
+              { clave: "unidades", titulo: "Unidades", alinear: "derecha" },
               { clave: "placa", titulo: "Placa" },
               { clave: "ubicacion", titulo: "Ubicación" },
-              { clave: "alerta", titulo: "Qué falta" },
+              { clave: "pendientes", titulo: "Pendientes" },
               { clave: "accion", titulo: "" },
             ]}
-            filtros={[{ clave: "ubicacion", titulo: "Ubicación" }, { clave: "alerta", titulo: "Qué falta" }]}
-            filas={visibles.map((a, i) => ({
-              id: `${a.activo_id}-${i}`,
-              href: `/portal/activos/${a.activo_id}`,
-              celdas: {
-                activo: a.tipo_bien!,
-                placa: a.placa ?? { texto: "Sin placa", tono: "ambar" },
-                ubicacion: a.ubicacion ?? { texto: "Sin ubicación", tono: "ambar" },
-                alerta: { texto: a.alerta!, tono: "ambar" },
-                accion:
-                  a.alerta === "Sin ubicación"
-                    ? { texto: "Asignar →", href: `/portal/activos/${a.activo_id}` }
-                    : a.alerta === "Sin factura adjunta"
-                    ? { texto: "Ir a Compras", href: "/portal/compras" }
-                    : puedeEscribir ? { texto: "Completar →", href: `/portal/activos/${a.activo_id}/editar` } : { vacio: true },
-              },
-              filtros: { ubicacion: a.ubicacion ?? "Sin ubicación", alerta: a.alerta! },
-            }))}
+            filtros={[{ clave: "ubicacion", titulo: "Ubicación" }]}
+            filas={visibles.map((g) => {
+              const a = g.activos[0];
+              const n = g.activos.length;
+              const varios = n > 1;
+              return {
+                id: a.id,
+                href: varios && g.compra ? `/portal/compras/${g.compra}` : `/portal/activos/${a.id}`,
+                celdas: {
+                  activo: a.tipoBien,
+                  unidades: n,
+                  placa: a.placa ?? { texto: "Sin placa", tono: "ambar" },
+                  ubicacion: a.ubicacion ?? { texto: "Sin ubicación", tono: "ambar" },
+                  pendientes: { texto: `${a.pendientes.length} ${a.pendientes.length === 1 ? "pendiente" : "pendientes"}`, tono: "ambar", ayuda: a.pendientes },
+                  accion: varios
+                    ? (g.compra ? { texto: `Ver las ${n} →`, href: `/portal/compras/${g.compra}` } : { texto: "Completar →", href: `/portal/activos/${a.id}` })
+                    : puedeEscribir ? { texto: "Completar →", href: `/portal/activos/${a.id}/editar` } : { texto: "Ver →", href: `/portal/activos/${a.id}` },
+                },
+                orden: { unidades: n },
+                filtros: { ubicacion: a.ubicacion ?? "Sin ubicación" },
+              };
+            })}
           />
         </div>
       )}
