@@ -4,7 +4,7 @@ import { obtenerSesion } from "@/lib/portal/sesion";
 import { fecha, hoyCR, mesLargo } from "@/lib/portal/formato";
 import { resumenAsistencia, type EstadoAsistencia } from "@/lib/calculos/ninos";
 import { LETRA } from "@/lib/export/asistenciaNinos";
-import { asistenciaDelMes } from "@/lib/portal/ninos";
+import { asistenciaDelMes, PRIVADO } from "@/lib/portal/ninos";
 import { estudiosPani } from "@/lib/portal/estudios";
 import Encabezado from "../../../_ui/Encabezado";
 import SinPermiso from "../../../_ui/SinPermiso";
@@ -48,6 +48,7 @@ export default async function AsistenciaNinosPage({ searchParams }: { searchPara
           <select name="fuente" defaultValue={fuente ?? ""} className="mt-1 block w-full rounded-xl border border-slate-300 px-3 py-2 text-base sm:w-auto">
             <option value="">Todos</option>
             {d.fuentes.map((f) => <option key={f.codigo} value={f.codigo}>{f.codigo} · {f.nombre}</option>)}
+            <option value={PRIVADO}>{PRIVADO}</option>
           </select>
         </label>
         <label className="w-full text-sm font-medium text-slate-700 sm:w-auto">Aula

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { obtenerSesion } from "@/lib/portal/sesion";
 import { hoyCR } from "@/lib/portal/formato";
 import { ausenciasSeguidas, edad, textoEdad, type EstadoAsistencia } from "@/lib/calculos/ninos";
+import { subsidioNino } from "@/lib/portal/ninos";
 import { VolverAlBorrador } from "../../_ui/Borrador";
 import Encabezado from "../../_ui/Encabezado";
 import SinPermiso from "../../_ui/SinPermiso";
@@ -21,7 +22,7 @@ export default async function NinosPage() {
   const hoy = hoyCR();
   const d = await consultar(async (tx) => {
     const ninos = await tx.selectFrom("ninos as n").leftJoin("ubicaciones as u", "u.id", "n.aula_id").leftJoin("fuentes_financiamiento as f", "f.id", "n.fuente_id")
-      .select(["n.id", "n.nombre", "n.apellidos", "n.fecha_nacimiento", "n.estado", "n.identificacion", "n.alergias", "u.nombre as aula", "f.codigo as fuente"])
+      .select(["n.id", "n.nombre", "n.apellidos", "n.fecha_nacimiento", "n.estado", "n.identificacion", "n.alergias", "u.nombre as aula", subsidioNino])
       .orderBy("n.estado").orderBy(alfa("n.nombre")).orderBy(alfa("n.apellidos")).execute();
     const responsables = await tx.selectFrom("responsables_nino").select(["nino_id", "nombre", "parentesco", "telefono", "es_legal", "orden"])
       .where("activo", "=", true).orderBy("orden").orderBy("id").execute();

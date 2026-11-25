@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { obtenerSesion } from "@/lib/portal/sesion";
 import { fecha, hoyCR, mesLargo, rangoMes } from "@/lib/portal/formato";
 import { edad, resumenAsistencia, textoEdad, type EstadoAsistencia } from "@/lib/calculos/ninos";
+import { subsidioNino } from "@/lib/portal/ninos";
 import Encabezado from "../../../_ui/Encabezado";
 import SinPermiso from "../../../_ui/SinPermiso";
 import { Insignia } from "../../../_ui/Insignias";
@@ -31,7 +32,7 @@ export default async function NinoPage({ params, searchParams }: { params: Promi
   const mes = hoy.slice(0, 7);
   const d = await consultar(async (tx) => {
     const n = await tx.selectFrom("ninos as n").leftJoin("ubicaciones as u", "u.id", "n.aula_id").leftJoin("fuentes_financiamiento as f", "f.id", "n.fuente_id")
-      .selectAll("n").select(["u.nombre as aula", "f.codigo as fuente"]).where("n.id", "=", id).executeTakeFirst();
+      .selectAll("n").select(["u.nombre as aula", subsidioNino]).where("n.id", "=", id).executeTakeFirst();
     if (!n) return null;
     const { desde, hasta } = rangoMes(mes);
     return {

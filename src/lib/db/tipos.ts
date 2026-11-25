@@ -325,6 +325,7 @@ export interface Ninos {
   medicamentos: string | null;
   motivo_retiro: string | null;
   nombre: string;
+  privado: Generated<boolean>;
   provincia: string | null;
   sexo: string | null;
 }
