@@ -43,11 +43,11 @@ const textoCelda = (c: Celda): string => {
 const COLOR_EXTRA: Record<Tono, string> = { gris: "text-slate-500", verde: "text-emerald-700", ambar: "text-amber-700", rojo: "text-red-700", azul: "text-sky-700" };
 
 /** Insignia con una lista que se ve al pasar el mouse o al tocarla. Va «fija» en la pantalla para que el borde de la tabla no la corte. */
-function CeldaConAyuda({ texto, tono, ayuda, href }: { texto: string; tono?: Tono; ayuda: string[]; href?: string }) {
+export function CeldaConAyuda({ texto, tono, ayuda, href }: { texto: string; tono?: Tono; ayuda: string[]; href?: string }) {
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const abrir = (e: React.SyntheticEvent<HTMLElement>) => {
     const r = e.currentTarget.getBoundingClientRect();
-    setPos({ x: Math.min(r.left, window.innerWidth - 300), y: r.bottom + 6 });
+    setPos({ x: Math.max(8, Math.min(r.left, window.innerWidth - 336)), y: r.bottom + 6 });
   };
   const lista = pos && (
     <span role="tooltip" style={{ left: pos.x, top: pos.y }} className="pointer-events-none fixed z-50 w-max max-w-xs rounded-xl bg-slate-900 px-3 py-2 text-sm text-white shadow-lg">
