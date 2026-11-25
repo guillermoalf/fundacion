@@ -2,11 +2,14 @@ import type { Metadata } from "next";
 import { NOMBRE_ROL, obtenerSesion } from "@/lib/portal/sesion";
 import Encabezado from "../../_ui/Encabezado";
 import FormularioContrasena from "./FormularioContrasena";
+import FotoPerfil from "./FotoPerfil";
+import { enlaceFoto, inicialDe } from "@/lib/portal/fotos";
 
 export const metadata: Metadata = { title: "Mi cuenta" };
 
 export default async function CuentaPage({ searchParams }: { searchParams: Promise<{ contrasena?: string }> }) {
-  const { usuario, perfil } = await obtenerSesion();
+  const { usuario, perfil, consultar } = await obtenerSesion();
+  const foto = perfil ? await consultar((tx) => enlaceFoto(tx, usuario.id)) : null;
   const cambiada = (await searchParams).contrasena === "cambiada";
 
   return (
@@ -24,6 +27,13 @@ export default async function CuentaPage({ searchParams }: { searchParams: Promi
           </div>
         )}
       </dl>
+      {perfil && (
+        <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-4 font-semibold">Foto de perfil</h2>
+          <FotoPerfil foto={foto} inicial={inicialDe(perfil.nombre)} />
+          <p className="mt-3 text-sm text-slate-500">Sale en el menú en vez de la letra. Se recorta en cuadrado al centro.</p>
+        </div>
+      )}
       <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="mb-4 font-semibold">Cambiar contraseña</h2>
         {cambiada && (

@@ -254,6 +254,13 @@ export interface EstudiosSocioeconomicos {
   trabajador_social: string | null;
 }
 
+export interface FotosPerfil {
+  actualizada_en: Generated<Timestamp>;
+  contenido: Buffer | null;
+  id: Generated<string>;
+  tipo: string | null;
+}
+
 export interface FuentesFinanciamiento {
   activo: Generated<boolean>;
   codigo: string;
@@ -540,6 +547,7 @@ export interface DB {
   dispositivos_kiosko: DispositivosKiosko;
   empleados: Empleados;
   estudios_socioeconomicos: EstudiosSocioeconomicos;
+  fotos_perfil: FotosPerfil;
   fuentes_financiamiento: FuentesFinanciamiento;
   horarios: Horarios;
   inventario_movimientos: InventarioMovimientos;

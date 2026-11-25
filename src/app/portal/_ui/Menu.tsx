@@ -139,7 +139,7 @@ function Enlaces({ secciones, pathname, compacto, alElegir, insignias = {} }: { 
  * Menú lateral. Computadora: barra de íconos que se agranda con el mouse. Celular: botón ☰ que abre el mismo menú
  * ya con los nombres.
  */
-export default function Menu({ secciones, cabecera, pie, inicial, insignias }: { secciones: SeccionMenu[]; cabecera: ReactNode; pie: ReactNode; inicial: string; insignias?: Record<string, number> }) {
+export default function Menu({ secciones, cabecera, pie, inicial, foto, insignias }: { secciones: SeccionMenu[]; cabecera: ReactNode; pie: ReactNode; inicial: string; foto?: string | null; insignias?: Record<string, number> }) {
   const pathname = usePathname();
   const [abierto, setAbierto] = useState(false);
   useEffect(() => setAbierto(false), [pathname]);
@@ -161,9 +161,13 @@ export default function Menu({ secciones, cabecera, pie, inicial, insignias }: {
           <Enlaces secciones={secciones} pathname={pathname} compacto insignias={insignias} />
         </div>
         <div className="border-t border-white/10 px-3 py-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full text-lg font-bold group-hover/menu:hidden group-focus-within/menu:hidden" style={{ background: CREMA, color: FONDO }} title="Su usuario">
-            {inicial}
-          </div>
+          {foto
+            ? <img src={foto} alt="" title="Su usuario" className="h-12 w-12 rounded-full object-cover group-hover/menu:hidden group-focus-within/menu:hidden" />
+            : (
+              <div className="flex h-12 w-12 items-center justify-center rounded-full text-lg font-bold group-hover/menu:hidden group-focus-within/menu:hidden" style={{ background: CREMA, color: FONDO }} title="Su usuario">
+                {inicial}
+              </div>
+            )}
           <div className="hidden w-[15.5rem] group-hover/menu:block group-focus-within/menu:block">{pie}</div>
         </div>
       </aside>
