@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Columns3, Filter, ArrowUp, ArrowDown, X } from "lucide-react";
+import { Columns3, Filter, ArrowUp, ArrowDown, Info, X } from "lucide-react";
 import { Falta, Insignia, type Tono } from "./Insignias";
 import { estiloInput } from "./estilos";
 import Vacio from "./Vacio";
@@ -43,12 +43,30 @@ const textoCelda = (c: Celda): string => {
 const COLOR_EXTRA: Record<Tono, string> = { gris: "text-slate-500", verde: "text-emerald-700", ambar: "text-amber-700", rojo: "text-red-700", azul: "text-sky-700" };
 
 /** Insignia con una lista que se ve al pasar el mouse o al tocarla. Va «fija» en la pantalla para que el borde de la tabla no la corte. */
-function CeldaConAyuda({ texto, tono, ayuda }: { texto: string; tono?: Tono; ayuda: string[] }) {
+function CeldaConAyuda({ texto, tono, ayuda, href }: { texto: string; tono?: Tono; ayuda: string[]; href?: string }) {
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const abrir = (e: React.SyntheticEvent<HTMLElement>) => {
     const r = e.currentTarget.getBoundingClientRect();
     setPos({ x: Math.min(r.left, window.innerWidth - 300), y: r.bottom + 6 });
   };
+  const lista = pos && (
+    <span role="tooltip" style={{ left: pos.x, top: pos.y }} className="pointer-events-none fixed z-50 w-max max-w-xs rounded-xl bg-slate-900 px-3 py-2 text-sm text-white shadow-lg">
+      <ul className="space-y-0.5">{ayuda.map((x) => <li key={x}>• {x}</li>)}</ul>
+    </span>
+  );
+  // Con enlace: el texto lleva a la ficha y la «i» muestra la lista.
+  if (href) {
+    return (
+      <span className="inline-flex items-center gap-1.5">
+        <Link href={href} className="font-medium text-sky-700 hover:underline">{texto}</Link>
+        <span className="inline-flex cursor-help text-sky-700" tabIndex={0} aria-label={ayuda.join(", ")}
+          onMouseEnter={abrir} onFocus={abrir} onClick={(e) => (pos ? setPos(null) : abrir(e))} onMouseLeave={() => setPos(null)} onBlur={() => setPos(null)}>
+          <Info aria-hidden className="h-4 w-4" />
+        </span>
+        {lista}
+      </span>
+    );
+  }
   return (
     <span className="inline-block" tabIndex={0} aria-label={`${texto}: ${ayuda.join(", ")}`}
       onMouseEnter={abrir} onFocus={abrir} onClick={(e) => (pos ? setPos(null) : abrir(e))} onMouseLeave={() => setPos(null)} onBlur={() => setPos(null)}>
@@ -68,7 +86,7 @@ function VerCelda({ c, href }: { c: Celda; href?: string }) {
   if ("vacio" in c) return <span className="text-slate-400">—</span>;
   const enlace = c.href ?? href;
   // `ayuda`: lista que aparece al pasar el mouse (o al tocar, en el celular) sobre la celda.
-  if (c.ayuda?.length) return <CeldaConAyuda texto={c.texto} tono={c.tono} ayuda={c.ayuda} />;
+  if (c.ayuda?.length) return <CeldaConAyuda texto={c.texto} tono={c.tono} ayuda={c.ayuda} href={c.href} />;
   const principal = c.insignia || (c.tono && !c.extra && !c.detalle)
     ? <Insignia tono={c.tono}>{c.texto}</Insignia>
     : enlace ? <Link href={enlace} className="font-medium text-sky-700 hover:underline">{c.texto}</Link> : <>{c.texto}</>;
