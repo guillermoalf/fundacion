@@ -1,3 +1,4 @@
+import { SUBSIDIOS_NINOS } from "@/lib/portal/ninos";
 import type { Metadata } from "next";
 import { obtenerSesion } from "@/lib/portal/sesion";
 import { hoyCR } from "@/lib/portal/formato";
@@ -14,7 +15,7 @@ export default async function NuevoNinoPage() {
   if (!editaNinos) return <SinPermiso que="registrar niños" />;
   const { aulas, fuentes } = await consultar(async (tx) => ({
     aulas: await tx.selectFrom("ubicaciones").select(["id", "nombre"]).orderBy(alfa("nombre")).execute(),
-    fuentes: await tx.selectFrom("fuentes_financiamiento").select(["id", "codigo", "nombre"]).orderBy("id").execute(),
+    fuentes: await tx.selectFrom("fuentes_financiamiento").select(["id", "codigo", "nombre"]).where("codigo", "in", SUBSIDIOS_NINOS).orderBy("id").execute(),
   }));
   return (
     <>

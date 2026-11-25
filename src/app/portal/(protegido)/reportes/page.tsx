@@ -17,13 +17,10 @@ export default async function ReportesPage() {
 
   return (
     <>
-      <Encabezado migas={[{ etiqueta: "Reportes" }]} titulo="Reportes" descripcion="Los reportes que se entregan a quienes financian a la fundación. Se llenan solos con los datos del portal." />
+      <Encabezado migas={[{ etiqueta: "Reportes" }]} titulo="Reportes" />
       <section className="space-y-4">
         <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h2 className="text-xl font-semibold">Reportes de activos</h2>
-            <p className="text-slate-600">Cada reporte tiene sus especificaciones (fondos, monto mínimo, aulas…) y se llena solo al exportarlo, con el formato del Auxiliar de activos fijos.</p>
-          </div>
+          <h2 className="text-xl font-semibold">Reportes de activos</h2>
           {esAdmin && <Link href="/portal/reportes/activos/nuevo" className={estiloBoton.primario}>+ Nuevo reporte</Link>}
         </div>
         <Tabla
@@ -36,17 +33,12 @@ export default async function ReportesPage() {
             celdas: { nombre: r.nombre, descripcion: r.descripcion ?? { vacio: true }, estado: r.activo ? { texto: "Activo", tono: "verde" } : { texto: "Desactivado", tono: "gris" } },
             filtros: { estado: r.activo ? "Activo" : "Desactivado" },
           }))}
-          vacio={<Vacio titulo="Todavía no hay reportes de activos." accion={esAdmin && <Link href="/portal/reportes/activos/nuevo" className={estiloBoton.primario}>Crear el primero</Link>}>
-            Por ejemplo «PANI activos 2026»: solo fondos PANI, desde el 25 % del salario base por unidad y dividido por aula.
-          </Vacio>}
+          vacio={<Vacio titulo="Todavía no hay reportes de activos." accion={esAdmin && <Link href="/portal/reportes/activos/nuevo" className={estiloBoton.primario}>Crear el primero</Link>} />}
         />
       </section>
 
       <section className={`${estiloTarjeta} mt-6 space-y-4`}>
-        <div>
-          <h2 className="text-xl font-semibold">Controles mensuales de inventario</h2>
-          <p className="text-slate-600">Con los formatos que usa la fundación: Formulario N.º 1 (control de inventarios mensual) de alimentos y de aseo, y el control de inventario y consumo de productos de limpieza.</p>
-        </div>
+        <h2 className="text-xl font-semibold">Controles mensuales de inventario</h2>
         <form action="/portal/reportes/inventario/descargar" className="flex flex-wrap items-end gap-3">
           <label className="space-y-1.5">
             <span className={estiloEtiqueta}>Mes</span>

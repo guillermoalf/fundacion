@@ -43,9 +43,9 @@ export default function FormularioReporte({ v, fuentes, ubicaciones, categorias,
       {v && <input type="hidden" name="id" value={v.id} />}
       <input type="hidden" name="config" value={JSON.stringify(c)} />
       <div className="grid gap-4 sm:grid-cols-2">
-        <Campo etiqueta="Nombre del reporte" name="nombre" id="rep-nombre" defaultValue={v?.nombre} required placeholder="Ej.: PANI activos 2026" />
-        <AreaTexto etiqueta="Para qué es (opcional)" name="descripcion" id="rep-desc" rows={1} defaultValue={v?.descripcion ?? ""} placeholder="Ej.: el que revisa el PANI aula por aula" />
-        <Campo etiqueta="Título en el Excel" name="rep-titulo" id="rep-titulo" value={c.titulo} onChange={(e) => poner({ titulo: e.target.value })} ayuda="Ej.: Auxiliar de activos fijos Recursos PANI" />
+        <Campo etiqueta="Nombre del reporte" name="nombre" id="rep-nombre" defaultValue={v?.nombre} required />
+        <AreaTexto etiqueta="Para qué es (opcional)" name="descripcion" id="rep-desc" rows={1} defaultValue={v?.descripcion ?? ""} />
+        <Campo etiqueta="Título en el Excel" name="rep-titulo" id="rep-titulo" value={c.titulo} onChange={(e) => poner({ titulo: e.target.value })} />
         <Campo etiqueta="Programa" name="rep-programa" id="rep-programa" value={c.programa} onChange={(e) => poner({ programa: e.target.value })} />
       </div>
 
@@ -84,7 +84,7 @@ export default function FormularioReporte({ v, fuentes, ubicaciones, categorias,
         <summary className="cursor-pointer font-semibold text-sky-700">Más filtros (aulas, categorías, fechas, estados)</summary>
         <div className="mt-4 grid gap-6 lg:grid-cols-2">
           <Marcas titulo="Aulas o ubicaciones" ayuda="Sin marcar = todas." ops={ubicaciones} sel={c.ubicaciones} cambiar={(x) => poner({ ubicaciones: x as number[] })} />
-          <Marcas titulo="Categorías (Anexo 2)" ayuda="Sin marcar = todas." ops={categorias} sel={c.categorias} cambiar={(x) => poner({ categorias: x as number[] })} />
+          <Marcas titulo="Categorías" ayuda="Sin marcar = todas." ops={categorias} sel={c.categorias} cambiar={(x) => poner({ categorias: x as number[] })} />
           <div className="grid grid-cols-2 gap-3">
             <Campo etiqueta="Comprados desde" name="rep-desde" id="rep-desde" type="date" value={c.adquiridoDesde ?? ""} onChange={(e) => poner({ adquiridoDesde: e.target.value || null })} />
             <Campo etiqueta="Comprados hasta" name="rep-hasta" id="rep-hasta" type="date" value={c.adquiridoHasta ?? ""} onChange={(e) => poner({ adquiridoHasta: e.target.value || null })} />

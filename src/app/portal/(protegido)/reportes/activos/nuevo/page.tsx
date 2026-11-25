@@ -14,8 +14,7 @@ export default async function NuevoReportePage() {
   const op = await consultar((tx) => opcionesReporte(tx));
   return (
     <>
-      <Encabezado migas={[{ etiqueta: "Reportes", href: "/portal/reportes" }, { etiqueta: "Nuevo reporte" }]} titulo="Nuevo reporte de activos"
-        descripcion="Defina qué activos entran. Cada vez que lo exporte se llena solo con los activos que cumplan estas especificaciones a esa fecha." />
+      <Encabezado migas={[{ etiqueta: "Reportes", href: "/portal/reportes" }, { etiqueta: "Nuevo reporte" }]} titulo="Nuevo reporte de activos" />
       <section className={estiloTarjeta}><FormularioReporte {...op} /></section>
     </>
   );

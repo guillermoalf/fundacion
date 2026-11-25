@@ -4,7 +4,7 @@ import { obtenerSesion } from "@/lib/portal/sesion";
 import { fecha, hoyCR, mesLargo } from "@/lib/portal/formato";
 import { resumenAsistencia, type EstadoAsistencia } from "@/lib/calculos/ninos";
 import { LETRA } from "@/lib/export/asistenciaNinos";
-import { asistenciaDelMes, PRIVADO } from "@/lib/portal/ninos";
+import { asistenciaDelMes, PRIVADO, SUBSIDIOS_NINOS } from "@/lib/portal/ninos";
 import { estudiosPani } from "@/lib/portal/estudios";
 import Encabezado from "../../../_ui/Encabezado";
 import SinPermiso from "../../../_ui/SinPermiso";
@@ -25,7 +25,7 @@ export default async function AsistenciaNinosPage({ searchParams }: { searchPara
   const aula = sp.aula ? Number(sp.aula) || null : null;
   const d = await consultar(async (tx) => ({
     ...(await asistenciaDelMes(tx, mes, { fuente, aula })),
-    fuentes: await tx.selectFrom("fuentes_financiamiento").select(["codigo", "nombre"]).orderBy("id").execute(),
+    fuentes: await tx.selectFrom("fuentes_financiamiento").select(["codigo", "nombre"]).where("codigo", "in", SUBSIDIOS_NINOS).orderBy("id").execute(),
     estudios: veNotasNinos ? new Map((await estudiosPani(tx, hoy)).estudios.map((e) => [e.ninoId, e.estado])) : new Map<string, string>(),
     aulas: await tx.selectFrom("ubicaciones").select(["id", "nombre"]).orderBy(alfa("nombre")).execute(),
   }));

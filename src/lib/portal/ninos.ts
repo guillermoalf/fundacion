@@ -11,6 +11,8 @@ import { alfa } from "@/lib/db/orden";
  */
 /** Subsidio del niño para mostrar y filtrar: el código de la fuente (PANI, IMAS…) o «Privado». Necesita los alias `n` y `f`. */
 export const PRIVADO = "Privado";
+/** Únicas fuentes que subsidian niños (además de «Privado»). */
+export const SUBSIDIOS_NINOS = ["PANI", "IMAS"];
 export const subsidioNino = sql<string | null>`case when n.privado then ${PRIVADO} else f.codigo end`.as("fuente");
 
 export async function asistenciaDelMes(tx: Tx, mes: string, filtro: { fuente?: string | null; aula?: number | null } = {}) {
