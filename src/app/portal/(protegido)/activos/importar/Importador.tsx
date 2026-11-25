@@ -3,10 +3,13 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { BotonEnviar, MensajeError, Seleccion, FormularioAccion } from "../../../_ui/Formulario";
-import { Falta, Insignia } from "../../../_ui/Insignias";
+import { CeldaConAyuda } from "../../../_ui/Tabla";
 import { estiloBoton, estiloEtiqueta } from "../../../_ui/estilos";
 import { colones, fecha } from "@/lib/portal/formato";
 import { confirmar, previsualizar } from "./acciones";
+
+/** Dato que no viene en el Excel. */
+const SIN = <span className="text-slate-400">—</span>;
 
 export default function Importador({ fuentes }: { fuentes: { valor: string; texto: string }[] }) {
   const [vista, accionVista, accionVistaPendiente] = useActionState(previsualizar, null);
@@ -64,19 +67,24 @@ export default function Importador({ fuentes }: { fuentes: { valor: string; text
           <div className="max-h-[32rem] overflow-auto rounded-2xl border border-slate-200 bg-white">
             <table className="w-full text-left text-sm">
               <thead className="sticky top-0 bg-slate-50 text-slate-600">
-                <tr>{["Fila", "Ubicación", "Bien", "Placa", "Fecha", "Costo", "Categoría", "Pendientes"].map((t) => <th key={t} className="px-3 py-2 font-semibold">{t}</th>)}</tr>
+                <tr>{["Fila en el Excel", "Ubicación", "Tipo de bien", "Marca", "Modelo", "Serie", "Placa", "Fecha de adquisición", "Costo", "Depreciación acumulada", "Valor en libros", "Categoría", "Pendientes"].map((t) => <th key={t} className="whitespace-nowrap px-3 py-2 font-semibold">{t}</th>)}</tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {vista.filas.filter((f) => !soloPendientes || f.pendientes.length).map((f, i) => (
                   <tr key={i} className="align-top">
                     <td className="px-3 py-2 text-slate-500">{f.filaOrigen}</td>
-                    <td className="px-3 py-2">{f.ubicacion ?? <Falta />}</td>
-                    <td className="px-3 py-2">{[f.tipoBien, f.marca].filter(Boolean).join(" · ")}</td>
-                    <td className="px-3 py-2">{f.placa ?? <Falta />}</td>
-                    <td className="px-3 py-2">{fecha(f.fechaAdquisicion) ?? <Falta />}{f.fechaAproximada && " (aprox.)"}</td>
-                    <td className="px-3 py-2 text-right tabular-nums">{colones(f.costo) ?? <Falta />}</td>
-                    <td className="px-3 py-2">{f.categoria?.nombre ?? <Falta />}</td>
-                    <td className="px-3 py-2">{f.pendientes.length ? f.pendientes.map((p) => <div key={p}><Insignia tono="ambar">{p}</Insignia></div>) : "—"}</td>
+                    <td className="px-3 py-2">{f.ubicacion ?? SIN}</td>
+                    <td className="px-3 py-2">{f.tipoBien ?? SIN}</td>
+                    <td className="px-3 py-2">{f.marca ?? SIN}</td>
+                    <td className="px-3 py-2">{f.modelo ?? SIN}</td>
+                    <td className="px-3 py-2">{f.serie ?? SIN}</td>
+                    <td className="px-3 py-2">{f.placa ?? SIN}</td>
+                    <td className="whitespace-nowrap px-3 py-2">{fecha(f.fechaAdquisicion) ?? SIN}{f.fechaAproximada && " (aprox.)"}</td>
+                    <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums">{colones(f.costo) ?? SIN}</td>
+                    <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums">{colones(f.depreciacionAcumulada) ?? SIN}</td>
+                    <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums">{colones(f.valorLibros) ?? SIN}</td>
+                    <td className="px-3 py-2">{f.categoria?.nombre ?? SIN}</td>
+                    <td className="whitespace-nowrap px-3 py-2">{f.pendientes.length ? <CeldaConAyuda texto={f.pendientes.length === 1 ? "1 pendiente" : `${f.pendientes.length} pendientes`} tono="ambar" ayuda={f.pendientes} /> : SIN}</td>
                   </tr>
                 ))}
               </tbody>
