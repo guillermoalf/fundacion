@@ -102,7 +102,7 @@ export default async function ProductoPage({ params, searchParams }: { params: P
       </section>
       <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
         <section className={estiloTarjeta}>
-          <h2 className="mb-3 text-xl font-semibold">Kárdex</h2>
+          <h2 className="mb-3 text-xl font-semibold">Historial de entradas y salidas</h2>
           {kardex.length === 0 ? <p className="text-slate-600">Sin movimientos todavía.</p> : (
             <ol className="divide-y divide-slate-100">
               {kardex.map((m) => (
