@@ -19,9 +19,6 @@ export default async function ActivosPage() {
   const { consultar, puedeEscribir } = await obtenerSesion();
   const hoy = hoyCR();
   const activos = (await consultar((tx) => consultaActivos(tx).orderBy(alfa("u.nombre")).orderBy("a.placa").execute())).map((a) => conDepreciacion(a, hoy));
-  const vigentes = activos.filter((a) => a.estado !== "dado_de_baja");
-  const totalLibros = vigentes.reduce((s, a) => s + (a.valorLibros ?? 0), 0);
-  const sinValor = vigentes.filter((a) => a.valorLibros === null).length;
 
   return (
     <>
@@ -29,12 +26,6 @@ export default async function ActivosPage() {
       <Encabezado
         migas={[{ etiqueta: "Activos" }]}
         titulo="Activos"
-        descripcion={
-          <>
-            {vigentes.length} activos en uso · valor en libros hoy: <strong>{colones(totalLibros)}</strong>
-            {sinValor > 0 && <> (sin contar {sinValor} a los que les falta costo, fecha o categoría)</>}
-          </>
-        }
         acciones={
           <>
             {puedeEscribir && <Link href="/portal/compras/nueva" className={estiloBoton.primario}>+ Registrar compra (factura)</Link>}
