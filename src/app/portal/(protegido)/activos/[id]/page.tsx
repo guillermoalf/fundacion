@@ -18,8 +18,8 @@ const TIPO_MOV = { alta: "Alta", traslado: "Traslado", reparacion: "Reparación"
 function Dato({ t, children }: { t: string; children: React.ReactNode }) {
   return (
     <div className="flex justify-between gap-4 border-b border-slate-100 py-2 text-base last:border-0">
-      <dt className="text-slate-500">{t}</dt>
-      <dd className="text-right font-medium">{children}</dd>
+      <dt className="shrink-0 text-slate-500">{t}</dt>
+      <dd className="min-w-0 text-right font-medium">{children}</dd>
     </div>
   );
 }
@@ -47,10 +47,13 @@ export default async function ActivoPage({ params, searchParams }: { params: Pro
     const archivos = compra
       ? await tx.selectFrom("compra_archivos as ca").innerJoin("archivos as f", "f.id", "ca.archivo_id").select(["f.id", "f.nombre", "f.tipo"]).where("ca.compra_id", "=", compra.id).orderBy(alfa("f.nombre")).execute()
       : [];
-    return { a: conDepreciacion(a, hoy), cal: calendario(a), movs, ubicaciones, compra, archivos };
+    const hermanos = a.compra_linea_id
+      ? await tx.selectFrom("activos").select(["id", "placa"]).where("compra_linea_id", "=", a.compra_linea_id).where("id", "<>", id).orderBy("creado_en").orderBy("id").execute()
+      : [];
+    return { a: conDepreciacion(a, hoy), cal: calendario(a), movs, ubicaciones, compra, archivos, hermanos };
   });
   if (!datos) notFound();
-  const { a, cal, movs, ubicaciones, compra, archivos } = datos;
+  const { a, cal, movs, ubicaciones, compra, archivos, hermanos } = datos;
   const titulo = `${a.tipo_bien}${a.placa ? ` · placa ${a.placa}` : ""}`;
   const deBaja = a.estado === "dado_de_baja";
 
@@ -78,11 +81,22 @@ export default async function ActivoPage({ params, searchParams }: { params: Pro
             <Dato t="Serie">{a.serie ?? "—"}</Dato>
             <Dato t="Ubicación"><Valor v={a.ubicacion} que="la ubicación" /></Dato>
             <Dato t="Fuente">{a.fuente}</Dato>
-            <Dato t="Factura">{compra ? <Link className={estiloBoton.enlace} href={`/portal/compras/${compra.id}`}>N.º {compra.numero_factura} ({fecha(compra.fecha)})</Link> : <Falta que="la factura" />}</Dato>
+            <Dato t="Factura">{compra ? <Link className={`${estiloBoton.enlace} block truncate`} title={compra.numero_factura} href={`/portal/compras/${compra.id}`}>N.º {compra.numero_factura} ({fecha(compra.fecha)})</Link> : <Falta que="la factura" />}</Dato>
             {archivos.length > 0 && (
               <Dato t="Archivos de la factura">
-                <span className="flex flex-col items-end gap-0.5">
-                  {archivos.map((f) => <a key={f.id} href={`/portal/archivos/${f.id}`} target="_blank" className={estiloBoton.enlace}>{f.tipo.includes("xml") ? "XML" : f.tipo === "application/pdf" ? "PDF" : "Foto"}: {f.nombre}</a>)}
+                <span className="flex min-w-0 flex-col items-end gap-0.5">
+                  {archivos.map((f) => (
+                    <a key={f.id} href={`/portal/archivos/${f.id}`} target="_blank" title={f.nombre} className={`${estiloBoton.enlace} block max-w-full truncate`}>
+                      {f.tipo.includes("xml") ? "XML" : f.tipo === "application/pdf" ? "PDF" : "Foto"}: {f.nombre}
+                    </a>
+                  ))}
+                </span>
+              </Dato>
+            )}
+            {hermanos.length > 0 && (
+              <Dato t="Otras unidades de la misma compra">
+                <span className="flex flex-wrap justify-end gap-x-3">
+                  {hermanos.map((h, i) => <Link key={h.id} href={`/portal/activos/${h.id}`} className={estiloBoton.enlace}>{h.placa ? `Placa ${h.placa}` : `Unidad ${i + 2}`}</Link>)}
                 </span>
               </Dato>
             )}

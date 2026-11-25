@@ -4,11 +4,12 @@ import type { Rol } from "@/lib/portal/sesion";
 export type ItemMenu = { href: string; etiqueta: string; roles?: Rol[]; personal?: boolean };
 /** `icono`: nombre del ícono en Menu.tsx · `color`: color del arcoíris del kínder para la sección. */
 export type SeccionMenu = { titulo: string; icono: IconoMenu; color: string; items: ItemMenu[] };
-export type IconoMenu = "inicio" | "ninos" | "activos" | "compras" | "personal" | "reportes" | "administracion" | "cuenta";
+export type IconoMenu = "inicio" | "notificaciones" | "ninos" | "activos" | "compras" | "personal" | "reportes" | "administracion" | "cuenta";
 
 /** Menú lateral. `roles` solo oculta el enlace (comodidad): el permiso real lo decide el RLS. */
 export const MENU: SeccionMenu[] = [
   { titulo: "Inicio", icono: "inicio", color: "#6ec1ff", items: [{ href: "/portal", etiqueta: "Inicio", personal: true }] },
+  { titulo: "Notificaciones", icono: "notificaciones", color: "#fca5a5", items: [{ href: "/portal/notificaciones", etiqueta: "Notificaciones" }] },
   { titulo: "Niños", icono: "ninos", color: "#ff9800", items: [
       { href: "/portal/ninos", etiqueta: "Niños y niñas", roles: ["admin", "coordinacion", "auditor", "personal"], personal: true },
       { href: "/portal/ninos/lista", etiqueta: "Pasar lista", roles: ["admin", "coordinacion", "personal"], personal: true },

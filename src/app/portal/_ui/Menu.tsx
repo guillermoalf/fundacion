@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { Baby, ChevronDown, CircleUserRound, House, Package, ReceiptText, ShieldCheck, ChartColumn, Users, type LucideIcon } from "lucide-react";
+import { Baby, Bell, ChevronDown, CircleUserRound, House, Package, ReceiptText, ShieldCheck, ChartColumn, Users, type LucideIcon } from "lucide-react";
 import type { IconoMenu, SeccionMenu } from "./navegacion";
 
 const ICONOS: Record<IconoMenu, LucideIcon> = {
-  inicio: House, ninos: Baby, activos: Package, compras: ReceiptText, personal: Users, reportes: ChartColumn, administracion: ShieldCheck, cuenta: CircleUserRound,
+  inicio: House, notificaciones: Bell, ninos: Baby, activos: Package, compras: ReceiptText, personal: Users, reportes: ChartColumn, administracion: ShieldCheck, cuenta: CircleUserRound,
 };
 
 /** Paleta del kínder: azul noche de fondo, crema para la burbuja. */
@@ -28,7 +28,7 @@ function enlaceActivo(secciones: SeccionMenu[], pathname: string) {
  * y aparecen los nombres y las pantallas de cada sección. Una burbuja crema se desliza («líquida») hasta la sección
  * bajo el mouse, o la actual.
  */
-function Enlaces({ secciones, pathname, compacto, alElegir }: { secciones: SeccionMenu[]; pathname: string; compacto: boolean; alElegir?: () => void }) {
+function Enlaces({ secciones, pathname, compacto, alElegir, insignias = {} }: { secciones: SeccionMenu[]; pathname: string; compacto: boolean; alElegir?: () => void; insignias?: Record<string, number> }) {
   const elegido = enlaceActivo(secciones, pathname);
   const actual = secciones.find((s) => s.items.some((i) => i.href === elegido))?.titulo;
   const [abiertas, setAbiertas] = useState<Set<string>>(() => new Set(actual ? [actual] : []));
@@ -83,10 +83,12 @@ function Enlaces({ secciones, pathname, compacto, alElegir }: { secciones: Secci
           const abierta = abiertas.has(s.titulo);
           const resaltada = (encima ?? actual) === s.titulo;
           const esActual = actual === s.titulo;
+          const n = s.items.reduce((t, i) => t + (insignias[i.href] ?? 0), 0);
           const cabeza = (
             <>
               <span className="relative z-10 flex h-12 w-12 shrink-0 items-center justify-center">
                 <Icono aria-hidden className={`h-6 w-6 transition-transform duration-300 ${resaltada ? "-translate-y-0.5 scale-110" : ""}`} style={{ color: resaltada ? FONDO : s.color }} strokeWidth={2.2} />
+                {n > 0 && <span className="absolute right-1 top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-xs font-bold text-white" aria-label={`${n} avisos`}>{n}</span>}
               </span>
               <span className={`flex-1 truncate text-left text-base font-semibold ${esActual ? "text-white" : "text-slate-200"} ${texto}`}>{directa ? s.items[0].etiqueta : s.titulo}</span>
               {!directa && <ChevronDown aria-hidden className={`mr-3 h-5 w-5 shrink-0 text-slate-400 transition-transform duration-300 ${abierta ? "rotate-180" : ""} ${texto}`} />}
@@ -137,7 +139,7 @@ function Enlaces({ secciones, pathname, compacto, alElegir }: { secciones: Secci
  * Menú lateral. Computadora: barra de íconos que se agranda con el mouse. Celular: botón ☰ que abre el mismo menú
  * ya con los nombres.
  */
-export default function Menu({ secciones, cabecera, pie, inicial }: { secciones: SeccionMenu[]; cabecera: ReactNode; pie: ReactNode; inicial: string }) {
+export default function Menu({ secciones, cabecera, pie, inicial, insignias }: { secciones: SeccionMenu[]; cabecera: ReactNode; pie: ReactNode; inicial: string; insignias?: Record<string, number> }) {
   const pathname = usePathname();
   const [abierto, setAbierto] = useState(false);
   useEffect(() => setAbierto(false), [pathname]);
@@ -156,7 +158,7 @@ export default function Menu({ secciones, cabecera, pie, inicial }: { secciones:
           </div>
         </div>
         <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-2">
-          <Enlaces secciones={secciones} pathname={pathname} compacto />
+          <Enlaces secciones={secciones} pathname={pathname} compacto insignias={insignias} />
         </div>
         <div className="border-t border-white/10 px-3 py-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-full text-lg font-bold group-hover/menu:hidden group-focus-within/menu:hidden" style={{ background: CREMA, color: FONDO }} title="Su usuario">
@@ -190,7 +192,7 @@ export default function Menu({ secciones, cabecera, pie, inicial }: { secciones:
               </button>
             </div>
             <div className="flex-1 overflow-y-auto px-3 py-4">
-              <Enlaces secciones={secciones} pathname={pathname} compacto={false} alElegir={() => setAbierto(false)} />
+              <Enlaces secciones={secciones} pathname={pathname} compacto={false} alElegir={() => setAbierto(false)} insignias={insignias} />
             </div>
             <div className="border-t border-white/10 px-4 py-4">{pie}</div>
           </div>

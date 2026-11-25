@@ -7,7 +7,7 @@ import Vacio from "../../_ui/Vacio";
 export const metadata: Metadata = { title: "Pendientes" };
 
 export default async function PendientesPage() {
-  const { consultar, puedeEscribir } = await obtenerSesion();
+  const { consultar } = await obtenerSesion();
   const { alertas, lineas } = await consultar(async (tx) => {
     const alertas = await tx.selectFrom("v_activos_alertas").select(["activo_id", "placa", "tipo_bien", "ubicacion", "alerta"]).orderBy("ubicacion").orderBy("placa").execute();
     const ids = [...new Set(alertas.map((a) => a.activo_id!))];
@@ -52,16 +52,18 @@ export default async function PendientesPage() {
         filas={visibles.map((g) => {
           const a = g.activos[0];
           const n = g.activos.length;
-          const href = n > 1 && g.compra ? `/portal/compras/${g.compra}` : puedeEscribir ? `/portal/activos/${a.id}/editar` : `/portal/activos/${a.id}`;
+          // Siempre a la ficha del activo (ahí se completa lo que falta); con varias unidades, la primera:
+          // la ficha enlaza a las demás de la misma compra.
+          const href = `/portal/activos/${a.id}`;
           return {
             id: a.id,
-            href: n > 1 && g.compra ? `/portal/compras/${g.compra}` : `/portal/activos/${a.id}`,
+            href,
             celdas: {
               activo: a.tipoBien,
               unidades: n,
               placa: a.placa ?? { texto: "Sin placa", tono: "ambar" },
               ubicacion: a.ubicacion ?? { texto: "Sin ubicación", tono: "ambar" },
-              accion: { texto: n > 1 && g.compra ? `Ver las ${n}` : "Completar", href, ayuda: a.pendientes },
+              accion: { texto: "Completar", href, ayuda: a.pendientes },
               falta: a.pendientes.join(", "),
             },
             orden: { unidades: n },
