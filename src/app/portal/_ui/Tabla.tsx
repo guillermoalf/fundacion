@@ -395,7 +395,7 @@ export default function Tabla({
                   {columnasVisibles.filter((c) => !c.ocultarEnMovil).map((c, i) => (
                     <div key={c.clave} className={i === 0 ? "text-lg font-semibold" : "flex justify-between gap-3 text-base"}>
                       {i > 0 && <dt className="text-slate-500">{c.titulo}</dt>}
-                      <dd className={i > 0 ? "text-right" : ""}>
+                      <dd className={i > 0 ? "min-w-0 text-right [&_.rounded-full]:whitespace-normal [&_.rounded-full]:rounded-xl" : ""}>
                         <VerCelda c={f.celdas[c.clave] ?? { vacio: true }} href={c.clave === colEnlace ? f.href : undefined} />
                       </dd>
                     </div>

@@ -41,17 +41,17 @@ export default async function AsistenciaNinosPage({ searchParams }: { searchPara
         acciones={<a href={`/portal/ninos/asistencia/descargar?${qs}`} className={estiloBoton.primario}>Descargar Excel</a>}
       />
       <form className={`${estiloTarjeta} mb-6 flex flex-wrap items-end gap-3`}>
-        <label className="text-sm font-medium text-slate-700">Mes
-          <input type="month" name="mes" defaultValue={mes} className="mt-1 block rounded-xl border border-slate-300 px-3 py-2 text-base" />
+        <label className="w-full text-sm font-medium text-slate-700 sm:w-auto">Mes
+          <input type="month" name="mes" defaultValue={mes} className="mt-1 block w-full rounded-xl border border-slate-300 px-3 py-2 text-base sm:w-auto" />
         </label>
-        <label className="text-sm font-medium text-slate-700">Subsidio
-          <select name="fuente" defaultValue={fuente ?? ""} className="mt-1 block rounded-xl border border-slate-300 px-3 py-2 text-base">
+        <label className="w-full text-sm font-medium text-slate-700 sm:w-auto">Subsidio
+          <select name="fuente" defaultValue={fuente ?? ""} className="mt-1 block w-full rounded-xl border border-slate-300 px-3 py-2 text-base sm:w-auto">
             <option value="">Todos</option>
             {d.fuentes.map((f) => <option key={f.codigo} value={f.codigo}>{f.codigo} · {f.nombre}</option>)}
           </select>
         </label>
-        <label className="text-sm font-medium text-slate-700">Aula
-          <select name="aula" defaultValue={aula ?? ""} className="mt-1 block rounded-xl border border-slate-300 px-3 py-2 text-base">
+        <label className="w-full text-sm font-medium text-slate-700 sm:w-auto">Aula
+          <select name="aula" defaultValue={aula ?? ""} className="mt-1 block w-full rounded-xl border border-slate-300 px-3 py-2 text-base sm:w-auto">
             <option value="">Todas</option>
             {d.aulas.map((u) => <option key={u.id} value={u.id}>{u.nombre}</option>)}
           </select>
@@ -76,9 +76,9 @@ export default async function AsistenciaNinosPage({ searchParams }: { searchPara
                 const r = resumenAsistencia(Object.values(f.porDia));
                 return (
                   <tr key={f.id}>
-                    <td className="sticky left-0 whitespace-nowrap bg-white px-3 py-2"><Link href={`/portal/ninos/${f.id}`} className="font-medium text-sky-700 hover:underline">{f.nombre}</Link>
+                    <td className="sticky left-0 max-w-[9.5rem] bg-white px-3 py-2 sm:max-w-none sm:whitespace-nowrap"><Link href={`/portal/ninos/${f.id}`} className="block truncate font-medium text-sky-700 hover:underline sm:inline">{f.nombre}</Link>
                       {["vencido", "falta"].includes(d.estudios.get(f.id) ?? "") && (
-                        <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-800" title="El PANI puede cobrar este tiempo">
+                        <span className="rounded-full bg-red-100 sm:ml-2 px-2 py-0.5 text-xs font-semibold text-red-800" title="El PANI puede cobrar este tiempo">
                           {d.estudios.get(f.id) === "falta" ? "Sin estudio" : "Estudio vencido"}
                         </span>
                       )}
