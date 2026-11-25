@@ -7,6 +7,7 @@ import Encabezado from "../../../../_ui/Encabezado";
 import { Insignia } from "../../../../_ui/Insignias";
 import { estiloBoton, estiloTarjeta } from "../../../../_ui/estilos";
 import { FormularioProducto } from "../../Formularios";
+import { PasarAActivos } from "../../../compras/[id]/Adjuntos";
 import Tabla from "../../../../_ui/Tabla";
 import { historialPrecios } from "@/lib/portal/precios";
 import { variacion } from "@/lib/calculos/precios";
@@ -25,7 +26,7 @@ export default async function ProductoPage({ params, searchParams }: { params: P
     const p = await tx.selectFrom("productos").selectAll().where("id", "=", id).executeTakeFirst();
     if (!p) return null;
     const movs = await tx.selectFrom("inventario_movimientos as m").leftJoin("compra_lineas as l", "l.id", "m.compra_linea_id").leftJoin("compras as c", "c.id", "l.compra_id")
-      .select(["m.id", "m.tipo", "m.cantidad", "m.fecha", "m.entregado_a", "m.motivo", "m.fecha_vencimiento", "c.id as compra_id", "c.numero_factura"])
+      .select(["m.id", "m.tipo", "m.cantidad", "m.fecha", "m.entregado_a", "m.motivo", "m.fecha_vencimiento", "c.id as compra_id", "c.numero_factura", "l.id as linea_id", "l.tipo as linea_tipo", "l.descripcion as linea_descripcion", "l.cantidad as linea_cantidad"])
       .where("m.producto_id", "=", id).orderBy("m.fecha").orderBy("m.creado_en").execute();
     const proveedores = await tx.selectFrom("proveedores").select(["id", "nombre"]).orderBy(alfa("nombre")).execute();
     return { p, movs, proveedores, cats: await categoriasProducto(tx), precios: await historialPrecios(tx, id) };
@@ -110,6 +111,9 @@ export default async function ProductoPage({ params, searchParams }: { params: P
                     <p><Insignia tono={TIPO[m.tipo][1]}>{TIPO[m.tipo][0]}</Insignia> <span className="font-medium">{fecha(m.fecha)}</span></p>
                     <p className="text-slate-600">
                       {m.compra_id ? <Link className={estiloBoton.enlace} href={`/portal/compras/${m.compra_id}`}>Factura {m.numero_factura}</Link> : null}
+                      {puedeEscribir && m.tipo === "entrada" && m.linea_id && m.linea_tipo === "consumible" && (
+                        <span className="mt-2 block"><PasarAActivos lineaId={m.linea_id} descripcion={m.linea_descripcion ?? p.nombre} unidades={Number(m.linea_cantidad)} /></span>
+                      )}
                       {m.entregado_a && `Entregado a ${m.entregado_a}. `}{m.motivo}
                       {m.fecha_vencimiento && ` · vence ${fecha(m.fecha_vencimiento)}`}
                     </p>
