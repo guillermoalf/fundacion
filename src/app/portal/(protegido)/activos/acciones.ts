@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { sql } from "kysely";
 import { redirect } from "next/navigation";
 import { obtenerSesion } from "@/lib/portal/sesion";
 import { ejecutar, ErrorUsuario, entero, numero, texto, textoObligatorio, type Resultado } from "@/lib/portal/acciones";
@@ -127,4 +128,45 @@ export async function darDeBaja(_: R, f: FormData): Promise<R> {
     redirect(`/portal/activos/${id}?guardado=baja`);
   }
   return r;
+}
+
+/** Revierte la baja (solo el superadministrador, con motivo): el activo vuelve a la lista de Activos. */
+export async function revertirBaja(_: R, f: FormData): Promise<R> {
+  const { consultar } = await obtenerSesion();
+  const id = String(f.get("id"));
+  const r = await ejecutar(async () => {
+    const motivo = textoObligatorio(f, "motivo", "el motivo");
+    await consultar((tx) => sql`select revertir_baja(${id}::uuid, ${motivo})`.execute(tx));
+    return {};
+  });
+  if (r.ok) {
+    revalidatePath("/portal/activos");
+    revalidatePath("/portal/activos/desecho");
+    redirect(`/portal/activos/${id}`);
+  }
+  return r;
+}
+
+/** Color de una ubicación (Dirección). Vacío = automático. */
+export async function cambiarColorUbicacion(_: R, f: FormData): Promise<R> {
+  const { consultar } = await obtenerSesion();
+  return ejecutar(async () => {
+    const id = entero(f, "id");
+    const color = texto(f, "color");
+    if (id === null) throw new ErrorUsuario("Falta la ubicación.");
+    await consultar((tx) => tx.updateTable("ubicaciones").set({ color }).where("id", "=", id).execute());
+    revalidatePath("/portal/activos", "layout");
+    return {};
+  });
+}
+
+/** Nueva ubicación (aula, bodega, oficina…). */
+export async function crearUbicacion(_: R, f: FormData): Promise<R> {
+  const { consultar } = await obtenerSesion();
+  return ejecutar(async () => {
+    const nombre = textoObligatorio(f, "nombre", "el nombre");
+    await consultar((tx) => tx.insertInto("ubicaciones").values({ nombre, color: texto(f, "color") }).execute());
+    revalidatePath("/portal/activos", "layout");
+    return {};
+  });
 }

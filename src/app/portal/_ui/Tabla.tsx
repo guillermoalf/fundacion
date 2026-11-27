@@ -17,7 +17,7 @@ import { guardarPreferenciaTabla, leerPreferenciaTabla, type PreferenciaTabla } 
  */
 export type Celda =
   | string | number | null
-  | { texto: string; href?: string; tono?: Tono; insignia?: boolean; detalle?: string; extra?: { texto: string; tono: Tono }; ayuda?: string[] }
+  | { texto: string; href?: string; tono?: Tono; insignia?: boolean; detalle?: string; extra?: { texto: string; tono: Tono }; ayuda?: string[]; color?: string }
   | { vacio: true };
 
 /** `oculta`: no se ve hasta que la persona la agregue en «Columnas». */
@@ -80,12 +80,23 @@ export function CeldaConAyuda({ texto, tono, ayuda, href }: { texto: string; ton
   );
 }
 
+/** Etiqueta con un color propio (p. ej. cada ubicación con el suyo). */
+export function Etiqueta({ color, children }: { color: string; children: ReactNode }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-sm font-medium text-slate-800" style={{ background: `${color}1f`, boxShadow: `inset 0 0 0 1px ${color}66` }}>
+      <span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: color }} />
+      {children}
+    </span>
+  );
+}
+
 function VerCelda({ c, href }: { c: Celda; href?: string }) {
   if (c === null) return <Falta />;
   if (typeof c === "string" || typeof c === "number") return href ? <Link href={href} className="font-medium text-sky-700 hover:underline">{c}</Link> : <>{c}</>;
   if ("vacio" in c) return <span className="text-slate-400">—</span>;
   const enlace = c.href ?? href;
   // `ayuda`: lista que aparece al pasar el mouse (o al tocar, en el celular) sobre la celda.
+  if (c.color) return <Etiqueta color={c.color}>{c.texto}</Etiqueta>;
   if (c.ayuda?.length) return <CeldaConAyuda texto={c.texto} tono={c.tono} ayuda={c.ayuda} href={c.href} />;
   const principal = c.insignia || (c.tono && !c.extra && !c.detalle)
     ? <Insignia tono={c.tono}>{c.texto}</Insignia>
