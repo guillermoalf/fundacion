@@ -19,7 +19,7 @@ export const opciones = <T extends { id: number; nombre: string }>(xs: T[], acti
 
 export const ESTADOS_ACTIVO = {
   en_uso: "En uso",
-  en_reparacion: "En reparación",
+  en_reparacion: "En revisión o reparación",
   en_bodega: "En bodega",
   extraviado: "Extraviado",
   dado_de_baja: "Dado de baja",

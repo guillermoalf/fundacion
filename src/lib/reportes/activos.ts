@@ -1,8 +1,11 @@
 /**
- * Reportes de activos configurables: especificaciones (qué activos entran y cómo se agrupan) y el filtro.
- * Los activos no tienen monto mínimo; la regla (p. ej. la baja cuantía del PANI) vive en cada reporte.
+ * Reportes configurables (activos, compras e inventario): especificaciones (qué entra y cómo se agrupa) y los filtros.
+ * Las listas de Activos e Inventario no tienen condiciones; las reglas (p. ej. la baja cuantía del PANI) viven en cada reporte.
  * Sin base de datos: se prueba aparte y lo usan la vista previa y la descarga.
  */
+export type TipoReporte = "activos" | "compras" | "inventario";
+export const TIPOS_REPORTE: Record<TipoReporte, string> = { activos: "Activos", compras: "Compras", inventario: "Inventario" };
+export const tipoReporte = (v: unknown): TipoReporte => (v === "compras" || v === "inventario" ? v : "activos");
 export type MontoMinimo = { tipo: "ninguno" } | { tipo: "monto"; valor: number } | { tipo: "umbral" };
 export type ConfigReporte = {
   /** Encabezado del Excel, p. ej. «Auxiliar de activos fijos Recursos PANI» */
@@ -22,11 +25,22 @@ export type ConfigReporte = {
   /** vacío = todos los estados excepto «dado de baja» */
   estados: string[];
   incluirBajas: boolean;
+  /** texto que debe tener el nombre (p. ej. «silla»); vacío = todo */
+  buscar: string;
+  /** activos: «auxiliar» = formato del Auxiliar de activos fijos · «conteo» = cuántos hay por aula y estado (control interno) */
+  formato: "auxiliar" | "conteo";
+  /** compras: ids de proveedores; vacío = todos */
+  proveedores: number[];
+  /** compras e inventario: códigos de categorías de inventario; vacío = todas */
+  categoriasProducto: string[];
+  /** compras: cómo se divide el Excel */
+  agruparCompras: "proveedor" | "categoria" | "ninguno";
 };
 
 export const CONFIG_INICIAL: ConfigReporte = {
   titulo: "Auxiliar de activos fijos", programa: "Fundación Creciendo Feliz ABC", fuentes: [], montoMinimo: { tipo: "ninguno" }, montoBase: "unidad",
   agrupar: "ubicacion", ubicaciones: [], categorias: [], adquiridoDesde: null, adquiridoHasta: null, estados: [], incluirBajas: false,
+  buscar: "", formato: "auxiliar", proveedores: [], categoriasProducto: [], agruparCompras: "proveedor",
 };
 
 const fecha = (v: unknown) => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null);
@@ -54,6 +68,11 @@ export function normalizarConfig(v: unknown): ConfigReporte {
     adquiridoHasta: fecha(o.adquiridoHasta),
     estados: textos(o.estados),
     incluirBajas: o.incluirBajas === true,
+    buscar: typeof o.buscar === "string" ? o.buscar.trim().slice(0, 80) : "",
+    formato: o.formato === "conteo" ? "conteo" : "auxiliar",
+    proveedores: numeros(o.proveedores),
+    categoriasProducto: textos(o.categoriasProducto),
+    agruparCompras: o.agruparCompras === "categoria" || o.agruparCompras === "ninguno" ? o.agruparCompras : "proveedor",
   };
 }
 
@@ -87,6 +106,7 @@ export function filtrarActivos(activos: ActivoReporte[], c: ConfigReporte, corte
     if (c.categorias.length && (a.categoriaId === null || !c.categorias.includes(a.categoriaId))) return false;
     if (c.adquiridoDesde && (!a.fechaAdquisicion || a.fechaAdquisicion < c.adquiridoDesde)) return false;
     if (c.adquiridoHasta && (!a.fechaAdquisicion || a.fechaAdquisicion > c.adquiridoHasta)) return false;
+    if (!contiene([a.tipoBien, a.marca, a.modelo], c.buscar)) return false;
     if (c.montoMinimo.tipo !== "ninguno") {
       if (minimo === null) return false;
       const monto = c.montoBase === "linea" ? totalLinea(a) : costoUnidad(a);
@@ -96,6 +116,33 @@ export function filtrarActivos(activos: ActivoReporte[], c: ConfigReporte, corte
     return true;
   });
   return { filas, sinCosto, minimo };
+}
+
+/** Sin tildes ni mayúsculas, para buscar «silla» y encontrar «Sillas de bebé». */
+export const sinTildes = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+/** ¿Alguno de los textos contiene lo buscado? (vacío = sí) */
+export const contiene = (textos: (string | null)[], buscar: string) => !buscar || textos.some((t) => t && sinTildes(t).includes(sinTildes(buscar)));
+
+export const ESTADOS_CONTEO = ["en_uso", "en_reparacion", "en_bodega", "extraviado", "dado_de_baja"] as const;
+/** Cuántos hay en total, por estado y por aula (reporte de conteo, p. ej. «sillas de bebé»). Cada activo es una unidad. */
+export function conteoActivos(filas: ActivoReporte[], corte: string) {
+  const estadoA = (a: ActivoReporte) => (a.fechaBaja !== null && a.fechaBaja <= corte ? "dado_de_baja" : a.estado);
+  const vacio = () => Object.fromEntries(ESTADOS_CONTEO.map((e) => [e, 0])) as Record<string, number>;
+  const porEstado = vacio();
+  const aulas = new Map<string, { total: number; porEstado: Record<string, number> }>();
+  for (const a of filas) {
+    const e = estadoA(a);
+    porEstado[e] = (porEstado[e] ?? 0) + 1;
+    const nombre = a.ubicacion ?? "Sin ubicación";
+    const g = aulas.get(nombre) ?? { total: 0, porEstado: vacio() };
+    g.total++;
+    g.porEstado[e] = (g.porEstado[e] ?? 0) + 1;
+    aulas.set(nombre, g);
+  }
+  return {
+    total: filas.length, porEstado,
+    porUbicacion: [...aulas].sort((x, y) => x[0].localeCompare(y[0], "es")).map(([ubicacion, g]) => ({ ubicacion, ...g })),
+  };
 }
 
 /** Grupos del Excel (secciones con su encabezado de color) en orden alfabético. */
