@@ -16,7 +16,7 @@ export function consultaActivos(tx: Tx) {
       "a.id", "a.placa", "a.tipo_bien", "a.marca", "a.modelo", "a.serie", "a.estado", "a.costo", "a.fecha_adquisicion",
       "a.fecha_baja", "a.motivo_baja", "a.metodo", "a.tasa_anual_override", "a.valor_residual", "a.notas", "a.origen",
       "a.fila_origen", "a.unidades_compra", "a.compra_linea_id", "a.ubicacion_id", "a.fuente_id", "a.categoria_id", "a.foto_url", "a.creado_en",
-      "u.nombre as ubicacion", "f.codigo as fuente", "c.nombre as categoria", "c.tasa_anual", "c.anios_vida",
+      "u.nombre as ubicacion", "u.color as color_ubicacion", "f.codigo as fuente", "c.nombre as categoria", "c.tasa_anual", "c.anios_vida",
     ]);
 }
 

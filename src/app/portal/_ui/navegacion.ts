@@ -18,6 +18,8 @@ export const MENU: SeccionMenu[] = [
     ] },
   { titulo: "Activos", icono: "activos", color: "#fbbf24", items: [
       { href: "/portal/activos", etiqueta: "Activos" },
+      { href: "/portal/activos/desecho", etiqueta: "Desecho de activos" },
+      { href: "/portal/activos/ubicaciones", etiqueta: "Ubicaciones" },
       { href: "/portal/pendientes", etiqueta: "Pendientes" },
       { href: "/portal/depreciacion", etiqueta: "Tabla de depreciación" },
       { href: "/portal/conteos", etiqueta: "Conteo físico" },

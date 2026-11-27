@@ -5,7 +5,7 @@ import { obtenerSesion } from "@/lib/portal/sesion";
 import { cantidad, fecha, hoyCR } from "@/lib/portal/formato";
 import Encabezado from "../../_ui/Encabezado";
 import Tabla from "../../_ui/Tabla";
-import { estiloBoton, estiloTarjeta } from "../../_ui/estilos";
+import { estiloBoton, estiloEtiqueta, estiloInput, estiloTarjeta } from "../../_ui/estilos";
 import { DIAS_AVISO_VENCIMIENTO } from "./datos";
 import { celdaPrecio, ultimosPrecios } from "@/lib/portal/precios";
 import { alfa } from "@/lib/db/orden";
@@ -113,6 +113,18 @@ export default async function InventarioPage() {
           };
         })}
       />
+      <section className={`${estiloTarjeta} mt-8 space-y-4`}>
+        <h2 className="text-xl font-semibold">Controles mensuales de inventario</h2>
+        <form action="/portal/reportes/inventario/descargar" className="flex flex-wrap items-end gap-3">
+          <label className="space-y-1.5">
+            <span className={estiloEtiqueta}>Mes</span>
+            <input type="month" name="mes" defaultValue={hoy.slice(0, 7)} className={estiloInput} />
+          </label>
+          <button type="submit" name="tipo" value="alimentos" className={estiloBoton.primario}>Alimentos (Formulario 1, Excel)</button>
+          <button type="submit" name="tipo" value="aseo" className={estiloBoton.secundario}>Aseo (Formulario 1, Excel)</button>
+          <button type="submit" name="tipo" value="limpieza" className={estiloBoton.secundario}>Control de limpieza (Word)</button>
+        </form>
+      </section>
     </>
   );
 }

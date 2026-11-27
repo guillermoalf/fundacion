@@ -10,6 +10,7 @@ import Tabla from "../../_ui/Tabla";
 import Vacio from "../../_ui/Vacio";
 import { estiloBoton } from "../../_ui/estilos";
 import { alfa } from "@/lib/db/orden";
+import { colorUbicacion } from "@/lib/portal/ubicaciones";
 
 export const metadata: Metadata = { title: "Activos" };
 
@@ -18,7 +19,7 @@ const TONO_ESTADO = { en_uso: "verde", en_reparacion: "ambar", en_bodega: "gris"
 export default async function ActivosPage() {
   const { consultar, puedeEscribir } = await obtenerSesion();
   const hoy = hoyCR();
-  const activos = (await consultar((tx) => consultaActivos(tx).orderBy(alfa("u.nombre")).orderBy("a.placa").execute())).map((a) => conDepreciacion(a, hoy));
+  const activos = (await consultar((tx) => consultaActivos(tx).where("a.estado", "<>", "dado_de_baja").orderBy(alfa("u.nombre")).orderBy("a.placa").execute())).map((a) => conDepreciacion(a, hoy));
 
   return (
     <>
@@ -59,11 +60,11 @@ export default async function ActivosPage() {
           celdas: {
             bien: [a.tipo_bien, a.marca].filter(Boolean).join(" · "),
             placa: a.placa,
-            ubicacion: a.ubicacion ?? { texto: "Sin ubicación", tono: "ambar" },
+            ubicacion: a.ubicacion && a.ubicacion_id ? { texto: a.ubicacion, color: colorUbicacion(a.ubicacion_id, a.color_ubicacion) } : { texto: "Sin ubicación", tono: "ambar" },
             fuente: a.fuente,
             estado: { texto: ESTADOS_ACTIVO[a.estado], tono: TONO_ESTADO[a.estado] },
             costo: colones(a.costo),
-            libros: a.estado === "dado_de_baja" ? { vacio: true } : colones(a.valorLibros),
+            libros: colones(a.valorLibros),
             categoria: a.categoria,
             marca: a.marca ?? { vacio: true }, modelo: a.modelo ?? { vacio: true }, serie: a.serie ?? { vacio: true },
             adquisicion: fecha(a.fecha_adquisicion),

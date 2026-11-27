@@ -8,7 +8,9 @@ import { colones, fecha, fechaHora, hoyCR } from "@/lib/portal/formato";
 import Encabezado from "../../../_ui/Encabezado";
 import { Falta, Insignia, Valor } from "../../../_ui/Insignias";
 import { estiloBoton, estiloTarjeta } from "../../../_ui/estilos";
-import { Baja, Traslado } from "./Acciones";
+import { Baja, Traslado, RevertirBaja } from "./Acciones";
+import { Etiqueta } from "../../../_ui/Tabla";
+import { colorUbicacion } from "@/lib/portal/ubicaciones";
 import { alfa } from "@/lib/db/orden";
 
 export const metadata: Metadata = { title: "Activo" };
@@ -27,7 +29,7 @@ function Dato({ t, children }: { t: string; children: React.ReactNode }) {
 export default async function ActivoPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ guardado?: string }> }) {
   const { id } = await params;
   const guardado = (await searchParams).guardado;
-  const { consultar, puedeEscribir } = await obtenerSesion();
+  const { consultar, puedeEscribir, esSuperadmin } = await obtenerSesion();
   const hoy = hoyCR();
   const datos = await consultar(async (tx) => {
     const a = await consultaActivos(tx).where("a.id", "=", id).executeTakeFirst();
@@ -60,9 +62,9 @@ export default async function ActivoPage({ params, searchParams }: { params: Pro
   return (
     <>
       <Encabezado
-        migas={[{ etiqueta: "Activos", href: "/portal/activos" }, { etiqueta: titulo }]}
+        migas={[{ etiqueta: "Activos", href: "/portal/activos" }, ...(deBaja ? [{ etiqueta: "Desecho de activos", href: "/portal/activos/desecho" }] : []), { etiqueta: titulo }]}
         titulo={titulo}
-        descripcion={<>{a.ubicacion ?? "Sin ubicación"} · <Insignia tono={deBaja ? "gris" : "verde"}>{ESTADOS_ACTIVO[a.estado]}</Insignia></>}
+        descripcion={<>{a.ubicacion && a.ubicacion_id ? <Etiqueta color={colorUbicacion(a.ubicacion_id, a.color_ubicacion)}>{a.ubicacion}</Etiqueta> : "Sin ubicación"} · <Insignia tono={deBaja ? "gris" : "verde"}>{ESTADOS_ACTIVO[a.estado]}</Insignia></>}
         acciones={
           <>
             {puedeEscribir && !deBaja && <Link href={`/portal/activos/${a.id}/editar`} className={estiloBoton.primario}>Editar</Link>}
@@ -143,6 +145,13 @@ export default async function ActivoPage({ params, searchParams }: { params: Pro
             </p>
           )}
         </section>
+
+        {esSuperadmin && deBaja && (
+          <section className={`${estiloTarjeta} space-y-3 lg:col-span-2`}>
+            <h2 className="text-xl font-semibold">Revertir la baja</h2>
+            <RevertirBaja id={a.id} />
+          </section>
+        )}
 
         {puedeEscribir && !deBaja && (
           <section className={`${estiloTarjeta} space-y-4 lg:col-span-2`}>

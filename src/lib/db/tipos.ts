@@ -491,6 +491,7 @@ export interface TramosRenta {
 
 export interface Ubicaciones {
   activo: Generated<boolean>;
+  color: string | null;
   id: Generated<number>;
   nombre: string;
   responsable_id: string | null;
