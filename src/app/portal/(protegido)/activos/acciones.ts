@@ -170,3 +170,40 @@ export async function crearUbicacion(_: R, f: FormData): Promise<R> {
     return {};
   });
 }
+
+/** Boleta de egreso: el activo sale a revisión o reparación (no se da de baja). Queda «En revisión» con su boleta. */
+export async function registrarEgreso(_: R, f: FormData): Promise<R> {
+  const { consultar } = await obtenerSesion();
+  const id = String(f.get("id"));
+  return ejecutar(async () => {
+    const motivo = textoObligatorio(f, "motivo", "el motivo (a dónde va y por qué)");
+    await consultar(async (tx) => {
+      const documento = await guardarArchivo(tx, f.get("documento"));
+      const a = await tx.updateTable("activos").set({ estado: "en_reparacion" })
+        .where("id", "=", id).where("estado", "not in", ["dado_de_baja", "en_reparacion"]).returning("ubicacion_id").executeTakeFirst();
+      if (!a) throw new ErrorUsuario("El activo ya está en revisión, dado de baja o no tiene permiso.");
+      await tx.insertInto("activo_movimientos").values({ activo_id: id, tipo: "reparacion", fecha: texto(f, "fecha") ?? hoyCR(), ubicacion_origen_id: a.ubicacion_id, motivo, documento_url: documento }).execute();
+    });
+    revalidatePath(`/portal/activos/${id}`);
+    revalidatePath("/portal/activos");
+    return {};
+  });
+}
+
+/** El activo regresó de revisión: vuelve a «En uso» en su ubicación. */
+export async function registrarRetorno(_: R, f: FormData): Promise<R> {
+  const { consultar } = await obtenerSesion();
+  const id = String(f.get("id"));
+  return ejecutar(async () => {
+    const motivo = texto(f, "motivo") ?? "Regresó de revisión";
+    await consultar(async (tx) => {
+      const documento = await guardarArchivo(tx, f.get("documento"));
+      const a = await tx.updateTable("activos").set({ estado: "en_uso" }).where("id", "=", id).where("estado", "=", "en_reparacion").returning("ubicacion_id").executeTakeFirst();
+      if (!a) throw new ErrorUsuario("El activo no está en revisión o no tiene permiso.");
+      await tx.insertInto("activo_movimientos").values({ activo_id: id, tipo: "retorno", fecha: texto(f, "fecha") ?? hoyCR(), ubicacion_destino_id: a.ubicacion_id, motivo, documento_url: documento }).execute();
+    });
+    revalidatePath(`/portal/activos/${id}`);
+    revalidatePath("/portal/activos");
+    return {};
+  });
+}

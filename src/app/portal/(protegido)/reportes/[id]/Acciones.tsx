@@ -1,8 +1,8 @@
 "use client";
 
 import { useTransition } from "react";
-import { useAviso } from "../../../../_ui/Avisos";
-import { estiloBoton } from "../../../../_ui/estilos";
+import { useAviso } from "../../../_ui/Avisos";
+import { estiloBoton } from "../../../_ui/estilos";
 import { cambiarActivoReporte, duplicarReporte } from "../acciones";
 
 export default function AccionesReporte({ id, activo }: { id: string; activo: boolean }) {

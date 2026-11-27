@@ -8,19 +8,19 @@ import { colones, fecha, fechaHora, hoyCR } from "@/lib/portal/formato";
 import Encabezado from "../../../_ui/Encabezado";
 import { Falta, Insignia, Valor } from "../../../_ui/Insignias";
 import { estiloBoton, estiloTarjeta } from "../../../_ui/estilos";
-import { Baja, Traslado, RevertirBaja } from "./Acciones";
+import { Baja, Egreso, Retorno, RevertirBaja, Traslado } from "./Acciones";
 import { Etiqueta } from "../../../_ui/Tabla";
 import { colorUbicacion } from "@/lib/portal/ubicaciones";
 import { alfa } from "@/lib/db/orden";
 
 export const metadata: Metadata = { title: "Activo" };
 
-const TIPO_MOV = { alta: "Alta", traslado: "Traslado", reparacion: "Reparación", retorno: "Retorno", baja: "Baja", ajuste: "Ajuste" } as const;
+const TIPO_MOV = { alta: "Alta", traslado: "Traslado", reparacion: "Boleta de egreso", retorno: "Regresó de revisión", baja: "Baja", ajuste: "Ajuste" } as const;
 
 function Dato({ t, children }: { t: string; children: React.ReactNode }) {
   return (
     <div className="flex justify-between gap-4 border-b border-slate-100 py-2 text-base last:border-0">
-      <dt className="shrink-0 text-slate-500">{t}</dt>
+      <dt className="min-w-0 text-slate-500">{t}</dt>
       <dd className="min-w-0 text-right font-medium">{children}</dd>
     </div>
   );
@@ -58,13 +58,15 @@ export default async function ActivoPage({ params, searchParams }: { params: Pro
   const { a, cal, movs, ubicaciones, compra, archivos, hermanos } = datos;
   const titulo = `${a.tipo_bien}${a.placa ? ` · placa ${a.placa}` : ""}`;
   const deBaja = a.estado === "dado_de_baja";
+  const enRevision = a.estado === "en_reparacion";
+  const egreso = enRevision ? movs.find((m) => m.tipo === "reparacion") : undefined;
 
   return (
     <>
       <Encabezado
         migas={[{ etiqueta: "Activos", href: "/portal/activos" }, ...(deBaja ? [{ etiqueta: "Desecho de activos", href: "/portal/activos/desecho" }] : []), { etiqueta: titulo }]}
         titulo={titulo}
-        descripcion={<>{a.ubicacion && a.ubicacion_id ? <Etiqueta color={colorUbicacion(a.ubicacion_id, a.color_ubicacion)}>{a.ubicacion}</Etiqueta> : "Sin ubicación"} · <Insignia tono={deBaja ? "gris" : "verde"}>{ESTADOS_ACTIVO[a.estado]}</Insignia></>}
+        descripcion={<>{a.ubicacion && a.ubicacion_id ? <Etiqueta color={colorUbicacion(a.ubicacion_id, a.color_ubicacion)}>{a.ubicacion}</Etiqueta> : "Sin ubicación"} · <Insignia tono={deBaja ? "gris" : enRevision ? "ambar" : "verde"}>{ESTADOS_ACTIVO[a.estado]}</Insignia></>}
         acciones={
           <>
             {puedeEscribir && !deBaja && <Link href={`/portal/activos/${a.id}/editar`} className={estiloBoton.primario}>Editar</Link>}
@@ -146,6 +148,17 @@ export default async function ActivoPage({ params, searchParams }: { params: Pro
           )}
         </section>
 
+        {enRevision && (
+          <section className="space-y-3 rounded-2xl border border-amber-300 bg-amber-50 p-6 shadow-sm lg:col-span-2">
+            <h2 className="text-xl font-semibold text-amber-900">En revisión{egreso ? ` desde el ${fecha(egreso.fecha)}` : ""}</h2>
+            {egreso && <p className="text-amber-900">{egreso.motivo}</p>}
+            {egreso?.documento_url
+              ? <a href={egreso.documento_url} target="_blank" rel="noopener" className="inline-block font-semibold text-sky-700 underline">Ver boleta de egreso</a>
+              : <p className="text-amber-800">No se adjuntó la boleta de egreso.</p>}
+            {puedeEscribir && <div><Retorno id={a.id} hoy={hoy} /></div>}
+          </section>
+        )}
+
         {esSuperadmin && deBaja && (
           <section className={`${estiloTarjeta} space-y-3 lg:col-span-2`}>
             <h2 className="text-xl font-semibold">Revertir la baja</h2>
@@ -158,6 +171,7 @@ export default async function ActivoPage({ params, searchParams }: { params: Pro
             <h2 className="text-xl font-semibold">Movimientos</h2>
             <div className="flex flex-wrap items-start gap-4">
               <Traslado id={a.id} hoy={hoy} primera={a.ubicacion_id === null} ubicaciones={opciones(ubicaciones, (u) => u.activo && u.id !== a.ubicacion_id)} />
+              {!enRevision && <Egreso id={a.id} hoy={hoy} />}
               <Baja id={a.id} hoy={hoy} />
             </div>
           </section>

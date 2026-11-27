@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import { AreaTexto, BotonEnviar, Campo, CampoArchivo, MensajeError, Seleccion, FormularioAccion } from "../../../_ui/Formulario";
 import { useAvisoResultado } from "../../../_ui/Avisos";
 import { estiloBoton } from "../../../_ui/estilos";
-import { darDeBaja, revertirBaja, trasladarActivo } from "../acciones";
+import { darDeBaja, registrarEgreso, registrarRetorno, revertirBaja, trasladarActivo } from "../acciones";
 
 export function Traslado({ id, ubicaciones, hoy, primera = false }: { id: string; ubicaciones: { valor: number; texto: string }[]; hoy: string; primera?: boolean }) {
   const [abierto, setAbierto] = useState(false);
@@ -64,6 +64,48 @@ export function RevertirBaja({ id }: { id: string }) {
       <MensajeError estado={estado} />
       <div className="flex gap-2">
         <BotonEnviar>Revertir baja</BotonEnviar>
+        <button type="button" className={estiloBoton.secundario} onClick={() => setAbierto(false)}>Cancelar</button>
+      </div>
+    </FormularioAccion>
+  );
+}
+
+/** Boleta de egreso: el activo sale a revisión o reparación sin darse de baja. */
+export function Egreso({ id, hoy }: { id: string; hoy: string }) {
+  const [abierto, setAbierto] = useState(false);
+  const [estado, accion, accionPendiente] = useActionState(registrarEgreso, null);
+  useAvisoResultado(estado, "Boleta de egreso registrada.");
+  if (!abierto) return <button type="button" className={estiloBoton.secundario} onClick={() => setAbierto(true)}>Boleta de egreso</button>;
+  return (
+    <FormularioAccion accion={accion} estado={estado} pendiente={accionPendiente} className="space-y-4 rounded-xl border border-amber-200 bg-amber-50 p-4" key={estado?.ok ? "ok" : "f"}>
+      <input type="hidden" name="id" value={id} />
+      <Campo etiqueta="Fecha de salida" name="fecha" type="date" defaultValue={hoy} required />
+      <AreaTexto etiqueta="Motivo" name="motivo" required placeholder="Ej.: revisión del técnico, garantía" />
+      <CampoArchivo etiqueta="Boleta de egreso" name="documento" />
+      <MensajeError estado={estado} />
+      <div className="flex gap-2">
+        <BotonEnviar>Registrar salida</BotonEnviar>
+        <button type="button" className={estiloBoton.secundario} onClick={() => setAbierto(false)}>Cancelar</button>
+      </div>
+    </FormularioAccion>
+  );
+}
+
+/** El activo regresó de revisión. */
+export function Retorno({ id, hoy }: { id: string; hoy: string }) {
+  const [abierto, setAbierto] = useState(false);
+  const [estado, accion, accionPendiente] = useActionState(registrarRetorno, null);
+  useAvisoResultado(estado, "Regreso registrado.");
+  if (!abierto) return <button type="button" className={estiloBoton.primario} onClick={() => setAbierto(true)}>Ya regresó</button>;
+  return (
+    <FormularioAccion accion={accion} estado={estado} pendiente={accionPendiente} className="space-y-4">
+      <input type="hidden" name="id" value={id} />
+      <Campo etiqueta="Fecha de regreso" name="fecha" type="date" defaultValue={hoy} required />
+      <AreaTexto etiqueta="Nota (opcional)" name="motivo" placeholder="Ej.: reparado, cambio de pantalla" />
+      <CampoArchivo etiqueta="Documento del técnico (opcional)" name="documento" />
+      <MensajeError estado={estado} />
+      <div className="flex gap-2">
+        <BotonEnviar>Registrar regreso</BotonEnviar>
         <button type="button" className={estiloBoton.secundario} onClick={() => setAbierto(false)}>Cancelar</button>
       </div>
     </FormularioAccion>
